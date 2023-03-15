@@ -17,7 +17,8 @@ defmodule PrintClientWeb.Router do
   scope "/", PrintClientWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    live "/", PrintClientLive
+    live "/:tab", PrintClientLive
   end
 
   # Other scopes may use custom stacks.

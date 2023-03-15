@@ -1,0 +1,27 @@
+<div class="flex flex-col p-4 w-screen h-screen max-h-72" {@dynamic_attrs}>
+
+  <section class="flex flex-col items-start w-full mb-4">
+    <h2 class="text-2xl font-semibold">Print Labels</h2>
+    <span class="tabs w-full">
+      <a href="/text" class="tab tab-bordered grow" x-bind:class="tab == 'text' ? 'tab-active' : ''">Text Label</a>
+      <a href="/asset" class="tab tab-bordered grow" x-bind:class="tab == 'asset' ? 'tab-active' : ''">Asset Label</a>
+    </span>
+  </section>
+
+  <template x-if="tab == 'text'">
+    <form phx-submit="text" class="flex flex-col w-full grow justify-between">
+      <input onClick="this.select()" type="text" class="input input-bordered" name="text" placeholder={ gettext "Enter some text.." } />
+      <button type="submit" class="btn btn-primary"><%= gettext "Print" %></button>
+    </form>
+  </template>
+
+  <template x-if="tab == 'asset'">
+    <form phx-submit="asset" class="flex flex-col w-full grow justify-between">
+      <span class="input-group input-group-vertical">
+        <input onClick="this.select()" type="text" class="input input-bordered" name="asset" placeholder={ gettext "Asset Number" } />
+        <input onClick="this.select()" type="text" class="input input-bordered" name="serial" placeholder={ gettext "Serial Number" } />
+      </span>
+      <button type="submit" class="btn btn-primary"><%= gettext "Print" %></button>
+    </form>
+  </template>
+</div>
