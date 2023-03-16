@@ -1,27 +1,67 @@
-<div class="flex flex-col p-4 w-screen h-screen max-h-72" {@dynamic_attrs}>
+<section class="flex flex-col md:flex-row w-full justify-around p-4 gap-4">
 
-  <section class="flex flex-col items-start w-full mb-4">
-    <h2 class="text-2xl font-semibold">Print Labels</h2>
-    <span class="tabs w-full">
-      <a href="/text" class="tab tab-bordered grow" x-bind:class="tab == 'text' ? 'tab-active' : ''">Text Label</a>
-      <a href="/asset" class="tab tab-bordered grow" x-bind:class="tab == 'asset' ? 'tab-active' : ''">Asset Label</a>
-    </span>
-  </section>
+  <form phx-change="select-printer" class="form-control">
+    <select name="printer" class="select select-bordered w-full">
+      <%= for printer <- @printers do %>
+        <option value={printer.id} selected={@current_printer === printer.id}><%= printer.name %></option>
+      <% end %>
+    </select>
+  </form>
 
-  <template x-if="tab == 'text'">
-    <form phx-submit="text" class="flex flex-col w-full grow justify-between">
-      <input onClick="this.select()" type="text" class="input input-bordered" name="text" placeholder={ gettext "Enter some text.." } />
-      <button type="submit" class="btn btn-primary"><%= gettext "Print" %></button>
-    </form>
-  </template>
+  <form phx-submit="print-text" class="form-control gap-4">
+    <%# Text input %>
+    <input type="text" name="text"
+      onclick="this.select()"
+      class="input input-bordered"
+      placeholder={ gettext "Enter some text.." }
+      aria-label="Label text"
+      />
 
-  <template x-if="tab == 'asset'">
-    <form phx-submit="asset" class="flex flex-col w-full grow justify-between">
-      <span class="input-group input-group-vertical">
-        <input onClick="this.select()" type="text" class="input input-bordered" name="asset" placeholder={ gettext "Asset Number" } />
-        <input onClick="this.select()" type="text" class="input input-bordered" name="serial" placeholder={ gettext "Serial Number" } />
-      </span>
-      <button type="submit" class="btn btn-primary"><%= gettext "Print" %></button>
-    </form>
-  </template>
-</div>
+    <div class="input-group">
+      <%# Submit %>
+      <button type="submit" class="btn btn-bordered grow">
+        <%= gettext "Print Text" %>
+      </button>
+
+      <%# Num. copies %>
+      <input type="number" name="copies"
+        class="input input-bordered w-24 tooltip tooltip-bottom"
+        value="1" aria-label="Number of copies"
+        />
+    </div>
+  </form>
+
+  <form phx-submit="print-asset" class="form-control gap-4">
+    <div class="input-group md:input-group-vertical">
+      <%# Asset number input %>
+      <input type="text" name="asset"
+        onclick="this.select()"
+        class="input input-bordered w-24 md:w-max grow"
+        placeholder={ gettext "Asset number.." }
+        aria-label="Asset number"
+        />
+
+      <%# Serial number input %>
+      <input type="text" name="serial"
+        onclick="this.select()"
+        class="input input-bordered w-36 md:w-max grow"
+        placeholder={ gettext "Serial number.." }
+        aria-label="Serial number"
+        />
+    </div>
+
+    <div class="input-group">
+      <%# Submit %>
+      <button type="submit" class="btn btn-bordered grow">
+        <%= gettext "Print Asset" %>
+      </button>
+
+      <%# Num. copies %>
+      <input type="number" name="copies"
+        class="input input-bordered w-24 tooltip tooltip-bottom"
+        value="1" aria-label="Number of copies"
+        />
+    </div>
+   </form>
+
+</section>

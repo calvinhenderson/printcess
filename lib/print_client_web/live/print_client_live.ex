@@ -1,62 +1,62 @@
 defmodule PrintClientWeb.PrintClientLive do
   use PrintClientWeb, :live_view
 
-  @timeout_info_ms 1000
-  @timeout_warn_ms 10000
-
   require Logger
 
+  @printers [
+    %{id: "help-desk-printer", name: "Help Desk — LabelTac 4", host: "10.40.21.189", port: 9100},
+    %{id: "tech-office-printer", name: "Tech Office — LabelTac Pro X", host: "10.40.21.154", port: 9100},
+  ]
+
   @impl true
-  def mount(%{"tab" => tab}, _session, socket) do
-    PubSub.subscribe(:menu_action)
-    {:ok, assign(socket, dynamic_attrs: [x_data: "{tab: '#{tab}'}"])}
+  def mount(_args, _session, socket) do
+    Phoenix.PubSub.subscribe(PrintClient.PubSub, "menu_action")
+
+    {:ok, assign(socket, %{printers: @printers, current_printer: List.first(@printers).id})}
   end
 
   @impl true
-  def mount(args, _session, socket) do
-    PubSub.subscribe(:menu_action)
-    {:ok, assign(socket, dynamic_attrs: [x_data: "{tab: 'text'}"])}
+  def handle_event("select-printer", %{"printer" => printer}, socket) do
+    new_printer = Enum.find(@printers, fn p -> p.id == printer end)
+    Logger.debug("Selecting printer #{inspect new_printer}")
+    {:noreply, assign(socket, current_printer: new_printer.id)}
   end
 
   @impl true
-  def handle_event("text", %{"text" => _text}, socket) do
-    notification_event("Printing text label")
+  def handle_event("print-text", %{"copies" => copies, "text" => text}, socket) do
+    printer = Enum.find(@printers, fn p -> p.id == socket.assigns.current_printer end)
+
+    PrintClient.Print.print(printer, :text, %{text: text}, copies)
+    Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
+
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("asset", %{"asset" => asset, "serial" => serial}, socket) do
+  def handle_event("print-asset", %{"copies" => copies, "asset" => asset, "serial" => serial}, socket) do
+    printer = Enum.find(@printers, fn p -> p.id == socket.assigns.current_printer end)
 
-    # Verify the asset number is only numeric
-    if ! Regex.match?(~r/[0-9]\+/, asset) do
-      warning_event "Asset \"#{asset}\" may be misformatted!"
+    if not Regex.match?(~r/^[0-9]+$/, asset) do
+      Desktop.Window.show_notification(PrintClientWindow, "Asset number \"#{asset}\" may be malformed", timeout: 5000)
     end
 
-    # Verify the serial number is only alphanumeric
-    if ! Regex.match?(~r/[A-z0-9]\+/, serial) do
-      warning_event "Serial \"#{serial}\" may be misformatted!"
+    if not Regex.match?(~r/^[A-z0-9]+$/, serial) do
+      Desktop.Window.show_notification(PrintClientWindow, "Serial number \"#{serial}\" may be malformed", timeout: 5000)
     end
 
-    print_event("Printing asset label")
+    PrintClient.Print.print(printer, :asset, %{asset: asset, serial: serial}, copies)
+    Desktop.Window.show_notification(PrintClientWindow, "Printing asset label: #{asset},#{serial}", timeout: 1000)
+
     {:noreply, socket}
   end
 
-  def notification_event(action) do
-    Desktop.Window.show_notification(PrintClientWindow, inspect(action),
-      id: :click,
-      type: :info
-    )
+  @impl true
+  def handle_info(:open_text, socket) do
+    {:noreply, socket}
   end
 
-  def print_event(action) do
-    Desktop.Window.show_notification(PrintClientWindow, action, id: :default, type: :info, timeout: @timeout_info_ms)
-  end
-
-  def warning_event(action) do
-    Desktop.Window.show_notification(PrintClientWindow, action, id: :default, type: :warning, timeout: @timeout_warn_ms)
-  end
-
-  def handle_info(:menu_action, action) do
-    {:noreply, dynamic_attrs: [x_data: "{tab: '#{action}'}"]}
+  @impl true
+  def handle_info(:open_asset, socket) do
+    {:noreply, socket}
   end
 end

@@ -5,7 +5,9 @@ defmodule PrintClient.Application do
 
   use Application
 
-  # @app Mix.Project.config()[:app]
+  require Logger
+
+  @window_size {400, 360}
 
   # User's Config directory
   def config_dir() do
@@ -32,7 +34,9 @@ defmodule PrintClient.Application do
           app: :print_client,
           id: PrintClientWindow,
           title: "Print Client",
-          size: {400, 300},
+          size: @window_size,
+          min_size: @window_size,
+          max_size: @window_size,
           icon: "icon.png",
           menubar: PrintClient.MenuBar,
           icon_menu: PrintClient.Menu,
@@ -44,7 +48,13 @@ defmodule PrintClient.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: PrintClient.Supervisor]
-    Supervisor.start_link(children, opts)
+    ret = Supervisor.start_link(children, opts)
+
+    :wx.set_env(Desktop.Env.wx_env())
+    frame = Desktop.Window.frame(PrintClientWindow)
+    :wxWindow.setMaxSize(frame, @window_size)
+
+    ret
   end
 
   # Tell Phoenix to update the endpoint configuration

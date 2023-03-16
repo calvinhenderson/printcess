@@ -4,14 +4,12 @@ defmodule PrintClient.Menu do
   """
   import PrintClientWeb.Gettext
 
-  alias Phoenix.PubSub
-
   use Desktop.Menu
   alias Desktop.Menu
 
   def mount(menu) do
     # This impure function sets the icon externally through wxWidgets
-    Menu.set_icon(menu, {:file, "icon.png"})
+    Menu.set_icon(menu, {:file, "icon32x32.png"})
 
     {:ok, menu}
   end
@@ -26,25 +24,14 @@ defmodule PrintClient.Menu do
   def handle_event("show", menu), do:
     Desktop.Window.show(PrintClientWindow) |> then(fn _ -> {:noreply, menu} end)
 
-  def handle_event("text", menu) do
-    PubSub.broadcast(:menu_action, "open text")
-    Desktop.Window.show(PrintClientWindow)
-    {:noreply, menu}
-  end
+  def handle_event("hide", menu), do:
+    Desktop.Window.hide(PrintClientWindow) |> then(fn _ -> {:noreply, menu} end)
 
-  def handle_event("asset", menu) do
-    PubSub.broadcast(:menu_action, "open asset")
-    Desktop.Window.show(PrintClientWindow)
-    {:noreply, menu}
-  end
-
-  def render(assigns) do
+   def render(assigns) do
     ~H"""
     <menu>
       <item onclick="show"><%= gettext "Show" %></item>
-      <hr/>
-      <item onclick="text"><%= gettext "Text Label" %></item>
-      <item onclick="asset"><%= gettext "Asset Label" %></item>
+      <item onclick="hide"><%= gettext "Hide" %></item>
       <hr/>
       <item onclick="quit"><%= gettext "Quit" %></item>
     </menu>
