@@ -11,7 +11,7 @@ defmodule PrintClient.Application do
 
   # User's Config directory
   def config_dir() do
-    Path.join([Desktop.OS.home(), ".config", "todo"])
+    Path.join([Desktop.OS.home(), ".config", "exprint"])
   end
 
   @impl true
@@ -19,15 +19,23 @@ defmodule PrintClient.Application do
     Desktop.identify_default_locale(PrintClientWeb.Gettext)
     File.mkdir_p!(config_dir())
 
+    Application.put_env(:print_client, PrintClient.Repo,
+      database: Path.join(config_dir(), "/settings.db")
+    )
+
     children = [
       # Start the Telemetry supervisor
       PrintClientWeb.Telemetry,
+
       # Start the PubSub system
       {Phoenix.PubSub, name: PrintClient.PubSub},
       # Start the Endpoint (http/https)
       PrintClientWeb.Endpoint,
       # Start a worker by calling: PrintClient.Worker.start_link(arg)
       # {PrintClient.Worker, arg}
+
+      # Start the Repo
+      PrintClient.Repo,
 
       { Desktop.Window,
         [
@@ -49,6 +57,9 @@ defmodule PrintClient.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: PrintClient.Supervisor]
     ret = Supervisor.start_link(children, opts)
+
+    # Perform db initialization tasks
+    PrintClient.Repo.initialize()
 
     :wx.set_env(Desktop.Env.wx_env())
     frame = Desktop.Window.frame(PrintClientWindow)

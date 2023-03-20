@@ -16,6 +16,12 @@ config :print_client, PrintClientWeb.Endpoint,
   live_view: [signing_salt: "O0X5LNCX"],
   server: true
 
+# Configure repo
+config :print_client,
+  ecto_repos: [PrintClient.Repo]
+
+# config :print_client, PrintClient.Repo
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.14.29",

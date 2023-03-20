@@ -17,6 +17,8 @@ defmodule PrintClientWeb.Router do
   scope "/", PrintClientWeb do
     pipe_through :browser
 
+    live "/settings", SettingsLive
+
     live "/", PrintClientLive
     live "/:tab", PrintClientLive
   end
