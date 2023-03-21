@@ -14,7 +14,11 @@ defmodule PrintClientWeb.PrintClientLive do
     current = Enum.find(printers, List.first(printers), fn p -> p.selected == 1 end)
     Logger.debug("Current printer: #{inspect current}")
 
-    {:ok, assign(socket, %{printers: printers, current_printer: current})}
+    if current == nil do
+      {:ok, redirect(socket, to: "/settings")}
+    else
+      {:ok, assign(socket, %{printers: printers, current_printer: current})}
+    end
   end
 
   @impl true
@@ -30,9 +34,8 @@ defmodule PrintClientWeb.PrintClientLive do
 
   @impl true
   def handle_event("print-text", %{"copies" => copies, "text" => text}, socket) do
-    printer = Enum.find(Settings.all_printers(), fn p -> p.id == socket.assigns.current_printer end)
-
-    PrintClient.Print.print(printer, :text, %{text: text}, copies)
+    Logger.debug("Printing to #{inspect socket.assigns.current_printer}")
+    PrintClient.Print.print(socket.assigns.current_printer, :text, %{text: text}, copies)
     Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
 
     {:noreply, socket}
@@ -40,8 +43,6 @@ defmodule PrintClientWeb.PrintClientLive do
 
   @impl true
   def handle_event("print-asset", %{"copies" => copies, "asset" => asset, "serial" => serial}, socket) do
-    printer = Enum.find(Settings.all_printers(), fn p -> p.id == socket.assigns.current_printer end)
-
     if not Regex.match?(~r/^[0-9]+$/, asset) do
       Desktop.Window.show_notification(PrintClientWindow, "Asset number \"#{asset}\" may be malformed", timeout: 5000)
     end
@@ -50,7 +51,7 @@ defmodule PrintClientWeb.PrintClientLive do
       Desktop.Window.show_notification(PrintClientWindow, "Serial number \"#{serial}\" may be malformed", timeout: 5000)
     end
 
-    PrintClient.Print.print(printer, :asset, %{asset: asset, serial: serial}, copies)
+    PrintClient.Print.print(socket.assigns.current_printer, :asset, %{asset: asset, serial: serial}, copies)
     Desktop.Window.show_notification(PrintClientWindow, "Printing asset label: #{asset},#{serial}", timeout: 1000)
 
     {:noreply, socket}

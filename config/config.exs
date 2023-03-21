@@ -7,6 +7,9 @@
 # General application configuration
 import Config
 
+# Pass the env through
+config :print_client, env: Mix.env()
+
 # Configures the endpoint
 config :print_client, PrintClientWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 0],
@@ -15,6 +18,8 @@ config :print_client, PrintClientWeb.Endpoint,
   pubsub_server: PrintClient.PubSub,
   live_view: [signing_salt: "O0X5LNCX"],
   server: true
+
+config :exqlite, force_build: true
 
 # Configure repo
 config :print_client,

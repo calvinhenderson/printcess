@@ -1,7 +1,7 @@
 <section class="flex flex-col md:flex-row w-full justify-around p-4 gap-4">
 
   <div class="flex flex-row justify-center items-center gap-2">
-    <div class="dropdown dropdown-hover w-full">
+    <div class="dropdown w-full">
       <label tabindex="0" class="btn btn-ghost justify-start m-1 w-full"><%= @current_printer.name %></label>
       <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 border-neutral-content border-2 rounded-box w-full">
         <%= for printer <- @printers do %>

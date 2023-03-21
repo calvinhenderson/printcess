@@ -21,11 +21,11 @@ defmodule PrintClient.Print do
   end
 
   defp init_job(printer, job_type) do
-    if not Map.has_key?(printer, :host) or not Map.has_key?(printer, :port) do
-      raise "Missing :host or :port key in #{inspect printer}"
+    if not Map.has_key?(printer, :hostname) or not Map.has_key?(printer, :port) do
+      raise "Missing :hostname or :port key in #{inspect printer}"
     end
 
-    {:ok, socket} = :gen_tcp.connect(to_charlist(printer.host), printer.port, [:binary, active: false])
+    {:ok, socket} = :gen_tcp.connect(to_charlist(printer.hostname), printer.port, [:binary, active: false])
 
     prefetch_job_assets(socket, job_type)
 

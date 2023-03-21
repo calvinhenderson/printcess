@@ -1,5 +1,9 @@
 defmodule PrintClient.Repo do
-  use Ecto.Repo, otp_app: :print_client, adapter: Ecto.Adapters.SQLite3
+  use Ecto.Repo,
+    otp_app: :print_client,
+    adapter: Ecto.Adapters.SQLite3
+
+  require Logger
 
   def initialize() do
     Ecto.Adapters.SQL.query!(__MODULE__, """
@@ -13,5 +17,6 @@ defmodule PrintClient.Repo do
 
       CREATE UNIQUE INDEX IF NOT EXISTS printers_hostname_index ON printers( hostname );
     """)
+    Logger.info("Initialize settings repository")
   end
 end

@@ -20,7 +20,7 @@ defmodule PrintClient.MixProject do
   def application do
     [
       mod: {PrintClient.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :observer]
     ]
   end
 
@@ -47,7 +47,8 @@ defmodule PrintClient.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:tailwind, "~> 0.1"},
       {:desktop, "~> 1.4"},
-      {:ecto_sqlite3, "~> 0.9.1"}
+      {:ecto_sqlite3, "~> 0.9.1"},
+      {:exqlite, "~> 0.13"}
     ]
   end
 
