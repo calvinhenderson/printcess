@@ -1,30 +1,36 @@
 defmodule PrintClientWeb.PrintClientLive do
   use PrintClientWeb, :live_view
 
-  require Logger
+  alias PrintClient.Settings
 
-  @printers [
-    %{id: "help-desk-printer", name: "Help Desk — LabelTac 4", host: "10.40.21.189", port: 9100},
-    %{id: "tech-office-printer", name: "Tech Office — LabelTac Pro X", host: "10.40.21.154", port: 9100},
-  ]
+  require Logger
 
   @impl true
   def mount(_args, _session, socket) do
     Phoenix.PubSub.subscribe(PrintClient.PubSub, "menu_action")
 
-    {:ok, assign(socket, %{printers: @printers, current_printer: List.first(@printers).id})}
+    printers = Settings.all_printers()
+
+    current = Enum.find(printers, List.first(printers), fn p -> p.selected == 1 end)
+    Logger.debug("Current printer: #{inspect current}")
+
+    {:ok, assign(socket, %{printers: printers, current_printer: current})}
   end
 
   @impl true
   def handle_event("select-printer", %{"printer" => printer}, socket) do
-    new_printer = Enum.find(@printers, fn p -> p.id == printer end)
-    Logger.debug("Selecting printer #{inspect new_printer}")
-    {:noreply, assign(socket, current_printer: new_printer.id)}
+    with {id_num, _} <- Integer.parse(printer) do
+      new_printer = Enum.find(Settings.all_printers(), fn p -> p.id == id_num end)
+      Logger.debug("Selecting printer #{inspect new_printer}")
+      {:noreply, assign(socket, current_printer: new_printer)}
+    else
+      _ -> {:noreply, socket}
+    end
   end
 
   @impl true
   def handle_event("print-text", %{"copies" => copies, "text" => text}, socket) do
-    printer = Enum.find(@printers, fn p -> p.id == socket.assigns.current_printer end)
+    printer = Enum.find(Settings.all_printers(), fn p -> p.id == socket.assigns.current_printer end)
 
     PrintClient.Print.print(printer, :text, %{text: text}, copies)
     Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
@@ -34,7 +40,7 @@ defmodule PrintClientWeb.PrintClientLive do
 
   @impl true
   def handle_event("print-asset", %{"copies" => copies, "asset" => asset, "serial" => serial}, socket) do
-    printer = Enum.find(@printers, fn p -> p.id == socket.assigns.current_printer end)
+    printer = Enum.find(Settings.all_printers(), fn p -> p.id == socket.assigns.current_printer end)
 
     if not Regex.match?(~r/^[0-9]+$/, asset) do
       Desktop.Window.show_notification(PrintClientWindow, "Asset number \"#{asset}\" may be malformed", timeout: 5000)
