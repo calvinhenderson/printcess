@@ -19,8 +19,6 @@ config :print_client, PrintClientWeb.Endpoint,
   live_view: [signing_salt: "O0X5LNCX"],
   server: true
 
-config :exqlite, force_build: true
-
 # Configure repo
 config :print_client,
   ecto_repos: [PrintClient.Repo]
