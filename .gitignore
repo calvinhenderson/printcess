@@ -32,3 +32,6 @@ print_client-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Ignore release files in macos bundle
+/macos/ExPrint.app/Contents/MacOS/lib
+/macos/ExPrint.app/Contents/MacOS/rel
