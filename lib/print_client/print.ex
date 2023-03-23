@@ -67,7 +67,7 @@ defmodule PrintClient.Print do
       "GAP 0,0\r\n",
       "DIRECTION 1\r\n",
       "CLS\r\n",
-      "BLOCK 0,100,1200,125,\"LABELFONT.TTF\",0,24,24,0,2,1,\"#{text}\"\r\n",
+      "BLOCK 40,55,1100,125,\"LABELFONT.TTF\",0,28,28,0,2,1,\"#{text}\"\r\n",
       "PRINT #{copies}\r\n"
     >>
   end

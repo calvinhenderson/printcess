@@ -3,4 +3,5 @@
 dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 cd "$dir/rel/print_client/"
-SECRET_KEY_BASE="hZ79GD4tI0QeWsEN3vmB35cmx2vURccImu16hsW7uE99uaB6mN8dRf3YgczokiJt" bin/print_client start
+
+LD_LIBRARY_PATH="./openssl-lib" SECRET_KEY_BASE="hZ79GD4tI0QeWsEN3vmB35cmx2vURccImu16hsW7uE99uaB6mN8dRf3YgczokiJt" bin/print_client start
