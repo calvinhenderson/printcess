@@ -47,8 +47,8 @@ defmodule PrintClient.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:tailwind, "~> 0.1"},
       {:desktop, "~> 1.4"},
-      {:ecto_sqlite3, "~> 0.9.1"},
-      {:exqlite, "~> 0.13"}
+      {:exqlite, "~> 0.13"},
+      {:ecto_sqlite3, "~> 0.9.1"}
     ]
   end
 
