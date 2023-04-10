@@ -1,4 +1,4 @@
-defmodule PrintClient.Print do
+defmodule PrintClient.Printer do
 
   # Static asset files
   @asset_blank_path "priv/static/asset-blank.pcx"
@@ -7,10 +7,34 @@ defmodule PrintClient.Print do
   require Logger
 
   @doc """
+  Checks if a printer is ready to receive a job
+  """
+  def ready?(printer) do
+    {:ok, socket} = open_job(printer)
+
+    send_binary(socket, <<27,"!S">>)
+    {:ok, packet} = read_binary(socket, 8)
+
+    ready_status = packet == <<0x02,0x40,0x40,0x40,0x40,0x03,0x0d,0x0a>>
+
+    end_job(socket)
+
+    ready_status
+  end
+
+  @doc """
   Sends a print job to the printer.
   Running this before `init_job/2` will fail!
   """
-  def print(printer, job_type, opts, copies \\ 1) do
+  def print(%{printer: printer, asset: asset, serial: serial, copies: copies}) do
+    print_opts(printer, :asset, %{asset: asset, serial: serial}, copies)
+  end
+
+  def print(%{printer: printer, text: text, copies: copies}) do
+    print_opts(printer, :text, %{text: text}, copies)
+  end
+
+  defp print_opts(printer, job_type, opts, copies) do
     command = build_label_command(opts, copies)
 
     {:ok, socket} = init_job(printer, job_type)
@@ -21,15 +45,19 @@ defmodule PrintClient.Print do
   end
 
   defp init_job(printer, job_type) do
-    if not Map.has_key?(printer, :hostname) or not Map.has_key?(printer, :port) do
-      raise "Missing :hostname or :port key in #{inspect printer}"
-    end
-
-    {:ok, socket} = :gen_tcp.connect(to_charlist(printer.hostname), printer.port, [:binary, active: false])
+    {:ok, socket} = open_job(printer)
 
     prefetch_job_assets(socket, job_type)
 
     {:ok, socket}
+  end
+
+  defp open_job(printer) do
+    if not Map.has_key?(printer, :hostname) or not Map.has_key?(printer, :port) do
+      raise "Missing :hostname or :port key in #{inspect printer}"
+    end
+
+    :gen_tcp.connect(to_charlist(printer.hostname), printer.port, [:binary, active: false])
   end
 
   defp end_job(socket) do
@@ -40,6 +68,10 @@ defmodule PrintClient.Print do
     Logger.debug("Sending command: #{inspect command}")
     :gen_tcp.send(socket, command)
     socket
+  end
+
+  defp read_binary(socket, length) do
+    :gen_tcp.recv(socket, length)
   end
 
   defp prefetch_job_assets(socket, job_type) do

@@ -35,6 +35,8 @@ defmodule PrintClient.Application do
       # Start a worker by calling: PrintClient.Worker.start_link(arg)
       # {PrintClient.Worker, arg}
 
+      {PrintClient.Printer.Queue, name: PrintQueue},
+
       { Desktop.Window,
         [
           app: :print_client,

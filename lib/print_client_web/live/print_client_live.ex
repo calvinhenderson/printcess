@@ -1,6 +1,7 @@
 defmodule PrintClientWeb.PrintClientLive do
   use PrintClientWeb, :live_view
 
+  alias PrintClient.Printer
   alias PrintClient.Settings
 
   require Logger
@@ -35,7 +36,13 @@ defmodule PrintClientWeb.PrintClientLive do
   @impl true
   def handle_event("print-text", %{"copies" => copies, "text" => text}, socket) do
     Logger.debug("Printing to #{inspect socket.assigns.current_printer}")
-    PrintClient.Print.print(socket.assigns.current_printer, :text, %{text: text}, copies)
+
+    GenServer.cast(PrintQueue, {:push, %{
+      printer: socket.assigns.current_printer,
+      text: text,
+      copies: copies
+    }})
+
     Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
 
     {:noreply, socket}
@@ -51,7 +58,13 @@ defmodule PrintClientWeb.PrintClientLive do
       Desktop.Window.show_notification(PrintClientWindow, "Serial number \"#{serial}\" may be malformed", timeout: 5000)
     end
 
-    PrintClient.Print.print(socket.assigns.current_printer, :asset, %{asset: asset, serial: serial}, copies)
+    GenServer.cast(PrintQueue, {:push, %{
+      printer: socket.assigns.current_printer,
+      asset: asset,
+      serial: serial,
+      copies: copies,
+    }})
+
     Desktop.Window.show_notification(PrintClientWindow, "Printing asset label: #{asset},#{serial}", timeout: 1000)
 
     {:noreply, socket}
