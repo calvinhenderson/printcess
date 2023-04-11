@@ -23,7 +23,8 @@ defmodule PrintClient.Printer.Queue do
       Logger.debug("Pushed job to queue: #{inspect data}")
       {:noreply, [data | state]}
     else
-      _ ->
+      error ->
+        Logger.debug("Invalid job data received: #{inspect data}, reason: #{inspect error}")
         {:noreply, state}
     end
   end

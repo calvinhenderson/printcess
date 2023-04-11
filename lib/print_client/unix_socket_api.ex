@@ -25,8 +25,6 @@ defmodule PrintClient.UnixSocketApi do
       iex> :gen_udp.send(sock, {:local, exprint_socket}, '{"text": "hello, world!"}')
   """
 
-  @socket_path "/var/run/exprint.sock"
-
   require Logger
 
   use GenServer
@@ -40,11 +38,23 @@ defmodule PrintClient.UnixSocketApi do
     end
   end
 
+  def start_link(opts) do
+    name = Keyword.fetch!(opts, :name)
+    GenServer.start_link(__MODULE__, opts, name: name)
+  end
+
   @impl true
   def handle_info({:udp, _socket, _addr, _port, data}, state) do
+    printer = Enum.find(PrintClient.Settings.all_printers(), fn p -> p.selected == 1 end)
+
     with {:ok, json} <- Jason.decode(data) do
-      GenServer.cast(__MODULE__, {:push, json})
-      {:reply, Jason.encode(%{error: "invalid json struct."}), state}
+      {_, state} = handle_cast({:push, Map.merge(%{printer: printer}, json)}, state)
+      Logger.debug("pushing job to queue: #{inspect json}")
+      {:reply, Jason.encode(%{success: "adding job to queue."}), state}
+    else
+      error ->
+      Logger.debug("invalid json struct: #{inspect error}")
+      {:reply, Jason.encode(%{error: "invalid json struct", reason: inspect(error)}), state}
     end
 
     {:noreply, state}
@@ -53,6 +63,7 @@ defmodule PrintClient.UnixSocketApi do
   @impl true
   def handle_cast({:push, data}, state) do
     with {:ok, data} <- PrintClient.Printer.Labels.validate_label_map(data) do
+      Logger.debug("casting data: #{inspect data}")
       GenServer.cast(PrintQueue, {:push, data})
     else
       {:error, reason} -> Logger.warn(reason)
@@ -62,8 +73,9 @@ defmodule PrintClient.UnixSocketApi do
   end
 
   defp open_socket() do
-    File.rm(@socket_path)
-    {:ok, socket} = :gen_udp.open(0, [{:ifaddr, {:local, @socket_path}}])
+    socket_path = Path.join(System.user_home!(), "Library/exprint.sock")
+    File.rm(socket_path)
+    {:ok, socket} = :gen_udp.open(0, [{:ifaddr, {:local, socket_path}}])
     {:ok, socket}
   end
 end

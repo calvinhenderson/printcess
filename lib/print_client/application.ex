@@ -35,6 +35,10 @@ defmodule PrintClient.Application do
       # Start a worker by calling: PrintClient.Worker.start_link(arg)
       # {PrintClient.Worker, arg}
 
+      # Start the Unix Socket API
+      {PrintClient.UnixSocketApi, name: UnixSocket},
+
+      # Start the printer queue
       {PrintClient.Printer.Queue, name: PrintQueue},
 
       { Desktop.Window,
