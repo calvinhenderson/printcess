@@ -1,7 +1,6 @@
 defmodule PrintClientWeb.PrintClientLive do
   use PrintClientWeb, :live_view
 
-  alias PrintClient.Printer
   alias PrintClient.Settings
 
   require Logger

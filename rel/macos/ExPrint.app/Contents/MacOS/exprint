@@ -1,7 +1,13 @@
 #!/usr/bin/env sh
 
-dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# Fetch the directory of this script.
+base_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/../Resources"
 
-cd "$dir/rel/print_client/"
+# Find the dir containing the app script
+app_dir="$base_dir/rel/app/bin"
 
-DYLD_FALLBACK_LIBRARY_PATH="$dir/lib"DYLD_LIBRARY_PATH="$dir/lib" SECRET_KEY_BASE="hZ79GD4tI0QeWsEN3vmB35cmx2vURccImu16hsW7uE99uaB6mN8dRf3YgczokiJt" bin/print_client start
+# Not too important. Used for local HTTPS only
+export SECRET_KEY_BASE="hZ79GD4tI0QeWsEN3vmB35cmx2vURccImu16hsW7uE99uaB6mN8dRf3YgczokiJt"
+
+# Start the app
+$app_dir/app start

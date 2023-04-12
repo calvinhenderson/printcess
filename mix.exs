@@ -1,6 +1,9 @@
 defmodule PrintClient.MixProject do
   use Mix.Project
 
+  @app_elixir_version "1.14.3"
+  @app_rebar3_version "3.19.0"
+
   def project do
     [
       app: :print_client,
@@ -10,7 +13,8 @@ defmodule PrintClient.MixProject do
       compilers: [:gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: releases()
     ]
   end
 
@@ -63,5 +67,32 @@ defmodule PrintClient.MixProject do
       setup: ["deps.get"],
       "assets.deploy": ["esbuild default --minify", "phx.digest"]
     ]
+  end
+
+  ## Releases
+
+  defp releases do
+    [
+      app: [
+        include_erts: false,
+        rel_templates_path: "rel/app",
+        steps: [
+          :assemble,
+          &standalone_erlang_elixir/1
+        ]
+      ]
+    ]
+  end
+
+  @compile {:no_warn_undefined, Standalone}
+
+  defp standalone_erlang_elixir(release) do
+    Code.require_file("rel/app/standalone.exs")
+
+    release
+    |> Standalone.copy_otp()
+    |> Standalone.copy_elixir(@app_elixir_version)
+    |> Standalone.copy_hex()
+    |> Standalone.copy_rebar3(@app_rebar3_version)
   end
 end
