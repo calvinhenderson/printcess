@@ -4,10 +4,20 @@
 base_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/../Resources"
 
 # Find the dir containing the app script
-app_dir="$base_dir/rel/app/bin"
+app_dir="$base_dir/rel/app"
 
 # Not too important. Used for local HTTPS only
 export SECRET_KEY_BASE="hZ79GD4tI0QeWsEN3vmB35cmx2vURccImu16hsW7uE99uaB6mN8dRf3YgczokiJt"
 
 # Start the app
-$app_dir/app start
+cd $app_dir/
+./bin/app start
+
+# Wait for the app to exit
+while true; do
+  ./bin/app pid
+  if [ $? -ne 0 ]; then
+    break
+  fi
+  sleep 1
+done
