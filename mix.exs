@@ -1,12 +1,11 @@
 defmodule PrintClient.MixProject do
   use Mix.Project
 
-  @app_elixir_version "1.14.3"
-  @app_rebar3_version "3.19.0"
+  @app :print_client
 
   def project do
     [
-      app: :print_client,
+      app: @app,
       version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -14,7 +13,7 @@ defmodule PrintClient.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      releases: releases()
+      releases: releases(),
     ]
   end
 
@@ -52,7 +51,8 @@ defmodule PrintClient.MixProject do
       {:tailwind, "~> 0.1"},
       {:desktop, "~> 1.4"},
       {:exqlite, "~> 0.13"},
-      {:ecto_sqlite3, "~> 0.9.1"}
+      {:ecto_sqlite3, "~> 0.9.1"},
+      {:bakeware, "~> 0.2.4"},
     ]
   end
 
@@ -74,25 +74,13 @@ defmodule PrintClient.MixProject do
   defp releases do
     [
       app: [
-        include_erts: false,
-        rel_templates_path: "rel/app",
-        steps: [
-          :assemble,
-          &standalone_erlang_elixir/1
-        ]
+        applications: [runtime_tools: :permanent, ssl: :permanent],
+        overwrite: true,
+        cookie: "#{@app}_cookie",
+        quiet: true,
+        steps: [:assemble, &Bakeware.assemble/1],
+        strip_beams: Mix.env() == :prod,
       ]
     ]
-  end
-
-  @compile {:no_warn_undefined, Standalone}
-
-  defp standalone_erlang_elixir(release) do
-    Code.require_file("rel/app/standalone.exs")
-
-    release
-    |> Standalone.copy_otp()
-    |> Standalone.copy_elixir(@app_elixir_version)
-    |> Standalone.copy_hex()
-    |> Standalone.copy_rebar3(@app_rebar3_version)
   end
 end

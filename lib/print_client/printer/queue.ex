@@ -36,8 +36,9 @@ defmodule PrintClient.Printer.Queue do
     if Printer.ready?(job.printer) do
       Printer.print(job)
       {:noreply, remaining_jobs}
+    else
+      {:noreply, state}
     end
-    {:noreply, state}
   end
   def handle_info(:work, state) do
     schedule_work()
