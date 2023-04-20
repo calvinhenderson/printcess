@@ -18,6 +18,8 @@ defmodule PrintClientWeb.Router do
     pipe_through :browser
 
     live "/settings", SettingsLive
+    get "/asset-spam", AssetPrintController, :index
+    post "/asset-spam", AssetPrintController, :print
 
     live "/", PrintClientLive
     live "/:tab", PrintClientLive

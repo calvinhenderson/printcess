@@ -27,7 +27,7 @@ defmodule PrintClient.Printer.Labels do
       end
     end)
 
-    if Map.has_key?(data, :text) or Map.has_key?(data, [:asset, :serial]) do
+    if Map.has_key?(data, :text) or (Map.has_key?(data, :asset) and Map.has_key?(data, :serial)) do
       {:ok, data}
     else
       {:error, :invalid_map_keys}

@@ -5,7 +5,10 @@ set -ueo pipefail
 
 arch="x86_64"
 
+# Support macOS Monterey and upwards
 export MACOSX_DEPLOYMENT_TARGET=12.1
+export CFLAGS="-mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET -O2"
+export CXXFLAGS="$CFLAGS"
 
 # Parse command line arguments for Elixir and OTP versions
 while getopts ":e:o:" opt; do
@@ -106,44 +109,50 @@ fi
 echo " * putting wx-config in the shell path."
 export PATH=$wxwidgets_rel_dir/bin:$PATH
 
+BUILD_ELIXIR=0
 # Clone Erlang OTP from GitHub and initialize submodules
-if [ ! -d erlang_otp_src ]; then
-  echo " * pulling Erlang/OTP from GitHub."
-  git clone https://github.com/erlang/otp.git erlang_otp_src
-else
-  echo " * source exists for Erlang/OTP. skipping."
-fi
-
-echo " * building Erlang/OTP $OTP_VERSION."
-
-cd erlang_otp_src
-# ./otp_build autoconf # no longer required.
-
-echo " * switching branches."
-git checkout tags/OTP-$OTP_VERSION
-
-echo " * updating git submodules."
-git submodule update --init --recursive
-
 erlang_release_dir="$BUILD_DIR/erlang-otp-$(echo "$OTP_VERSION" | tr '.' '_')-$arch"
-# Configure and build Erlang OTP with static linking of OpenSSL and wxWidgets
-./configure \
-	--without-javac \
-	--without-fop \
-	--with-ssl=$openssl_rel_dir \
-	--with-wx-config=$wxwidgets_rel_dir/bin/wx-config \
-	--disable-dynamic-ssl-lib \
-	--disable-jit \
-	--enable-static-libs \
-	--enable-wx \
-	--prefix=$erlang_release_dir \
-	--host=x86_64-apple-darwin
+if [ ! -d $erlang_release_dir ]; then
+  if [ ! -d erlang_otp_src ]; then
+    echo " * pulling Erlang/OTP from GitHub."
+    git clone https://github.com/erlang/otp.git erlang_otp_src
+  else
+    echo " * source exists for Erlang/OTP. skipping."
+  fi
 
-make clean
-make -j 4
-make install
+  echo " * building Erlang/OTP $OTP_VERSION."
 
-cd ..
+  cd erlang_otp_src
+  # ./otp_build autoconf # no longer required.
+
+  echo " * switching branches."
+  git checkout tags/OTP-$OTP_VERSION
+
+  echo " * updating git submodules."
+  git submodule update --init --recursive
+
+  # Configure and build Erlang OTP with static linking of OpenSSL and wxWidgets
+  ./configure \
+	  --without-javac \
+	  --without-fop \
+	  --with-ssl=$openssl_rel_dir \
+	  --with-wx-config=$wxwidgets_rel_dir/bin/wx-config \
+	  --disable-dynamic-ssl-lib \
+	  --disable-jit \
+	  --enable-static-libs \
+	  --enable-wx \
+	  --prefix=$erlang_release_dir \
+	  --host=x86_64-apple-darwin
+
+  make clean
+  make -j 4
+  make install
+
+  cd ..
+  export BUILD_ELIXIR=1
+else
+  echo " * skipping Erlang/OTP. release already exists."
+fi
 
 # Add Erlang OTP to PATH
 export PATH=$erlang_release_dir/bin:$PATH
@@ -152,18 +161,23 @@ echo " * which erl: $(which erl)"
 erl -s erlang halt
 
 # Clone Elixir from GitHub and set the version
-if [ ! -d elixir_src ]; then
-  echo " * pulling Elixir from GitHub."
-  git clone https://github.com/elixir-lang/elixir.git --depth 1 --branch v$ELIXIR_VERSION elixir_src
+elixir_release_dir=elixir-rel-otp-$OTP_VERSION
+if [ ! -d $elixir_release_dir ] || [ $BUILD_ELIXIR -ne 0 ]; then
+  if [ ! -d elixir_src ]; then
+    echo " * pulling Elixir from GitHub."
+    git clone https://github.com/elixir-lang/elixir.git --depth 1 --branch v$ELIXIR_VERSION elixir_src
+  else
+    echo " * source exists for Elixir. skipping."
+  fi
+
+  cd elixir_src
+
+  # Build Elixir
+  make clean
+  make PREFIX=$elixir_release_dir -j 4 install
 else
-  echo " * source exists for Elixir. skipping."
+  echo " * skipping Elixir. release already exists."
 fi
-
-cd elixir_src
-
-# Build Elixir
-make clean
-make
 
 # Set Elixir as a portable installation
 export PATH=$(pwd)/bin:$PATH

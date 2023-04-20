@@ -35,7 +35,7 @@ cat > "$OUTPUT_DIR/$APP_NAME.app/Contents/Info.plist" <<EOL
    <key>NSHighResolutionCapable</key>
    <string>True</string>
    <key>LSMinimumSystemVersion</key>
-   <string>10.12</string>
+   <string>12.3</string>
    <key>LSArchitecturePriority</key>
    <array>
      <string>x86_64</string>

@@ -32,6 +32,13 @@ defmodule PrintClient.Menu do
     {:noreply, menu}
   end
 
+  def handle_event("asset-spam", menu) do
+    url = Router.Helpers.asset_print_url(Endpoint, :index)
+    Desktop.Window.show(PrintClientWindow, url)
+    {:noreply, menu}
+  end
+
+
   def handle_event("settings", menu) do
     settings_url = Router.Helpers.live_url(Endpoint, PrintClientWeb.SettingsLive)
     Desktop.Window.show(PrintClientWindow, settings_url) |> then(fn _ -> {:noreply, menu} end)
@@ -43,6 +50,8 @@ defmodule PrintClient.Menu do
     <menu>
       <item onclick="show"><%= gettext "Show" %></item>
       <item onclick="hide"><%= gettext "Hide" %></item>
+      <hr/>
+      <item onclick="asset-spam"><%= gettext "Assets Only" %></item>
       <hr/>
       <item onclick="settings"><%= gettext "Settings" %></item>
       <hr/>

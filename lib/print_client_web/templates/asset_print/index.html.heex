@@ -1,0 +1,29 @@
+<form
+    method="post"
+    action="/asset-spam"
+    class="flex flex-col gap-4 p-8 w-screen h-screen justify-center items-center">
+  <h2 class="text-xl font-bold mt-2">Asset Label Printing</h2>
+  <p class="text-sm mb-8">Scanner-only optimized</p>
+  <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()}>
+  <input
+      class="input input-bordered w-full"
+      type="text"
+      name="asset"
+      placeholder={ gettext "Asset number.." }
+      aria-label="Asset number"
+      autofocus
+      required
+      value="" />
+  <input
+      class="input input-bordered w-full"
+      type="text"
+      name="serial"
+      placeholder={ gettext "Serial number.." }
+      aria-label="Serial number"
+      required
+      value="" />
+
+  <button class="btn btn-bordered w-full" type="submit">
+    <%= gettext "Submit" %>
+  </button>
+</form>

@@ -1,14 +1,13 @@
 defmodule PrintClientWeb.PrintClientLive do
   use PrintClientWeb, :live_view
 
-  alias PrintClient.Settings
-
   require Logger
 
-  @impl true
-  def mount(_args, _session, socket) do
-    Phoenix.PubSub.subscribe(PrintClient.PubSub, "menu_action")
+  alias PrintClientWeb.{TextForm,AssetForm,PrinterSelect}
+  alias PrintClient.Settings
 
+  @impl true
+  def mount(_params, _session, socket) do
     printers = Settings.all_printers()
 
     current = Enum.find(printers, List.first(printers), fn p -> p.selected == 1 end)
@@ -21,6 +20,17 @@ defmodule PrintClientWeb.PrintClientLive do
     end
   end
 
+  @impl true
+  def render(assigns) do
+    ~H"""
+      <section class="flex flex-col md:flex-row w-full justify-around p-4 gap-4">
+        <.live_component id="printer-select" module={PrinterSelect} current_printer={@current_printer} printers={@printers} />
+        <.live_component id="text-form" module={TextForm} printer={@current_printer} />
+        <.live_component id="asset-form" module={AssetForm} printer={@current_printer} />
+      </section>
+    """
+  end
+  
   @impl true
   def handle_event("select-printer", %{"printer" => printer}, socket) do
     with {id_num, _} <- Integer.parse(printer) do
@@ -43,28 +53,6 @@ defmodule PrintClientWeb.PrintClientLive do
     }})
 
     Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("print-asset", %{"copies" => copies, "asset" => asset, "serial" => serial}, socket) do
-    if not Regex.match?(~r/^[0-9]+$/, asset) do
-      Desktop.Window.show_notification(PrintClientWindow, "Asset number \"#{asset}\" may be malformed", timeout: 5000)
-    end
-
-    if not Regex.match?(~r/^[A-z0-9]+$/, serial) do
-      Desktop.Window.show_notification(PrintClientWindow, "Serial number \"#{serial}\" may be malformed", timeout: 5000)
-    end
-
-    GenServer.cast(PrintQueue, {:push, %{
-      printer: socket.assigns.current_printer,
-      asset: asset,
-      serial: serial,
-      copies: copies,
-    }})
-
-    Desktop.Window.show_notification(PrintClientWindow, "Printing asset label: #{asset},#{serial}", timeout: 1000)
 
     {:noreply, socket}
   end
