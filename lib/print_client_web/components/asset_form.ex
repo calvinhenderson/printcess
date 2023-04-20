@@ -5,7 +5,13 @@ defmodule PrintClientWeb.AssetForm do
 
   @impl true
   def mount(socket) do
-    {:ok, socket}
+    {:ok, assign(socket, copies: "1")}
+  end
+
+  defp put_if_nil(map, key, val) do
+    map
+    |> Kernel.get_and_update_in(key, fn v -> if v == nil, do: val, else: v end)
+    |> then(fn {_, m} -> m end)
   end
   
   @impl true
@@ -42,7 +48,7 @@ defmodule PrintClientWeb.AssetForm do
           <%# Num. copies %>
           <input type="number" name="copies"
             class="input input-bordered w-24 tooltip tooltip-bottom"
-            value="1" aria-label="Number of copies"
+            value={@copies} aria-label="Number of copies"
             required
             />
         </div>
@@ -73,6 +79,6 @@ defmodule PrintClientWeb.AssetForm do
 
     Desktop.Window.show_notification(PrintClientWindow, "Printing asset label: #{asset},#{serial}", timeout: 1000)
 
-    {:noreply, socket}
+    {:noreply, assign(socket, copies: copies)}
   end
 end

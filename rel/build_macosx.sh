@@ -7,8 +7,6 @@ arch="x86_64"
 
 # Support macOS Monterey and upwards
 export MACOSX_DEPLOYMENT_TARGET=12.1
-export CFLAGS="-mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET -O2"
-export CXXFLAGS="$CFLAGS"
 
 # Parse command line arguments for Elixir and OTP versions
 while getopts ":e:o:" opt; do
@@ -53,7 +51,10 @@ if [ ! -d $openssl_rel_dir ]; then
   echo " * building OpenSSL."
 
   cd openssl_src
-  ./Configure darwin64-x86_64-cc --prefix=$openssl_rel_dir
+  ./Configure \
+    darwin64-x86_64-cc \
+    --prefix=$openssl_rel_dir \
+    --target=x86_64-apple-darwin$MACOSX_DEPLOYMENT_TARGET
   make -j 4
   make install_sw
   cd ..
@@ -87,6 +88,7 @@ if [ ! -d $wxwidgets_rel_dir ] || [ ! -f $wxwidgets_rel_dir/bin/wx-config ]; the
 	  --prefix=$wxwidgets_rel_dir \
 	  --with-osx_cocoa \
 	  --with-macosx-version-min=$MACOSX_DEPLOYMENT_TARGET \
+	  --target=x86_64-apple-darwin$MACOSX_DEPLOYMENT_TARGET \
 	  --with-macosx-sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk \
 	  --with-libtiff=builtin \
 	  --with-zlib=builtin \
@@ -142,6 +144,7 @@ if [ ! -d $erlang_release_dir ]; then
 	  --enable-static-libs \
 	  --enable-wx \
 	  --prefix=$erlang_release_dir \
+	  --target=x86_64-apple-darwin$MACOSX_DEPLOYMENT_TARGET \
 	  --host=x86_64-apple-darwin
 
   make clean

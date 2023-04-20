@@ -43,21 +43,6 @@ defmodule PrintClientWeb.PrintClientLive do
   end
 
   @impl true
-  def handle_event("print-text", %{"copies" => copies, "text" => text}, socket) do
-    Logger.debug("Printing to #{inspect socket.assigns.current_printer}")
-
-    GenServer.cast(PrintQueue, {:push, %{
-      printer: socket.assigns.current_printer,
-      text: text,
-      copies: copies
-    }})
-
-    Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
-
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_info(:open_text, socket) do
     {:noreply, socket}
   end

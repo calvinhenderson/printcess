@@ -5,7 +5,7 @@ defmodule PrintClientWeb.TextForm do
 
   @impl true
   def mount(socket) do
-    {:ok, socket}
+    {:ok, assign(socket, copies: "1")}
   end
 
   @impl true
@@ -30,7 +30,7 @@ defmodule PrintClientWeb.TextForm do
           <%# Num. copies %>
           <input type="number" name="copies"
             class="input input-bordered w-24 tooltip tooltip-bottom"
-            value="1" aria-label="Number of copies"
+            value={@copies} aria-label="Number of copies"
             required
             />
         </div>
@@ -50,6 +50,6 @@ defmodule PrintClientWeb.TextForm do
 
     Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
 
-    {:noreply, socket}
+    {:noreply, assign(socket, copies: copies)}
   end
 end
