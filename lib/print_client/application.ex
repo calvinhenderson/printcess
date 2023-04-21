@@ -7,7 +7,7 @@ defmodule PrintClient.Application do
 
   require Logger
 
-  @window_size {400, 360}
+  @window_size {400, 380}
 
   # User's Config directory
   def config_dir() do

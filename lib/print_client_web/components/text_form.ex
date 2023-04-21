@@ -5,23 +5,25 @@ defmodule PrintClientWeb.TextForm do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, copies: "1")}
+    {:ok, assign(socket, copies: "1", text: nil)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-      <form phx-submit="print" class="form-control gap-2" phx-target={@myself}>
+      <form phx-submit="print" phx-change="update" class="form-control gap-2 w-full px-2" phx-target={@myself}>
         <%# Text input %>
         <input type="text" name="text"
+          phx-debounce="250"
           onclick="this.select()"
           class="input input-bordered"
           placeholder={ gettext "Enter some text.." }
           aria-label="Label text"
+          value={@text}
           required
           />
 
-        <div class="input-group">
+        <div class="input-group w-full">
           <%# Submit %>
           <button type="submit" class="btn btn-bordered grow">
             <%= gettext "Print Text" %>
@@ -29,13 +31,19 @@ defmodule PrintClientWeb.TextForm do
 
           <%# Num. copies %>
           <input type="number" name="copies"
-            class="input input-bordered w-24 tooltip tooltip-bottom"
+            phx-debounce="250"
+            class="input input-bordered w-20 tooltip tooltip-bottom"
             value={@copies} aria-label="Number of copies"
             required
             />
         </div>
       </form>
     """
+  end
+
+  @impl true
+  def handle_event("update", %{"copies" => copies, "text" => text}, socket) do
+    {:noreply, assign(socket, copies: copies, text: text)}
   end
 
   @impl true
@@ -50,6 +58,6 @@ defmodule PrintClientWeb.TextForm do
 
     Desktop.Window.show_notification(PrintClientWindow, "Printing text label: #{text}", timeout: 1000)
 
-    {:noreply, assign(socket, copies: copies)}
+    {:noreply, assign(socket, copies: copies, text: nil)}
   end
 end

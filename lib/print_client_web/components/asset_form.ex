@@ -5,36 +5,34 @@ defmodule PrintClientWeb.AssetForm do
 
   @impl true
   def mount(socket) do
-    {:ok, assign(socket, copies: "1")}
+    {:ok, assign(socket, copies: "1", asset: "", serial: "")}
   end
-
-  defp put_if_nil(map, key, val) do
-    map
-    |> Kernel.get_and_update_in(key, fn v -> if v == nil, do: val, else: v end)
-    |> then(fn {_, m} -> m end)
-  end
-  
+ 
   @impl true
   def render(assigns) do
     ~H"""
-      <form phx-submit="print" phx-target={@myself} class="form-control gap-2">
-        <div class="input-group md:input-group-vertical">
+      <form phx-submit="print" phx-change="update" phx-target={@myself} class="form-control gap-2 w-full px-2">
+        <div class="input-group md:input-group-vertical w-full">
           <%# Asset number input %>
           <input type="text" name="asset"
+            phx-debounce="250"
             onclick="this.select()"
-            class="input input-bordered w-24 md:w-max grow"
+            class="input input-bordered w-full"
             placeholder={ gettext "Asset number.." }
             aria-label="Asset number"
+            value={@asset}
             required
             />
 
           <%# Serial number input %>
           <input type="text" name="serial"
+            phx-debounce="250"
             onclick="this.select()"
-            class="input input-bordered w-36 md:w-max grow"
+            class="input input-bordered w-full"
             placeholder={ gettext "Serial number.." }
             aria-label="Serial number"
             autocapitalize="characters"
+            value={@serial}
             required
             />
         </div>
@@ -47,13 +45,19 @@ defmodule PrintClientWeb.AssetForm do
 
           <%# Num. copies %>
           <input type="number" name="copies"
-            class="input input-bordered w-24 tooltip tooltip-bottom"
+            phx-debounce="250"
+            class="input input-bordered w-20 tooltip tooltip-bottom"
             value={@copies} aria-label="Number of copies"
             required
             />
         </div>
       </form>
     """
+  end
+
+  @impl true
+  def handle_event("update", %{"copies" => copies, "asset" => asset, "serial" => serial}, socket) do
+    {:noreply, assign(socket, copies: copies, asset: asset, serial: serial)}
   end
 
   @impl true
@@ -79,6 +83,6 @@ defmodule PrintClientWeb.AssetForm do
 
     Desktop.Window.show_notification(PrintClientWindow, "Printing asset label: #{asset},#{serial}", timeout: 1000)
 
-    {:noreply, assign(socket, copies: copies)}
+    {:noreply, assign(socket, copies: copies, asset: nil, serial: nil)}
   end
 end

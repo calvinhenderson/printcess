@@ -4,7 +4,7 @@ defmodule PrintClientWeb.PrinterSelect do
   @impl true
   def render(assigns) do
     ~H"""
-      <div class="flex flex-row justify-center items-center gap-2">
+      <div class="flex flex-row justify-center items-center gap-2 w-full px-2">
         <div class="dropdown w-full">
           <label tabindex="0" class="btn btn-ghost justify-start m-1 w-full"><%= @current_printer.name %></label>
           <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 border-neutral-content border-2 rounded-box w-full">

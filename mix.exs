@@ -14,6 +14,8 @@ defmodule PrintClient.MixProject do
       aliases: aliases(),
       deps: deps(),
       releases: releases(),
+      make_env: make_env(),
+      make_args: make_args(),
     ]
   end
 
@@ -67,6 +69,25 @@ defmodule PrintClient.MixProject do
       setup: ["deps.get"],
       "assets.deploy": ["esbuild default --minify", "phx.digest"]
     ]
+  end
+
+  # Extra environment variables and arguments to pass to ElixirMake
+  #
+  defp make_env() do
+    case :os.type() do
+      {:unix, :darwin} ->
+        %{MACOSX_DEPLOYMENT_TARGET: "12.1"}
+      _ ->
+        %{}
+    end
+  end
+  defp make_args do
+    case :os.type() do
+      {:unix, :darwin} ->
+        # Pass macOS Minimum Supported Version
+        ["-mmacosx-version-min=12.1"]
+      _ -> []
+    end
   end
 
   ## Releases

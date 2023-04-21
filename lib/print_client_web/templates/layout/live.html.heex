@@ -7,5 +7,9 @@
     phx-click="lv:clear-flash"
     phx-value-key="error"><%= live_flash(@flash, :error) %></p>
 
-  <%= @inner_content %>
+  <div class="w-screen h-screen flex flex-col justify-start items-center p-8">
+    <div class="w-[21rem] h-full flex flex-col justify-start items-center gap-3 md:gap-8">
+      <%= @inner_content %>
+    </div>
+  </div>
 </main>

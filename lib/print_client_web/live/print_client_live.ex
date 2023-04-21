@@ -23,11 +23,9 @@ defmodule PrintClientWeb.PrintClientLive do
   @impl true
   def render(assigns) do
     ~H"""
-      <section class="flex flex-col md:flex-row w-full justify-around p-4 gap-4">
-        <.live_component id="printer-select" module={PrinterSelect} current_printer={@current_printer} printers={@printers} />
-        <.live_component id="text-form" module={TextForm} printer={@current_printer} />
-        <.live_component id="asset-form" module={AssetForm} printer={@current_printer} />
-      </section>
+      <.live_component id="printer-select" module={PrinterSelect} current_printer={@current_printer} printers={@printers} />
+      <.live_component id="text-form" module={TextForm} printer={@current_printer} />
+      <.live_component id="asset-form" module={AssetForm} printer={@current_printer} />
     """
   end
   
