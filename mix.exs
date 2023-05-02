@@ -14,8 +14,6 @@ defmodule PrintClient.MixProject do
       aliases: aliases(),
       deps: deps(),
       releases: releases(),
-      make_env: make_env(),
-      make_args: make_args(),
     ]
   end
 
@@ -52,9 +50,7 @@ defmodule PrintClient.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:tailwind, "~> 0.1"},
       {:desktop, "~> 1.4"},
-      {:exqlite, "~> 0.13"},
-      {:ecto_sqlite3, "~> 0.9.1"},
-      {:bakeware, "~> 0.2.4"},
+      {:ecto_sqlite3, "~> 0.9.1"}
     ]
   end
 
@@ -66,28 +62,10 @@ defmodule PrintClient.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
+      env: ["export EXQLITE_SYSTEM_CFLAGS=-mmacosx-version-min=12.1"],
       setup: ["deps.get"],
       "assets.deploy": ["esbuild default --minify", "phx.digest"]
     ]
-  end
-
-  # Extra environment variables and arguments to pass to ElixirMake
-  #
-  defp make_env() do
-    case :os.type() do
-      {:unix, :darwin} ->
-        %{MACOSX_DEPLOYMENT_TARGET: "12.1"}
-      _ ->
-        %{}
-    end
-  end
-  defp make_args do
-    case :os.type() do
-      {:unix, :darwin} ->
-        # Pass macOS Minimum Supported Version
-        ["-mmacosx-version-min=12.1"]
-      _ -> []
-    end
   end
 
   ## Releases
@@ -99,7 +77,7 @@ defmodule PrintClient.MixProject do
         overwrite: true,
         cookie: "#{@app}_cookie",
         quiet: true,
-        steps: [:assemble, &Bakeware.assemble/1],
+        steps: [:assemble, &Mix.Tasks.Assemble.assemble/1],
         strip_beams: Mix.env() == :prod,
       ]
     ]
