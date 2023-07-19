@@ -15,17 +15,23 @@ defmodule PrintClient.Printer.Labels do
 
     iex> Labels.map_to_struct(%{"asset" => "12345", "serial" => "9QV56N"})
     {:ok, %AssetLabel{asset: "12345", serial: "9QV56N", copies: 1}}
+
+    iex> Labels.map_to_struct(%{"asset" => "12345", "serial" => "9QV56N", "printer" => {"host" => "127.0.0.1"}})
+    {:ok, %AssetLabel{asset: "12345", serial: "9QV56N", copies: 1}}
+
   """
   @spec validate_label_map(term) :: {:ok, term} | {:error, term}
   def validate_label_map(map) do
-    data = map
-    |> string_keys_to_atoms
-    |> then(fn d -> if Map.has_key?(d, :copies) do
-        d
-      else
-        Map.merge(%{copies: 1}, d)
-      end
-    end)
+    data =
+      map
+      |> string_keys_to_atoms
+      |> then(fn d ->
+        if Map.has_key?(d, :copies) do
+          d
+        else
+          Map.merge(%{copies: 1}, d)
+        end
+      end)
 
     if Map.has_key?(data, :text) or (Map.has_key?(data, :asset) and Map.has_key?(data, :serial)) do
       {:ok, data}
@@ -43,5 +49,6 @@ defmodule PrintClient.Printer.Labels do
       end
     end)
   end
+
   defp string_keys_to_atoms(data), do: data
 end

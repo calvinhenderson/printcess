@@ -45,16 +45,28 @@ defmodule PrintClient.UnixSocketApi do
 
   @impl true
   def handle_info({:udp, _socket, _addr, _port, data}, state) do
-    printer = Enum.find(PrintClient.Settings.all_printers(), fn p -> p.selected == 1 end)
-
     with {:ok, json} <- Jason.decode(data) do
-      {_, state} = handle_cast({:push, Map.merge(%{printer: printer}, json)}, state)
-      Logger.debug("pushing job to queue: #{inspect json}")
+      json =
+        if not Map.has_key?(json, "printer") do
+          printer = Enum.find(PrintClient.Settings.all_printers(), fn p -> p.selected == 1 end)
+          Map.merge(json, %{"printer" => printer})
+        else
+          printer =
+            json["printer"]
+            |> Enum.reduce(%{}, fn {key, val}, acc -> Map.put(acc, String.to_atom(key), val) end)
+
+          Map.merge(json, %{"printer" => printer})
+        end
+
+      IO.inspect(json)
+
+      {_, state} = handle_cast({:push, json}, state)
+      Logger.debug("pushing job to queue: #{inspect(json)}")
       {:reply, Jason.encode(%{success: "adding job to queue."}), state}
     else
       error ->
-      Logger.debug("invalid json struct: #{inspect error}")
-      {:reply, Jason.encode(%{error: "invalid json struct", reason: inspect(error)}), state}
+        Logger.debug("invalid json struct: #{inspect(error)}")
+        {:reply, Jason.encode(%{error: "invalid json struct", reason: inspect(error)}), state}
     end
 
     {:noreply, state}
@@ -63,7 +75,7 @@ defmodule PrintClient.UnixSocketApi do
   @impl true
   def handle_cast({:push, data}, state) do
     with {:ok, data} <- PrintClient.Printer.Labels.validate_label_map(data) do
-      Logger.debug("casting data: #{inspect data}")
+      Logger.debug("casting data: #{inspect(data)}")
       GenServer.cast(PrintQueue, {:push, data})
     else
       {:error, reason} -> Logger.warn(reason)
@@ -75,7 +87,14 @@ defmodule PrintClient.UnixSocketApi do
   defp open_socket() do
     socket_path = Path.join(System.user_home!(), "Library/exprint.sock")
     File.rm(socket_path)
-    {:ok, socket} = :gen_udp.open(0, [{:ifaddr, {:local, socket_path}}])
-    {:ok, socket}
+
+    with {:ok, socket} <- :gen_udp.open(0, [{:ifaddr, {:local, socket_path}}]) do
+      Logger.info("Unix API Socket available at #{socket_path}")
+      {:ok, socket}
+    else
+      error ->
+        Logger.warn("Failed to initialize Unix File socket: #{inspect(error)}")
+        {:error, error}
+    end
   end
 end
