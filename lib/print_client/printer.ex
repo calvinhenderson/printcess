@@ -1,8 +1,7 @@
 defmodule PrintClient.Printer do
-
   # Static asset files
   @asset_blank_path "priv/static/asset-blank.pcx"
-  @text_font_path   "priv/static/text-font.ttf"
+  @text_font_path "priv/static/text-font.ttf"
 
   require Logger
 
@@ -12,10 +11,10 @@ defmodule PrintClient.Printer do
   def ready?(printer) do
     {:ok, socket} = open_job(printer)
 
-    send_binary(socket, <<27,"!S">>)
+    send_binary(socket, <<27, "!S">>)
     {:ok, packet} = read_binary(socket, 8)
 
-    ready_status = packet == <<0x02,0x40,0x40,0x40,0x40,0x03,0x0d,0x0a>>
+    ready_status = packet == <<0x02, 0x40, 0x40, 0x40, 0x40, 0x03, 0x0D, 0x0A>>
 
     end_job(socket)
 
@@ -54,7 +53,7 @@ defmodule PrintClient.Printer do
 
   defp open_job(printer) do
     if not Map.has_key?(printer, :hostname) or not Map.has_key?(printer, :port) do
-      raise "Missing :hostname or :port key in #{inspect printer}"
+      raise "Missing :hostname or :port key in #{inspect(printer)}"
     end
 
     :gen_tcp.connect(to_charlist(printer.hostname), printer.port, [:binary, active: false])
@@ -65,7 +64,7 @@ defmodule PrintClient.Printer do
   end
 
   defp send_binary(socket, command) do
-    Logger.debug("Sending command: #{inspect command}")
+    Logger.debug("Sending command: #{inspect(command)}")
     :gen_tcp.send(socket, command)
     socket
   end
@@ -75,19 +74,37 @@ defmodule PrintClient.Printer do
   end
 
   defp prefetch_job_assets(socket, job_type) do
-    {file_name, data} = case job_type do
-      :text ->
-        {:ok, data} = File.read(Application.app_dir(:print_client, @text_font_path))
-        {"LABELFONT.TTF", data}
-      :asset ->
-        {:ok, data} = File.read(Application.app_dir(:print_client, @asset_blank_path))
-        Logger.debug("Uploading: #{inspect data}")
-        {"ASSETBLANK.PCX", data}
-      _ ->
-        raise "Unknown job type given: #{inspect job_type}"
-    end
+    {file_name, data} =
+      case job_type do
+        :text ->
+          {:ok, data} = File.read(Application.app_dir(:print_client, @text_font_path))
+          {"LABELFONT.TTF", data}
 
-    send_binary(socket, <<"DOWNLOAD F,\"#{file_name}\",#{byte_size(data)},">> <> data <> <<"\r\n">>)
+        :asset ->
+          {:ok, data} = File.read(Application.app_dir(:print_client, @asset_blank_path))
+          Logger.debug("Uploading: #{inspect(data)}")
+          {"ASSETBLANK.PCX", data}
+
+        _ ->
+          raise "Unknown job type given: #{inspect(job_type)}"
+      end
+
+    send_binary(
+      socket,
+      <<"DOWNLOAD F,\"#{file_name}\",#{byte_size(data)},">> <> data <> <<"\r\n">>
+    )
+  end
+
+  defp get_barcode_size(len) do
+    a = String.length(len)
+
+    Enum.max([
+      2,
+      Enum.min([
+        4,
+        :math.floor(10 - (a / 2 + 0.5) * 0.9)
+      ])
+    ])
   end
 
   defp build_label_command(%{text: text}, copies) do
@@ -105,6 +122,9 @@ defmodule PrintClient.Printer do
   end
 
   defp build_label_command(%{asset: asset, serial: serial}, copies) do
+    asset_size = get_barcode_size(asset)
+    serial_size = get_barcode_size(serial)
+
     <<
       # Setup
       "SIZE 1200 dot,600 dot\r\n",
@@ -121,8 +141,8 @@ defmodule PrintClient.Printer do
       "REVERSE 0,0,1200,600\r\n",
 
       # Draw barcodes
-      "BARCODE 360,424,\"128\",62,0,0,5,5,2,\"#{asset}\"\r\n",
-      "BARCODE 882,424,\"128\",62,0,0,4,4,2,\"#{serial}\"\r\n",
+      "BARCODE 360,424,\"128\",62,0,0,#{asset_size},#{asset_size},2,\"#{asset}\"\r\n",
+      "BARCODE 882,424,\"128\",62,0,0,#{serial_size},#{serial_size},2,\"#{serial}\"\r\n",
 
       # Clear the space underneath the barcodes and write their values
       "ERASE 0,486,1200,26\r\n",
@@ -130,10 +150,9 @@ defmodule PrintClient.Printer do
       "TEXT 882,490,\"1\",0,2,2,2,\"#{serial}\"\r\n",
       "PRINT #{copies}\r\n",
       "EOP\r\n",
-
-      ":BARCODE_SIZE\r\n",
+      ":BARCODE_SIZE\r\n"
     >>
   end
 
-  defp build_label_command(opts, _), do: raise "Invalid label command options: #{inspect opts}"
+  defp build_label_command(opts, _), do: raise("Invalid label command options: #{inspect(opts)}")
 end

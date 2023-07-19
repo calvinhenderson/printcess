@@ -3,7 +3,7 @@
     action="/asset-spam"
     class="flex flex-col gap-4 p-8 w-screen h-screen justify-center items-center">
   <h2 class="text-xl font-bold mt-2">Asset Label Printing</h2>
-  <p class="text-sm mb-8">Scanner-only optimized</p>
+  <p class="text-sm mb-4">Scanner-only optimized</p>
   <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()}>
   <input
       class="input input-bordered w-full"
@@ -22,6 +22,15 @@
       aria-label="Serial number"
       required
       value="" />
+
+  <input
+      class="input input-bordered w-full text-xs"
+      type="text"
+      name="strip_leading"
+      placeholder={ gettext "Optionally, enter leading characters to strip from SN" }
+      aria-label="Strip Leading"
+      required
+      value={@strip_leading} />
 
   <button class="btn btn-bordered w-full" type="submit">
     <%= gettext "Submit" %>

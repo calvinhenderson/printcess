@@ -6,7 +6,7 @@ set -ueo pipefail
 arch="x86_64"
 
 # Support macOS Monterey and upwards
-export MACOSX_DEPLOYMENT_TARGET=12.1
+export MACOSX_DEPLOYMENT_TARGET=12.3
 
 # Parse command line arguments for Elixir and OTP versions
 while getopts ":e:o:" opt; do
@@ -89,7 +89,7 @@ if [ ! -d $wxwidgets_rel_dir ] || [ ! -f $wxwidgets_rel_dir/bin/wx-config ]; the
 	  --with-osx_cocoa \
 	  --with-macosx-version-min=$MACOSX_DEPLOYMENT_TARGET \
 	  --target=x86_64-apple-darwin$MACOSX_DEPLOYMENT_TARGET \
-	  --with-macosx-sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk \
+	  --with-macosx-sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX$MACOSX_DEPLOYMENT_TARGET.sdk \
 	  --with-libtiff=builtin \
 	  --with-zlib=builtin \
 	  --with-expat=builtin \

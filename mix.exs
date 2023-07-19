@@ -77,7 +77,6 @@ defmodule PrintClient.MixProject do
         overwrite: true,
         cookie: "#{@app}_cookie",
         quiet: true,
-        steps: [:assemble, &Mix.Tasks.Assemble.assemble/1],
         strip_beams: Mix.env() == :prod,
       ]
     ]

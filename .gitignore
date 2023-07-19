@@ -36,3 +36,5 @@ npm-debug.log
 /rel/macos/ExPrint.app/Contents/Resources/lib
 /rel/macos/ExPrint.app/Contents/Resources/rel
 /rel/_build/
+
+.DS_Store
