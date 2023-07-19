@@ -56,7 +56,10 @@ defmodule PrintClient.Printer do
       raise "Missing :hostname or :port key in #{inspect(printer)}"
     end
 
-    :gen_tcp.connect(to_charlist(printer.hostname), printer.port, [:binary, active: false])
+    :gen_tcp.connect(to_charlist(printer.hostname), printer.port, [
+      :binary,
+      active: false
+    ])
   end
 
   defp end_job(socket) do
@@ -84,9 +87,6 @@ defmodule PrintClient.Printer do
           {:ok, data} = File.read(Application.app_dir(:print_client, @asset_blank_path))
           Logger.debug("Uploading: #{inspect(data)}")
           {"ASSETBLANK.PCX", data}
-
-        _ ->
-          raise "Unknown job type given: #{inspect(job_type)}"
       end
 
     send_binary(
@@ -98,11 +98,11 @@ defmodule PrintClient.Printer do
   defp get_barcode_size(len) do
     a = String.length(len)
 
-    Enum.max([
-      2,
-      Enum.min([
-        4,
-        :math.floor(10 - (a / 2 + 0.5) * 0.9)
+    Enum.min([
+      5,
+      Enum.max([
+        2,
+        :math.floor((10 - a / 2 + 0.5) * 0.7)
       ])
     ])
   end
@@ -154,5 +154,6 @@ defmodule PrintClient.Printer do
     >>
   end
 
-  defp build_label_command(opts, _), do: raise("Invalid label command options: #{inspect(opts)}")
+  defp build_label_command(opts, _),
+    do: raise("Invalid label command options: #{inspect(opts)}")
 end
