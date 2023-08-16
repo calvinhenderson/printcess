@@ -1,24 +1,15 @@
 defmodule PrintClient.Printer.Labels do
   @doc """
   Takes a map and converts it to a valid label struct.
-  ## Returns
-
-      {:ok, struct}
-
-  or
-
-      {:error, reason}
-
-  on failure.
-
   ## Examples
 
-    iex> Labels.map_to_struct(%{"asset" => "12345", "serial" => "9QV56N"})
+    iex> Labels.validate_label_map(%{"asset" => "12345", "serial" => "9QV56N"})
     {:ok, %AssetLabel{asset: "12345", serial: "9QV56N", copies: 1}}
 
-    iex> Labels.map_to_struct(%{"asset" => "12345", "serial" => "9QV56N", "printer" => {"host" => "127.0.0.1"}})
+    iex> Labels.validate_label_map(%{"asset" => "12345", "serial" => "9QV56N", "printer" => {"host" => "127.0.0.1"}})
     {:ok, %AssetLabel{asset: "12345", serial: "9QV56N", copies: 1}}
 
+    iex> Labels.validate_label_map
   """
   @spec validate_label_map(term) :: {:ok, term} | {:error, term}
   def validate_label_map(map) do

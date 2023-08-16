@@ -7,7 +7,7 @@ defmodule PrintClient.Menu do
   use Desktop.Menu
   alias Desktop.Menu
 
-  alias PrintClientWeb.{Router,Endpoint}
+  alias PrintClientWeb.{Router, Endpoint}
 
   def mount(menu) do
     # This impure function sets the icon externally through wxWidgets
@@ -20,15 +20,19 @@ defmodule PrintClient.Menu do
     {:noreply, menu}
   end
 
-  def handle_event("quit", menu), do:
-    Desktop.Window.quit() |> then(fn _ -> {:noreply, menu} end)
+  def handle_event("quit", menu),
+    do: Desktop.Window.quit() |> then(fn _ -> {:noreply, menu} end)
 
-  def handle_event("hide", menu), do:
-    Desktop.Window.hide(PrintClientWindow) |> then(fn _ -> {:noreply, menu} end)
+  def handle_event("toggle", menu) do
+    if Desktop.Window.is_hidden?(PrintClientWindow),
+      do: show_window(),
+      else: hide_window()
 
-  def handle_event("show", menu) do
-    live_url = Router.Helpers.live_url(Endpoint, PrintClientWeb.PrintClientLive)
-    Desktop.Window.show(PrintClientWindow, live_url)
+    {:noreply, menu}
+  end
+
+  def handle_event("show-queue", menu) do
+    PrintClient.JobQueue.init()
     {:noreply, menu}
   end
 
@@ -38,10 +42,12 @@ defmodule PrintClient.Menu do
     {:noreply, menu}
   end
 
-
   def handle_event("settings", menu) do
     settings_url = Router.Helpers.live_url(Endpoint, PrintClientWeb.SettingsLive)
-    Desktop.Window.show(PrintClientWindow, settings_url) |> then(fn _ -> {:noreply, menu} end)
+
+    Desktop.Window.show(PrintClientWindow, settings_url)
+    |> then(fn _ -> {:noreply, menu} end)
+
     {:noreply, menu}
   end
 
@@ -52,8 +58,8 @@ defmodule PrintClient.Menu do
         <item><%= gettext "Dev build" %></item>
         <hr/>
       <% end %>
-      <item onclick="show"><%= gettext "Show" %></item>
-      <item onclick="hide"><%= gettext "Hide" %></item>
+      <item onclick="toggle"><%= gettext "Toggle Window" %></item>
+      <item onclick="show-queue"><%= gettext "Show Queue" %></item>
       <hr/>
       <item onclick="asset-spam"><%= gettext "Assets Only" %></item>
       <hr/>
@@ -62,5 +68,12 @@ defmodule PrintClient.Menu do
       <item onclick="quit"><%= gettext "Quit" %></item>
     </menu>
     """
+  end
+
+  defp hide_window, do: Desktop.Window.hide(PrintClientWindow)
+
+  defp show_window do
+    live_url = Router.Helpers.live_url(Endpoint, PrintClientWeb.PrintClientLive)
+    Desktop.Window.show(PrintClientWindow, live_url)
   end
 end

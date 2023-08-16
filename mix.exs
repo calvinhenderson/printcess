@@ -13,7 +13,7 @@ defmodule PrintClient.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      releases: releases(),
+      releases: releases()
     ]
   end
 
@@ -36,12 +36,13 @@ defmodule PrintClient.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.6.15"},
-      {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.17.5"},
+      {:phoenix, "~> 1.7"},
+      {:phoenix_html, "~> 3.3"},
+      {:phoenix_live_reload, "~> 1.4", only: :dev},
+      {:phoenix_live_view, "~> 0.19.5"},
+      {:phoenix_view, "~> 2.0"},
       {:floki, ">= 0.30.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.6"},
+      {:phoenix_live_dashboard, "~> 0.8"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
@@ -77,7 +78,7 @@ defmodule PrintClient.MixProject do
         overwrite: true,
         cookie: "#{@app}_cookie",
         quiet: true,
-        strip_beams: Mix.env() == :prod,
+        strip_beams: Mix.env() == :prod
       ]
     ]
   end

@@ -45,7 +45,7 @@ defmodule PrintClientWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {PrintClientWeb.LayoutView, "live.html"}
+        layout: {PrintClientWeb.LayoutView, :live}
 
       unquote(view_helpers())
     end
@@ -94,6 +94,9 @@ defmodule PrintClientWeb do
 
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
+
+      import Phoenix.Component
+      import PrintClientWeb.CoreComponents
 
       import PrintClientWeb.ErrorHelpers
       import PrintClientWeb.Gettext

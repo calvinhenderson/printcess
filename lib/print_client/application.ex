@@ -20,6 +20,7 @@ defmodule PrintClient.Application do
     File.mkdir_p!(config_dir())
 
     Logger.info("Saving settings to path: #{config_dir()}")
+
     Application.put_env(:print_client, PrintClient.Repo,
       database: Path.join(config_dir(), "/settings.db")
     )
@@ -40,29 +41,26 @@ defmodule PrintClient.Application do
 
       # Start the printer queue
       {PrintClient.Printer.Queue, name: PrintQueue},
-
-      { Desktop.Window,
-        [
-          app: :print_client,
-          id: PrintClientWindow,
-          title: "Print Client",
-          size: @window_size,
-          icon: "icon.png",
-          menubar: PrintClient.MenuBar,
-          icon_menu: PrintClient.Menu,
-          url: &PrintClientWeb.Endpoint.url/0
-        ]
-      },
+      {Desktop.Window,
+       [
+         app: :print_client,
+         id: PrintClientWindow,
+         title: "Print Client",
+         size: @window_size,
+         icon: "icon.png",
+         menubar: PrintClient.MenuBar,
+         icon_menu: PrintClient.Menu,
+         url: &PrintClientWeb.Endpoint.url/0
+       ]},
 
       # Start the Repo
       PrintClient.Repo,
 
       # One-off post-startup tasks
-      { PrintClient.StartupTasks,
-        [
-          window_size: @window_size
-        ]
-      }
+      {PrintClient.StartupTasks,
+       [
+         window_size: @window_size
+       ]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

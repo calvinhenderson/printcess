@@ -3,7 +3,7 @@ defmodule PrintClientWeb.PrintClientLive do
 
   require Logger
 
-  alias PrintClientWeb.{TextForm,AssetForm,PrinterSelect}
+  alias PrintClientWeb.{TextForm, AssetForm, PrinterSelect}
   alias PrintClient.Settings
 
   @impl true
@@ -11,7 +11,7 @@ defmodule PrintClientWeb.PrintClientLive do
     printers = Settings.all_printers()
 
     current = Enum.find(printers, List.first(printers), fn p -> p.selected == 1 end)
-    Logger.debug("Current printer: #{inspect current}")
+    Logger.debug("Current printer: #{inspect(current)}")
 
     if current == nil do
       {:ok, redirect(socket, to: "/settings")}
@@ -23,17 +23,19 @@ defmodule PrintClientWeb.PrintClientLive do
   @impl true
   def render(assigns) do
     ~H"""
-      <.live_component id="printer-select" module={PrinterSelect} current_printer={@current_printer} printers={@printers} />
-      <.live_component id="text-form" module={TextForm} printer={@current_printer} />
-      <.live_component id="asset-form" module={AssetForm} printer={@current_printer} />
+      <div class="flex flex-col gap-2">
+        <.live_component id="printer-select" module={PrinterSelect} current_printer={@current_printer} printers={@printers} />
+        <.live_component id="text-form" module={TextForm} printer={@current_printer} />
+        <.live_component id="asset-form" module={AssetForm} printer={@current_printer} />
+      </div>
     """
   end
-  
+
   @impl true
   def handle_event("select-printer", %{"printer" => printer}, socket) do
     with {id_num, _} <- Integer.parse(printer) do
       new_printer = Enum.find(Settings.all_printers(), fn p -> p.id == id_num end)
-      Logger.debug("Selecting printer #{inspect new_printer}")
+      Logger.debug("Selecting printer #{inspect(new_printer)}")
       {:noreply, assign(socket, current_printer: new_printer)}
     else
       _ -> {:noreply, socket}

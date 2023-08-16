@@ -21,6 +21,8 @@ defmodule PrintClientWeb.Router do
     get "/asset-spam", AssetPrintController, :index
     post "/asset-spam", AssetPrintController, :print
 
+    live "/job-queue", JobQueueLive
+
     live "/", PrintClientLive
     live "/:tab", PrintClientLive
   end
