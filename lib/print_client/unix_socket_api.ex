@@ -78,7 +78,7 @@ defmodule PrintClient.UnixSocketApi do
       Logger.debug("casting data: #{inspect(data)}")
       GenServer.cast(PrintQueue, {:push, data})
     else
-      {:error, reason} -> Logger.warn(reason)
+      {:error, reason} -> Logger.warning(reason)
     end
 
     {:noreply, state}
@@ -93,7 +93,7 @@ defmodule PrintClient.UnixSocketApi do
       {:ok, socket}
     else
       error ->
-        Logger.warn("Failed to initialize Unix File socket: #{inspect(error)}")
+        Logger.warning("Failed to initialize Unix File socket: #{inspect(error)}")
         {:error, error}
     end
   end
