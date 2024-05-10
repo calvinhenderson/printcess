@@ -29,8 +29,8 @@ while getopts ":e:o:" opt; do
 done
 
 # Set default versions if not provided via command line arguments
-ELIXIR_VERSION=${ELIXIR_VERSION:-"1.14.3"}
-OTP_VERSION=${OTP_VERSION:-"25.3"}
+ELIXIR_VERSION=${ELIXIR_VERSION:-"1.15.7"}
+OTP_VERSION=${OTP_VERSION:-"26.1"}
 
 # Set build directory
 BUILD_DIR=$(pwd)/_build
