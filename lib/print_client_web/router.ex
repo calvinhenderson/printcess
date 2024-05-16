@@ -24,6 +24,7 @@ defmodule PrintClientWeb.Router do
     live "/job-queue", JobQueueLive
 
     live "/", PrintClientLive
+    live "/search", IiqSearchLive
     live "/:tab", PrintClientLive
   end
 

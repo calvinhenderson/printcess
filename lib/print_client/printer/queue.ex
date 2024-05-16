@@ -59,6 +59,7 @@ defmodule PrintClient.Printer.Queue do
         data
         |> Map.put(:id, job_id)
         |> Map.put(:entered_queue_at, DateTime.utc_now())
+        |> Map.put(:status, :pending)
 
       broadcast_job(:push, data)
 
@@ -76,9 +77,7 @@ defmodule PrintClient.Printer.Queue do
       {:noreply, state}
     else
       error ->
-        Logger.debug(
-          "Invalid job data received: #{inspect(data)}, reason: #{inspect(error)}"
-        )
+        Logger.debug("Invalid job data received: #{inspect(data)}, reason: #{inspect(error)}")
 
         {:noreply, state}
     end
@@ -90,11 +89,13 @@ defmodule PrintClient.Printer.Queue do
   @impl true
   def handle_info(:work, %{jobs: jobs} = state)
       when is_list(jobs) and length(jobs) > 0 do
-    Enum.uniq_by(jobs, & &1.printer)
+    jobs
+    |> Enum.filter(&(&1.status in [:pending]))
+    |> Enum.uniq_by(& &1.printer)
     |> Task.async_stream(fn job ->
       if Printer.ready?(job.printer) do
         Printer.print(job)
-        {:delete, job}
+        {:complete, job}
       else
         {:retry, job}
       end
@@ -102,8 +103,8 @@ defmodule PrintClient.Printer.Queue do
     |> Enum.to_list()
     |> Enum.map_reduce(state.jobs, fn res, acc ->
       case res do
-        {:ok, {:delete, job}} ->
-          {job, delete_job_from_queue(job.id, acc)}
+        {:ok, {:complete, job}} ->
+          {job, complete_job_in_queue(job.id, acc)}
 
         _ ->
           {nil, acc}
@@ -123,6 +124,23 @@ defmodule PrintClient.Printer.Queue do
   def handle_info(:work, state) do
     schedule_work()
     {:noreply, state}
+  end
+
+  defp complete_job_in_queue(job_id, %{jobs: jobs} = state) do
+    jobs = complete_job_in_queue(job_id, jobs)
+    Map.put(state, :jobs, jobs)
+  end
+
+  defp complete_job_in_queue(job_id, jobs) when is_list(jobs) do
+    broadcast_job(:complete, job_id)
+
+    Enum.map(jobs, fn job ->
+      if job.id == job_id do
+        Map.put(job, :status, :complete)
+      else
+        job
+      end
+    end)
   end
 
   defp delete_job_from_queue(job_id, %{jobs: jobs} = state) do
