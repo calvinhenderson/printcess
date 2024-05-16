@@ -11,7 +11,9 @@ defmodule PrintClientWeb.AssetPrintController do
     |> render("index.html")
   end
 
-  def print(conn, %{"asset" => asset, "serial" => serial, "strip_leading" => strip_leading}) do
+  def print(conn, %{"asset" => asset, "serial" => serial} = params) do
+    strip_leading = Map.get(params, "strip_leading", "")
+
     if not Regex.match?(~r/^[0-9]+$/, asset) do
       Desktop.Window.show_notification(
         PrintClientWindow,
