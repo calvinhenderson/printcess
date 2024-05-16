@@ -23,31 +23,23 @@ defmodule PrintClient.Menu do
   def handle_event("quit", menu),
     do: Desktop.Window.quit() |> then(fn _ -> {:noreply, menu} end)
 
-  def handle_event("toggle", menu) do
-    if Desktop.Window.is_hidden?(PrintClientWindow),
-      do: show_window(),
-      else: hide_window()
-
+  def handle_event("show", menu) do
+    PrintClient.Window.Print.show()
     {:noreply, menu}
   end
 
   def handle_event("show-queue", menu) do
-    PrintClient.JobQueue.init()
+    PrintClient.Window.JobQueue.show()
     {:noreply, menu}
   end
 
   def handle_event("asset-spam", menu) do
-    url = Router.Helpers.asset_print_url(Endpoint, :index)
-    Desktop.Window.show(PrintClientWindow, url)
+    PrintClient.Window.BulkAssetPrint.show()
     {:noreply, menu}
   end
 
   def handle_event("settings", menu) do
-    settings_url = Router.Helpers.live_url(Endpoint, PrintClientWeb.SettingsLive)
-
-    Desktop.Window.show(PrintClientWindow, settings_url)
-    |> then(fn _ -> {:noreply, menu} end)
-
+    PrintClient.Window.Settings.show()
     {:noreply, menu}
   end
 
@@ -55,25 +47,18 @@ defmodule PrintClient.Menu do
     ~H"""
     <menu>
       <%= if Enum.member?([:dev,:test], Application.get_env(:print_client, :env)) do %>
-        <item><%= gettext "Dev build" %></item>
-        <hr/>
+        <item><%= gettext("Dev build") %></item>
+        <hr />
       <% end %>
-      <item onclick="toggle"><%= gettext "Toggle Window" %></item>
-      <item onclick="show-queue"><%= gettext "Show Queue" %></item>
-      <hr/>
-      <item onclick="asset-spam"><%= gettext "Assets Only" %></item>
-      <hr/>
-      <item onclick="settings"><%= gettext "Settings" %></item>
-      <hr/>
-      <item onclick="quit"><%= gettext "Quit" %></item>
+      <item onclick="show"><%= gettext("Show Window") %></item>
+      <item onclick="show-queue"><%= gettext("Show Queue") %></item>
+      <hr />
+      <item onclick="asset-spam"><%= gettext("Assets Only") %></item>
+      <hr />
+      <item onclick="settings"><%= gettext("Settings") %></item>
+      <hr />
+      <item onclick="quit"><%= gettext("Quit") %></item>
     </menu>
     """
-  end
-
-  defp hide_window, do: Desktop.Window.hide(PrintClientWindow)
-
-  defp show_window do
-    live_url = Router.Helpers.live_url(Endpoint, PrintClientWeb.PrintClientLive)
-    Desktop.Window.show(PrintClientWindow, live_url)
   end
 end

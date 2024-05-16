@@ -7,8 +7,6 @@ defmodule PrintClient.Application do
 
   require Logger
 
-  @window_size {400, 380}
-
   # User's Config directory
   def config_dir() do
     Path.join([Desktop.OS.home(), ".config", "exprint"])
@@ -41,26 +39,13 @@ defmodule PrintClient.Application do
 
       # Start the printer queue
       {PrintClient.Printer.Queue, name: PrintQueue},
-      {Desktop.Window,
-       [
-         app: :print_client,
-         id: PrintClientWindow,
-         title: "Print Client",
-         size: @window_size,
-         icon: "icon.png",
-         menubar: PrintClient.MenuBar,
-         icon_menu: PrintClient.Menu,
-         url: &PrintClientWeb.Endpoint.url/0
-       ]},
+      PrintClient.Window.Print,
 
       # Start the Repo
       PrintClient.Repo,
 
       # One-off post-startup tasks
-      {PrintClient.StartupTasks,
-       [
-         window_size: @window_size
-       ]}
+      PrintClient.StartupTasks
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
