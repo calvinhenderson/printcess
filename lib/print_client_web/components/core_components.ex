@@ -102,9 +102,7 @@ defmodule PrintClientWeb.CoreComponents do
   attr(:title, :string, default: nil)
   attr(:kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup")
 
-  attr(:rest, :global,
-    doc: "the arbitrary HTML attributes to add to the flash container"
-  )
+  attr(:rest, :global, doc: "the arbitrary HTML attributes to add to the flash container")
 
   slot(:inner_block, doc: "the optional inner block that renders the flash message")
 
@@ -197,8 +195,7 @@ defmodule PrintClientWeb.CoreComponents do
   )
 
   attr(:rest, :global,
-    include:
-      ~w(autocomplete name rel action enctype method novalidate target multipart),
+    include: ~w(autocomplete name rel action enctype method novalidate target multipart),
     doc: "the arbitrary HTML attributes to apply to the form tag"
   )
 
@@ -237,8 +234,9 @@ defmodule PrintClientWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-900/60 py-2 px-3",
+        "text-sm font-semibold leading-6 text-white hover:text-white/80",
+        "dark:text-base-content dark:hover:text-base-content/80",
         @class
       ]}
       {@rest}
@@ -280,9 +278,8 @@ defmodule PrintClientWeb.CoreComponents do
 
   attr(:type, :string,
     default: "text",
-    values:
-      ~w(checkbox color date datetime-local email file hidden month number password
-               range radio search select tel text textarea time url week)
+    values: ~w(checkbox color date datetime-local email file hidden month number password
+               range radio search select tel text textarea time url week style button-group)
   )
 
   attr(:field, Phoenix.HTML.FormField,
@@ -293,15 +290,12 @@ defmodule PrintClientWeb.CoreComponents do
   attr(:checked, :boolean, doc: "the checked flag for checkbox inputs")
   attr(:prompt, :string, default: nil, doc: "the prompt for select inputs")
 
-  attr(:options, :list,
-    doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
-  )
+  attr(:options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2")
 
   attr(:multiple, :boolean, default: false, doc: "the multiple flag for select inputs")
 
   attr(:rest, :global,
-    include:
-      ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
   )
 
@@ -344,6 +338,48 @@ defmodule PrintClientWeb.CoreComponents do
     """
   end
 
+  def input(%{type: "button-group"} = assigns) do
+    ~H"""
+    <div phx-feedback-for={@name}>
+      <.label for={@id}><%= @label %></.label>
+      <div class={[
+        "grid grid-flow-col gap-0",
+        @errors == [] && "border-zinc-300 focus:border-zinc-400",
+        @errors != [] && "border-rose-400 focus:border-rose-400"
+      ]}>
+        <%= for {label, value} <- @options do %>
+          <label class="grow group" tabindex="0">
+            <input
+              type="radio"
+              id={"#{@id}-#{value}"}
+              name={@name}
+              value={value}
+              checked={value == @value}
+              class="hidden peer"
+              required
+            />
+            <div
+              for={"#{@id}-#{value}"}
+              role="radio"
+              class={[
+                "w-full rounded-none text-base-content p-2 px-4 text-center text-sm",
+                "group-first-of-type:rounded-l-lg group-last-of-type:rounded-r-lg",
+                "bg-zinc-200 dark:bg-zinc-900/20",
+                "peer-checked:bg-zinc-400 dark:peer-checked:bg-zinc-900 transition",
+                "peer-checked:text-white dark:peer-checked:text-base-content",
+                "hover:bg-zinc-400 dark:hover:bg-zinc-900 dark:bg-zinc-900/40"
+              ]}
+            >
+              <%= label %>
+            </div>
+          </label>
+        <% end %>
+      </div>
+      <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
@@ -351,7 +387,10 @@ defmodule PrintClientWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class={[
+          "mt-2 block w-full rounded-md border border-gray-300 dark:border-gray-900",
+          "bg-white dark:bg-zinc-900 shadow-sm focus:border-zinc-400 dark:focus:border-zinc-800 focus:ring-0 sm:text-sm"
+        ]}
         multiple={@multiple}
         {@rest}
       >
@@ -394,10 +433,14 @@ defmodule PrintClientWeb.CoreComponents do
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
+          "mt-2 block w-full rounded-lg focus:ring-0 sm:text-sm sm:leading-6 border",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "dark:phx-no-feedback:border-zinc-900 dark:phx-no-feedback:focus:border-zinc-800",
+          "dark:bg-zinc-900 text-base-content",
+          @errors == [] &&
+            "border-zinc-300 focus:border-zinc-400 dark:border-zinc-900 dark:focus:border-zinc-800",
+          @errors != [] &&
+            "border-rose-400 focus:border-rose-400 dark:border-rose-700 dark:focus:border-rose-600"
         ]}
         {@rest}
       />
@@ -414,7 +457,7 @@ defmodule PrintClientWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class="block text-sm font-semibold leading-6 text-base-content">
       <%= render_slot(@inner_block) %>
     </label>
     """
@@ -447,10 +490,10 @@ defmodule PrintClientWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+        <h1 class="text-lg font-semibold leading-8 text-base-content">
           <%= render_slot(@inner_block) %>
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-base-content/80">
           <%= render_slot(@subtitle) %>
         </p>
       </div>
@@ -622,6 +665,18 @@ defmodule PrintClientWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders a horizontal divider.
+  """
+
+  attr(:class, :string, default: nil)
+
+  def hr(assigns) do
+    ~H"""
+    <hr class={["border-zinc-900/30 border-2 rounded-lg", @class]} />
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do
@@ -650,8 +705,7 @@ defmodule PrintClientWeb.CoreComponents do
     |> JS.show(to: "##{id}")
     |> JS.show(
       to: "##{id}-bg",
-      transition:
-        {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
+      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
     |> JS.add_class("overflow-hidden", to: "body")
@@ -662,8 +716,7 @@ defmodule PrintClientWeb.CoreComponents do
     js
     |> JS.hide(
       to: "##{id}-bg",
-      transition:
-        {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
+      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
     )
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
