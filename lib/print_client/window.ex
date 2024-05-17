@@ -72,8 +72,17 @@ defmodule PrintClient.Window do
         :wx.set_env(Desktop.Env.wx_env())
         frame = Desktop.Window.frame(window)
 
-        :wxWindow.setMinSize(frame, size)
-        :wxWindow.setMaxSize(frame, size)
+        {w, _h} = :wxWindow.getSize(frame)
+
+        # fixes wxwidgets complaining about max size < min size, vice versa
+        if elem(size, 0) <= w do
+          :wxWindow.setMinSize(frame, size)
+          :wxWindow.setMaxSize(frame, size)
+        else
+          :wxWindow.setMaxSize(frame, size)
+          :wxWindow.setMinSize(frame, size)
+        end
+
         :wxWindow.setSize(frame, size)
 
         :ok

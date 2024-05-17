@@ -1,12 +1,15 @@
 defmodule PrintClientWeb.IiqSearchLive do
+  alias PrintClient.Settings
   use PrintClientWeb, :live_view
 
   @impl true
   def mount(params, session, socket) do
     expanded = params["expanded"] == "true"
+    printers = Settings.all_printers()
 
     socket =
       socket
+      |> assign_printer()
       |> assign(expand_sidebar: expanded)
       |> assign_query_form()
       |> assign_label_values()
@@ -14,133 +17,6 @@ defmodule PrintClientWeb.IiqSearchLive do
       |> save_tab_state(expanded)
 
     {:ok, socket}
-  end
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <div class={[
-      "grid gap-4",
-      @expand_sidebar && "grid-cols-[21rem_1fr]"
-    ]}>
-      <div class="text-left">
-        <div class="flex flex-row justify-between items-center">
-          <.header>Label Printing</.header>
-          <button type="button" class="btn btn-ghost btn-sm" phx-click="toggle_sidebar">
-            <%= if @expand_sidebar do %>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
-                />
-              </svg>
-            <% else %>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-                />
-              </svg>
-            <% end %>
-          </button>
-        </div>
-
-        <.form for={@query}>
-          <div class="flex flex-row items-stretch">
-            <.input
-              type="select"
-              options={@query.source["fields"]}
-              tabindex="0"
-              field={@query["selected_field"]}
-              style="border-radius: 0.5rem 0 0 0.5rem;"
-            />
-            <.input
-              type="text"
-              style="margin-left: -1px; margin-right: -0.5rem; border-radius: 0; width: 100%;"
-              tabindex="0"
-              field={@query["query"]}
-              placeholder={gettext("Enter a search query")}
-            />
-            <button
-              type="submit"
-              class={[
-                "-ml-[2px] mt-2 p-2 block rounded-r-lg focus:ring-0 sm:text-sm sm:leading-6 border",
-                "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-                "dark:phx-no-feedback:border-zinc-900 dark:phx-no-feedback:focus:border-zinc-800",
-                "dark:bg-zinc-900 text-base-content hover:bg-zinc-200 dark:hover:bg-zinc-800",
-                "active:bg-zinc-300 dark:active:bg-zinc-800",
-                "border-zinc-300 focus:border-zinc-400 dark:border-zinc-900 dark:focus:border-zinc-800"
-              ]}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                />
-              </svg>
-            </button>
-          </div>
-        </.form>
-
-        <.hr class="mb-3 mt-4" />
-
-        <.form for={@label} phx-submit="print">
-          <div class="grid grid-cols-[2fr_3fr] items-center">
-            <span>Owner</span>
-            <.input
-              type="text"
-              field={@label[:owner]}
-              required={@label[:action].value in ["both", "owner"]}
-            />
-            <span>Asset Tag</span>
-            <.input
-              type="text"
-              field={@label[:asset]}
-              required={@label[:action].value in ["both", "asset"]}
-            />
-            <span>Serial Number</span>
-            <.input
-              type="text"
-              field={@label[:serial]}
-              required={@label[:action].value in ["both", "asset"]}
-            />
-          </div>
-          <.hr class="mb-3 mt-4" />
-
-          <.input type="button-group" field={@label[:action]} options={@label_actions} />
-
-          <.button type="submit" class="w-full grow mt-2"><%= gettext("Print Label(s)") %></.button>
-        </.form>
-      </div>
-      <%= if @expand_sidebar do %>
-        <div class="grow w-full bg-red-50 dark:bg-red-700 h-full"></div>
-      <% end %>
-    </div>
-    """
   end
 
   @impl true
@@ -152,6 +28,13 @@ defmodule PrintClientWeb.IiqSearchLive do
      |> assign(expand_tab: expanded)
      |> maybe_resize_window()
      |> save_tab_state(expanded)}
+  end
+
+  @impl true
+  def handle_event("select-printer", %{"active" => selected}, socket) do
+    {:noreply,
+     socket
+     |> assign_printer(selected)}
   end
 
   @impl true
@@ -171,13 +54,19 @@ defmodule PrintClientWeb.IiqSearchLive do
 
   @impl true
   def handle_event("print", params, socket) do
-    form = to_form(%{"owner" => "", "asset" => "", "serial" => "", "action" => params["action"]})
+    saved_params = Map.take(params, ["action"])
 
-    socket =
-      socket
-      |> assign(label: form)
+    {:noreply,
+     socket
+     |> assign(label_params: saved_params)}
+  end
 
-    {:noreply, socket}
+  @impl true
+  def handle_event("update-label", params, socket) do
+    {:noreply,
+     socket
+     |> assign(label_params: params)
+     |> assign_label_values()}
   end
 
   defp maybe_resize_window(socket) do
@@ -194,8 +83,6 @@ defmodule PrintClientWeb.IiqSearchLive do
 
   defp save_tab_state(socket, new_state) do
     old_state = socket.assigns.expand_sidebar
-
-    dbg({old_state, new_state})
 
     route = fn params ->
       PrintClientWeb.Router.Helpers.live_path(
@@ -234,10 +121,38 @@ defmodule PrintClientWeb.IiqSearchLive do
   end
 
   defp assign_label_values(socket) do
-    form = to_form(%{owner: "", asset: "", serial: "", action: ""})
+    params = Map.get(socket.assigns, :label_params, %{})
+
+    owner = Map.get(params, "owner", "")
+    asset = Map.get(params, "asset", "")
+    serial = Map.get(params, "serial", "")
+    action = Map.get(params, "action", "")
+
+    form = to_form(%{"owner" => owner, "asset" => asset, "serial" => serial, "action" => action})
 
     socket
     |> assign(label: form)
     |> assign(label_actions: [Owner: "owner", Both: "both", Asset: "asset"])
+  end
+
+  defp assign_printer(socket, selected \\ nil) do
+    printers = Settings.all_printers()
+
+    selected =
+      (cond do
+        printer = Enum.find(printers, & &1.name == selected) ->
+          printer
+        printer = Enum.find(printers, & &1.selected) ->
+          printer
+        true ->
+          [printer | _] = Enum.take(printers, 1)
+          printer
+      end)
+
+    form = to_form(%{"active" => selected.name, "options" => Enum.map(printers, & &1.name)})
+
+    socket
+    |> assign(printer: selected)
+    |> assign(printer_form: form)
   end
 end

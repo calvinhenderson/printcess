@@ -364,7 +364,7 @@ defmodule PrintClientWeb.CoreComponents do
               class={[
                 "w-full rounded-none text-base-content p-2 px-4 text-center text-sm",
                 "group-first-of-type:rounded-l-lg group-last-of-type:rounded-r-lg",
-                "bg-zinc-200 dark:bg-zinc-900/20",
+                "bg-zinc-200 dark:bg-zinc-900/20 cursor-pointer",
                 "peer-checked:bg-zinc-400 dark:peer-checked:bg-zinc-900 transition",
                 "peer-checked:text-white dark:peer-checked:text-base-content",
                 "hover:bg-zinc-400 dark:hover:bg-zinc-900 dark:bg-zinc-900/40"
@@ -389,7 +389,7 @@ defmodule PrintClientWeb.CoreComponents do
         name={@name}
         class={[
           "mt-2 block w-full rounded-md border border-gray-300 dark:border-gray-900",
-          "bg-white dark:bg-zinc-900 shadow-sm focus:border-zinc-400 dark:focus:border-zinc-800 focus:ring-0 sm:text-sm"
+          "bg-white dark:bg-zinc-900 shadow-sm focus:border-zinc-400 dark:focus:border-zinc-800 focus:ring-0"
         ]}
         multiple={@multiple}
         {@rest}
@@ -433,7 +433,7 @@ defmodule PrintClientWeb.CoreComponents do
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "mt-2 block w-full rounded-lg focus:ring-0 sm:text-sm sm:leading-6 border",
+          "mt-2 block w-full rounded-lg focus:ring-0 sm:leading-6 border",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
           "dark:phx-no-feedback:border-zinc-900 dark:phx-no-feedback:focus:border-zinc-800",
           "dark:bg-zinc-900 text-base-content",
@@ -674,6 +674,31 @@ defmodule PrintClientWeb.CoreComponents do
   def hr(assigns) do
     ~H"""
     <hr class={["border-zinc-900/30 border-2 rounded-lg", @class]} />
+    """
+  end
+
+  @doc """
+  Renders shadows when scrolling.
+  """
+  slot(:inner_block)
+  attr(:rest, :global, default: %{})
+
+  def scroll_box(assigns) do
+    # https://stackoverflow.com/a/44794221
+    ~H"""
+    <div style={~S"
+    background: /* Shadow covers */
+    linear-gradient(white 30%, rgba(255, 255, 255, 0)), linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%, /* Shadows */
+    radial-gradient(50% 0, farthest-side, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)), radial-gradient(50% 100%, farthest-side, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+    background: /* Shadow covers */
+    linear-gradient(white 30%, rgba(255, 255, 255, 0)), linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%, /* Shadows */
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)), radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+    /* Opera doesn't support this in the shorthand */
+    background-attachment: local, local, scroll, scroll;
+    "} {@rest}><%= render_slot(@inner_block) %></div>
     """
   end
 
