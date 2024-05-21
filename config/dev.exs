@@ -49,7 +49,7 @@ config :print_client, PrintClientWeb.Endpoint,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/print_client_web/(live|views)/.*(ex)$",
+      ~r"lib/print_client_web/(live|views|components)/.*(ex)$",
       ~r"lib/print_client_web/templates/.*(eex)$"
     ]
   ]

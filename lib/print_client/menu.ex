@@ -28,11 +28,6 @@ defmodule PrintClient.Menu do
     {:noreply, menu}
   end
 
-  def handle_event("show-queue", menu) do
-    PrintClient.Window.JobQueue.show()
-    {:noreply, menu}
-  end
-
   def handle_event("asset-spam", menu) do
     PrintClient.Window.BulkAssetPrint.show()
     {:noreply, menu}
@@ -50,13 +45,9 @@ defmodule PrintClient.Menu do
         <item><%= gettext("Dev build") %></item>
         <hr />
       <% end %>
-      <item onclick="show"><%= gettext("Show Window") %></item>
-      <item onclick="show-queue"><%= gettext("Show Queue") %></item>
-      <hr />
-      <item onclick="asset-spam"><%= gettext("Assets Only") %></item>
-      <hr />
+      <item onclick="show"><%= gettext("Show") %></item>
+      <item onclick="asset-spam"><%= gettext("Bulk") %></item>
       <item onclick="settings"><%= gettext("Settings") %></item>
-      <hr />
       <item onclick="quit"><%= gettext("Quit") %></item>
     </menu>
     """

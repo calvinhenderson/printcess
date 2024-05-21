@@ -1,9 +1,7 @@
-function computedTimeString(iso8601_timestamp) {
-  const timestamp = Date.parse(iso8601_timestamp);
-  const now = Date.now();
-  const diff = Math.floor((now - timestamp) / 1000);
-
-  console.log(iso8601_timestamp, timestamp, now, diff);
+function computedTimeString(iso_start, iso_end) {
+  const start = new Date(iso_start);
+  const end = new Date(iso_end);
+  const diff = Math.floor((end - start) / 1000);
 
   if (diff < 60) return diff + "s"; // seconds
   if (diff < 3600) return diff % 60 + "m"; // minutes
@@ -27,7 +25,12 @@ export default {
     this.el
       .querySelectorAll("[data-timestamp]")
       .forEach(el => {
-        el.innerText = computedTimeString(el.getAttribute("data-timestamp"));
+        let end = Date.now();
+
+        if (el.getAttribute("data-timestamp-end")) {
+          end = el.getAttribute("data-timestamp-end");
+        }
+        el.innerText = computedTimeString(el.getAttribute("data-timestamp"), end);
       });
   }
 };

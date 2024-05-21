@@ -32,4 +32,5 @@ You now have a bundled desktop app at `_build/prod/rel/bundle/[app name].app`.
   - Owner username, asset and serial number from iiQ
   - Add simplified asset search? Lookup asset and then
     have two separate buttons (print owner / asset / both?)
+  - Add support for label templates
 

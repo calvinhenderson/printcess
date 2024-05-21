@@ -9,21 +9,24 @@ defmodule PrintClient.Printer do
   Checks if a printer is ready to receive a job
   """
   def ready?(printer) do
-    {:ok, socket} = open_job(printer)
+    case open_job(printer) do
+      {:ok, socket} ->
+        send_binary(socket, <<27, "!S">>)
+        {:ok, packet} = read_binary(socket, 8)
 
-    send_binary(socket, <<27, "!S">>)
-    {:ok, packet} = read_binary(socket, 8)
+        ready_status = packet == <<0x02, 0x40, 0x40, 0x40, 0x40, 0x03, 0x0D, 0x0A>>
 
-    ready_status = packet == <<0x02, 0x40, 0x40, 0x40, 0x40, 0x03, 0x0D, 0x0A>>
+        end_job(socket)
 
-    end_job(socket)
+        ready_status
 
-    ready_status
+      _error ->
+        false
+    end
   end
 
   @doc """
   Sends a print job to the printer.
-  Running this before `init_job/2` will fail!
   """
   def print(%{printer: printer, asset: asset, serial: serial, copies: copies}) do
     print_opts(printer, :asset, %{asset: asset, serial: serial}, copies)
@@ -36,19 +39,26 @@ defmodule PrintClient.Printer do
   defp print_opts(printer, job_type, opts, copies) do
     command = build_label_command(opts, copies)
 
-    {:ok, socket} = init_job(printer, job_type)
+    case init_job(printer, job_type) do
+      {:ok, socket} ->
+        socket
+        |> send_binary(command)
+        |> end_job()
 
-    socket
-    |> send_binary(command)
-    |> end_job()
+      error ->
+        error
+    end
   end
 
   defp init_job(printer, job_type) do
-    {:ok, socket} = open_job(printer)
+    case open_job(printer) do
+      {:ok, socket} ->
+        prefetch_job_assets(socket, job_type)
+        {:ok, socket}
 
-    prefetch_job_assets(socket, job_type)
-
-    {:ok, socket}
+      error ->
+        error
+    end
   end
 
   defp open_job(printer) do

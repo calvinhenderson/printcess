@@ -388,8 +388,7 @@ defmodule PrintClientWeb.CoreComponents do
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-md border border-gray-300 dark:border-gray-900",
-          "bg-white dark:bg-zinc-900 shadow-sm focus:border-zinc-400 dark:focus:border-zinc-800 focus:ring-0"
+          "select select-bordered w-full mt-2 max-w-xs"
         ]}
         multiple={@multiple}
         {@rest}
@@ -433,10 +432,7 @@ defmodule PrintClientWeb.CoreComponents do
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "mt-2 block w-full rounded-lg focus:ring-0 sm:leading-6 border",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          "dark:phx-no-feedback:border-zinc-900 dark:phx-no-feedback:focus:border-zinc-800",
-          "dark:bg-zinc-900 text-base-content",
+          "input input-bordered w-full max-w-xs mt-2",
           @errors == [] &&
             "border-zinc-300 focus:border-zinc-400 dark:border-zinc-900 dark:focus:border-zinc-800",
           @errors != [] &&

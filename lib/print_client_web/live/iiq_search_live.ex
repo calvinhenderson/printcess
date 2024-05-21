@@ -1,9 +1,13 @@
 defmodule PrintClientWeb.IiqSearchLive do
-  alias PrintClient.Settings
   use PrintClientWeb, :live_view
+
+  import PrintClientWeb.FormComponents
+  alias PrintClient.{Printer, Settings, Window}
 
   @impl true
   def mount(params, session, socket) do
+    if connected?(socket), do: Printer.Queue.subscribe()
+
     expanded = params["expanded"] == "true"
     printers = Settings.all_printers()
 
@@ -15,6 +19,30 @@ defmodule PrintClientWeb.IiqSearchLive do
       |> assign_label_values()
       |> maybe_resize_window()
       |> save_tab_state(expanded)
+      |> stream(:jobs, [], limit: 50)
+
+    socket =
+      Enum.reduce(0..15, socket, fn i, socket ->
+        job = %{
+          text: "job",
+          id: i,
+          asset: to_string(i),
+          serial: to_string(i),
+          status: :pending,
+          entered_queue_at: DateTime.utc_now()
+        }
+
+        {:noreply, socket} = handle_info({:push, job}, socket)
+
+        status = Enum.random([:complete, :complete, :deleted])
+
+        :timer.send_after(
+          1000 + Enum.random(10..90) * 100,
+          {"job-queue", status, %{job | status: status}}
+        )
+
+        socket
+      end)
 
     {:ok, socket}
   end
@@ -38,12 +66,17 @@ defmodule PrintClientWeb.IiqSearchLive do
   end
 
   @impl true
-  def handle_event("query", %{"query" => query, "field" => field}, socket) do
+  def handle_event("submit-query", %{"query" => query, "field" => field}, socket) do
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("toggle_sidebar", _params, socket) do
+  def handle_event("update-query", %{"query" => query, "field" => field}, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("toggle-sidebar", _params, socket) do
     new_state = not socket.assigns.expand_sidebar
 
     {:noreply,
@@ -53,8 +86,27 @@ defmodule PrintClientWeb.IiqSearchLive do
   end
 
   @impl true
-  def handle_event("print", params, socket) do
-    saved_params = Map.take(params, ["action"])
+  def handle_event("submit-label", params, socket) do
+    saved_params = params |> Map.take(["action"])
+
+    params =
+      params
+      |> Enum.reduce(%{}, fn {k, v}, acc ->
+        k = if k == "owner", do: "text", else: k
+        Map.put(acc, k, v)
+      end)
+      |> Map.put("printer", socket.assigns.printer)
+
+    case Printer.Queue.submit_job(params) do
+      {:ok, job_id} ->
+        socket
+        |> stream_delete(:jobs, %{id: job_id})
+        |> stream_insert(:jobs, %{id: job_id}, at: 0)
+
+      {:error, reason} ->
+        socket
+        |> put_flash(:error, "Failed to submit job: #{reason}")
+    end
 
     {:noreply,
      socket
@@ -69,13 +121,28 @@ defmodule PrintClientWeb.IiqSearchLive do
      |> assign_label_values()}
   end
 
+  @impl true
+  def handle_info({:push, job}, socket) do
+    {:noreply,
+     socket
+     |> stream_delete(:jobs, job)
+     |> stream_insert(:jobs, job, at: 0)}
+  end
+
+  @impl true
+  def handle_info({"job-queue", _action, job}, socket) do
+    {:noreply,
+     socket
+     |> stream_insert(:jobs, job, at: -1)}
+  end
+
   defp maybe_resize_window(socket) do
-    {w, h} = PrintClient.Window.Print.opts()[:size]
+    {w, h} = Window.Print.opts()[:size]
 
     if socket.assigns.expand_sidebar do
-      PrintClient.Window.Print.set_fixed_size({w + 300, h})
+      Window.Print.set_fixed_size({w + 300, h})
     else
-      PrintClient.Window.Print.set_fixed_size({w, h})
+      Window.Print.set_fixed_size({w, h})
     end
 
     socket
@@ -139,15 +206,17 @@ defmodule PrintClientWeb.IiqSearchLive do
     printers = Settings.all_printers()
 
     selected =
-      (cond do
-        printer = Enum.find(printers, & &1.name == selected) ->
+      cond do
+        printer = Enum.find(printers, &(&1.name == selected)) ->
           printer
+
         printer = Enum.find(printers, & &1.selected) ->
           printer
+
         true ->
           [printer | _] = Enum.take(printers, 1)
           printer
-      end)
+      end
 
     form = to_form(%{"active" => selected.name, "options" => Enum.map(printers, & &1.name)})
 

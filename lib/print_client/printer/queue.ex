@@ -25,6 +25,18 @@ defmodule PrintClient.Printer.Queue do
   """
   def subscribe(), do: Phoenix.PubSub.subscribe(PrintClient.PubSub, @topic)
 
+  @doc """
+  Adds a job to the job queue.
+  """
+  @spec submit_job(Map.t(), number() | nil) :: {:ok, number()} | {:error, term()}
+  def submit_job(params, timeout \\ 5000) do
+    GenServer.call(PrintQueue, {:push, params}, timeout)
+  end
+
+  @doc """
+  Deletes a job from the queue.
+  """
+  @spec delete_job(number()) :: :ok
   def delete_job(job_id) do
     GenServer.cast(PrintQueue, {:delete, job_id})
   end
@@ -41,17 +53,11 @@ defmodule PrintClient.Printer.Queue do
     {:reply, state.jobs, state}
   end
 
-  @impl true
-  def handle_cast({:delete, job_id}, state) do
-    state = delete_job_from_queue(job_id, state)
-    {:noreply, state}
-  end
-
   @doc """
   Adds a job to the queue.
   """
   @impl true
-  def handle_cast({:push, data}, state) do
+  def handle_call({:push, data}, _from, state) do
     with {:ok, data} <- Printer.Labels.validate_label_map(data) do
       job_id = state.last_job_id + 1
 
@@ -74,13 +80,19 @@ defmodule PrintClient.Printer.Queue do
         |> Map.put(:last_job_id, job_id)
         |> Map.put(:jobs, jobs)
 
-      {:noreply, state}
+      {:reply, {:ok, job_id}, state}
     else
       error ->
         Logger.debug("Invalid job data received: #{inspect(data)}, reason: #{inspect(error)}")
 
-        {:noreply, state}
+        {:reply, {:error, error}, state}
     end
+  end
+
+  @impl true
+  def handle_cast({:delete, job_id}, state) do
+    state = delete_job_from_queue(job_id, state)
+    {:noreply, state}
   end
 
   @doc """
@@ -149,8 +161,14 @@ defmodule PrintClient.Printer.Queue do
   end
 
   defp delete_job_from_queue(job_id, jobs) when is_list(jobs) do
-    broadcast_job(:delete, job_id)
-    Enum.reject(jobs, &(&1.id == job_id))
+    broadcast_job(:deleted, job_id)
+
+    Enum.map(jobs, fn j ->
+      case j do
+        %{id: job_id} -> %{j | status: :deleted}
+        j -> j
+      end
+    end)
   end
 
   defp broadcast_job(action, job),
