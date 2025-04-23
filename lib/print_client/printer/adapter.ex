@@ -5,15 +5,8 @@ defmodule PrintClient.Printer.Adapter do
 
   @type t :: module()
 
-  @spec close(GenServer.server()) :: :ok | {:error, term()}
-  @callback close(GenServer.server())
-
-  @spec write(GenServer.server()) :: :ok | {:error, term()}
-  @callback write(GenServer.server(), term())
-
-  @spec read(GenServer.server()) :: {:ok, binary()} | {:error, term()}
-  @callback read(GenServer.server())
-
-  @spec healthcheck(GenServer.server()) :: :ok | {:error, term()}
-  @callback healthcheck(GenServer.server())
+  @callback close(GenServer.server()) :: :ok | {:error, term()}
+  @callback write(GenServer.server(), term()) :: :ok | {:error, term()}
+  @callback read(GenServer.server()) :: {:ok, binary()} | {:error, term()}
+  @callback healthcheck(GenServer.server()) :: :ok | {:error, term()}
 end

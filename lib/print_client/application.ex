@@ -29,10 +29,12 @@ defmodule PrintClient.Application do
 
       # Start the PubSub system
       {Phoenix.PubSub, name: PrintClient.PubSub},
+
       # Start the Endpoint (http/https)
       PrintClientWeb.Endpoint,
-      # Start a worker by calling: PrintClient.Worker.start_link(arg)
-      # {PrintClient.Worker, arg}
+
+      # Start the automatic clustering supervisor
+      {Cluster.Supervisor, [topologies(), [name: PrintClient.ClusterSupervisor]]},
 
       # Start the Unix Socket API
       {PrintClient.UnixSocketApi, name: UnixSocket},
@@ -63,4 +65,7 @@ defmodule PrintClient.Application do
     PrintClientWeb.Endpoint.config_change(changed, removed)
     :ok
   end
+
+  defp topologies,
+    do: [background_job: [strategy: Cluster.Strategy.Gossip]]
 end

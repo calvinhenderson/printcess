@@ -51,10 +51,11 @@ defmodule PrintClient.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:tailwind, "~> 0.1"},
-      {:desktop, "~> 1.4"},
+      {:desktop, "~> 1.5"},
       {:ecto_sqlite3, "~> 0.9.1"},
-      {:circuits_uart, "~> 1.5.3"},
-      {:gen_icmp, "~> 0.6.2"}
+      {:circuits_uart, "~> 1.5"},
+      {:gen_icmp, "~> 0.6"}
+      # {:libcluster, "~> 3.5"}
     ]
   end
 
