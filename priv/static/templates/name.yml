@@ -1,0 +1,20 @@
+variables:
+  text:
+    name: "Text"
+    type: "string"
+  copies:
+    name: "Copies"
+    type: "number"
+files:
+  - "./fonts/text-font.ttf:LABELFONT.TTF"
+tspl: |
+  SIZE 1200 dot,225 dot
+  SPEED 2
+  DENSITY 8
+  OFFSET 0,0
+  GAP 0,0
+  DIRECTION 1
+  CLS
+  BLOCK 40,55,1100,125,"LABELFONT.TTF",0,28,28,0,2,1,"#{text}",
+  PRINT #{copies}
+
