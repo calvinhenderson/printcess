@@ -1,6 +1,4 @@
-defmodule PrintClient.Printer.Adapter.SerialPrinter do
-  use PrintClient.Printer.Adapter
-
+defmodule PrintClient.Printer.SerialPrinter do
   @request_timeout 1000
   @packet_size 1000
 

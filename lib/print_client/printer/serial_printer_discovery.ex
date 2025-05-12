@@ -1,4 +1,4 @@
-defmodule PrintClient.Discovery do
+defmodule PrintClient.Printer.SerialPrinterDiscovery do
   @moduledoc """
   Provides a GenServer for automatically discovering and connecting to printers.
   """
@@ -6,7 +6,7 @@ defmodule PrintClient.Discovery do
   use GenServer
 
   alias Circuits.UART
-  alias PrintClient.Printer.Adapter.SerialPrinter
+  alias PrintClient.Printer.SerialPrinter
   alias PrintClient.Printer
 
   @ownership_table :printer_ownership
@@ -19,11 +19,6 @@ defmodule PrintClient.Discovery do
 
   @impl true
   def init(printer) do
-    with false <- :mnesia.table()
-
-    if not :mnesia.table_exists(@ownership_table) do
-    end
-
     schedule_heartbeat()
     {:ok, %{}}
   end

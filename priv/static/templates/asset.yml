@@ -39,6 +39,4 @@ tspl: |
   TEXT 360,490,"1",0,2,2,2,"#{asset}"
   TEXT 882,490,"1",0,2,2,2,"#{serial}"
   PRINT #{copies}
-  EOP
-  :BARCODE_SIZE
 

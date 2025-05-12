@@ -1,4 +1,4 @@
-defmodule PrintClient.Printer.Adapter.NetworkPrinter do
+defimpl Printer, for: PrintClient.Printer.NetworkPrinter do
   use GenServer
 
   @request_timeout 1000

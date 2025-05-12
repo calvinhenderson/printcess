@@ -54,7 +54,8 @@ defmodule PrintClient.MixProject do
       {:desktop, "~> 1.5"},
       {:ecto_sqlite3, "~> 0.9.1"},
       {:circuits_uart, "~> 1.5"},
-      {:gen_icmp, "~> 0.6"}
+      {:gen_icmp, "~> 0.6"},
+      {:yaml_elixir, "~> 2.11.0"}
       # {:libcluster, "~> 3.5"}
     ]
   end
