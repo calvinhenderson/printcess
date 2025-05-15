@@ -13,7 +13,7 @@ config :print_client, env: Mix.env()
 # Configures the endpoint
 config :print_client, PrintClientWeb.Endpoint,
   url: [host: "localhost"],
-  adapter: PrintClientWeb,
+  adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: PrintClientWeb.ErrorHTML, json: PrintClientWeb.ErrorJSON],
     layout: false
