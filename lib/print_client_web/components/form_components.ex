@@ -1,5 +1,5 @@
 defmodule PrintClientWeb.FormComponents do
-  use PrintClientWeb, :component
+  use PrintClientWeb, :html
 
   @doc """
   Renders a label form for printing.
@@ -13,21 +13,21 @@ defmodule PrintClientWeb.FormComponents do
     ~H"""
     <.form for={@form} class="flex flex-col gap-2" {@rest}>
       <div class="grid grid-cols-[2fr_3fr] items-center">
-        <span><%= gettext("Owner") %></span>
+        <span>{gettext("Owner")}</span>
         <.input
           type="text"
           field={@form[:owner]}
           required={@form[:action].value in ["both", "owner"]}
           disabled={@form[:action].value in ["asset"]}
         />
-        <span><%= gettext("Asset Tag") %></span>
+        <span>{gettext("Asset Tag")}</span>
         <.input
           type="text"
           field={@form[:asset]}
           required={@form[:action].value in ["both", "asset"]}
           disabled={@form[:action].value in ["owner"]}
         />
-        <span><%= gettext("Serial Number") %></span>
+        <span>{gettext("Serial Number")}</span>
         <.input
           type="text"
           field={@form[:serial]}
@@ -40,9 +40,9 @@ defmodule PrintClientWeb.FormComponents do
 
       <button type="submit" class="btn btn-primary btn-md w-full grow">
         <%= if @printer do %>
-          <%= gettext("Print to") %> <%= @printer %>
+          {gettext("Print to")} {@printer}
         <% else %>
-          <%= gettext("Print label(s)") %>
+          {gettext("Print label(s)")}
         <% end %>
       </button>
     </.form>
@@ -162,7 +162,7 @@ defmodule PrintClientWeb.FormComponents do
                 >
                 </path>
               </svg>
-              <span class="col-span-4"><%= job.text %></span>
+              <span class="col-span-4">{job.text}</span>
             <% end %>
             <%= if job.asset do %>
               <svg
@@ -189,9 +189,9 @@ defmodule PrintClientWeb.FormComponents do
               </svg>
 
               <p class="col-span-4">
-                <span>Asset: <%= job.asset %></span>
+                <span>Asset: {job.asset}</span>
                 <br />
-                <span>Serial: <%= job.serial %></span>
+                <span>Serial: {job.serial}</span>
               </p>
             <% end %>
 

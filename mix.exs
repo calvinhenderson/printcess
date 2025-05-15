@@ -6,10 +6,10 @@ defmodule PrintClient.MixProject do
   def project do
     [
       app: @app,
-      version: "0.1.0",
-      elixir: "~> 1.12",
+      version: "1.1.0",
+      elixir: "~> 1.18.3",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -38,25 +38,38 @@ defmodule PrintClient.MixProject do
     [
       {:phoenix, "~> 1.7"},
       {:phoenix_ecto, "~> 4.5"},
-      {:phoenix_html, "~> 3.3"},
-      {:phoenix_live_reload, "~> 1.4", only: :dev},
-      {:phoenix_live_view, "~> 0.19.5"},
-      {:phoenix_view, "~> 2.0"},
+      {:ecto_sqlite3, "~> 0.18.1"},
+      {:phoenix_html, "~> 4.2"},
+      {:phoenix_live_reload, "~> 1.5", only: :dev},
+      {:phoenix_live_view, "~> 1.0"},
       {:floki, ">= 0.30.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8"},
-      {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
+      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.1.1",
+       sparse: "optimized",
+       app: false,
+       compile: false,
+       depth: 1},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.18"},
-      {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"},
-      {:tailwind, "~> 0.1"},
+      {:dns_cluster, "~> 0.1.1"},
+      {:plug_cowboy, "~> 2.7"},
+
+      # Desktop application dependencies
       {:desktop, "~> 1.5"},
-      {:ecto_sqlite3, "~> 0.9.1"},
+
+      # Serial printer connections
       {:circuits_uart, "~> 1.5"},
-      {:gen_icmp, "~> 0.6"},
-      {:yaml_elixir, "~> 2.11.0"}
-      # {:libcluster, "~> 3.5"}
+      # Usb printer connections
+      {:usb, "~> 0.2.1"},
+      {:csv, "~> 3.2"},
+
+      # Clustering
+      {:libcluster, "~> 3.5"}
     ]
   end
 
@@ -69,8 +82,20 @@ defmodule PrintClient.MixProject do
   defp aliases do
     [
       env: ["export EXQLITE_SYSTEM_CFLAGS=-mmacosx-version-min=12.1"],
-      setup: ["deps.get"],
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]
+      setup: ["deps.get", "assets.setup", "assets.build"],
+      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      "assets.setup": [
+        "tailwind.install --if-missing",
+        "esbuild.install --if-missing"
+      ],
+      "assets.build": ["tailwind default", "esbuild default"],
+      "assets.deploy": [
+        "tailwind default --minify",
+        "esbuild default --minify",
+        "phx.digest"
+      ]
     ]
   end
 

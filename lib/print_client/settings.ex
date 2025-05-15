@@ -1,12 +1,16 @@
 defmodule PrintClient.Settings do
   alias PrintClient.Repo
 
-  alias PrintClient.Settings.{Printer, Iiq}
+  alias PrintClient.Settings.{Printer, Config}
 
   import Ecto.Query
 
   ##
   ## Printers
+
+  def get_printer(printer_id), do: Repo.get(Printer, printer_id)
+
+  def change_printer(printer, attrs \\ %{}), do: Printer.changeset(printer, attrs)
 
   def all_printers() do
     Repo.all(
@@ -18,15 +22,13 @@ defmodule PrintClient.Settings do
     )
   end
 
-  def update_printer(printer, attrs) do
+  def update_printer(%Ecto.Changeset{} = changeset) do
     multi =
-      if attrs.selected == 1 do
+      if changeset.data.selected == 1 do
         unset_selected_printers_multi()
       else
         Ecto.Multi.new()
       end
-
-    changeset = Printer.changeset(printer, attrs)
 
     with {:ok, transaction} <-
            multi
@@ -78,31 +80,31 @@ defmodule PrintClient.Settings do
   ## IncidentIQ
 
   @doc """
-  Returns the current IncidentIQ config. If it
+  Returns the current Settings.Config. If it
   does not exist, a blank config is returned.
   """
-  def get_iiq_settings do
-    Repo.one(Iiq)
+  def get_settings do
+    Repo.one(Config)
     |> case do
-      nil -> %Iiq{}
-      iiq -> iiq
+      nil -> %Config{}
+      config -> config
     end
   end
 
   @doc """
-  Returns an `Ecto.Changeset` for tracking IncidentIQ config changes.
+  Returns an `Ecto.Changeset` for tracking config changes.
   """
-  def change_iiq_settings(attrs \\ %{}) do
-    get_iiq_settings()
-    |> Iiq.changeset(attrs)
+  def change_settings(attrs \\ %{}) do
+    get_settings()
+    |> Config.changeset(attrs)
   end
 
   @doc """
-  Writes the IncidentIQ settings config to the database.
+  Writes the config to the database.
   """
-  def save_iiq_settings(attrs \\ %{}) do
-    get_iiq_settings()
-    |> Iiq.changeset(attrs)
+  def save_settings(attrs \\ %{}) do
+    get_settings()
+    |> Config.changeset(attrs)
     |> Repo.insert_or_update()
   end
 end

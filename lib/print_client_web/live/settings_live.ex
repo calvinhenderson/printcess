@@ -15,7 +15,7 @@ defmodule PrintClientWeb.SettingsLive do
       |> assign(printers: printers)
       |> assign(selected_printer: List.first(printers, %Settings.Printer{}))
       |> assign(tab: tab_form)
-      |> assign_incidentiq_settings()
+      |> assign_settings()
 
     {:ok, socket}
   end
@@ -41,11 +41,11 @@ defmodule PrintClientWeb.SettingsLive do
     }
 
     {:ok, printer} =
-      if !Map.has_key?(attrs, "id") or attrs["id"] == "" do
+      if !Map.has_key?(attrs, "printer_id") or attrs["printer_id"] == "" do
         Settings.create_printer(changeset)
       else
-        {id, _} = Integer.parse(attrs["id"])
-        Settings.update_printer(%Settings.Printer{id: id}, changeset)
+        {printer_id, _} = Integer.parse(attrs["printer_id"])
+        Settings.update_printer(%Settings.Printer{id: printer_id}, changeset)
       end
 
     {:noreply,
@@ -55,7 +55,7 @@ defmodule PrintClientWeb.SettingsLive do
      )}
   end
 
-  def handle_event("select", %{"printer" => printer_id}, socket) do
+  def handle_event("select", %{"printer_id" => printer_id}, socket) do
     printers = Settings.all_printers()
 
     with {printer_id_num, _} <- Integer.parse(printer_id) do
@@ -92,8 +92,8 @@ defmodule PrintClientWeb.SettingsLive do
      )}
   end
 
-  defp assign_incidentiq_settings(socket) do
+  defp assign_settings(socket) do
     socket
-    |> assign(iiq_form: to_form(Settings.change_iiq_settings()))
+    |> assign(settings_form: to_form(Settings.change_settings()))
   end
 end

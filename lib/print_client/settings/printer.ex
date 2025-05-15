@@ -3,12 +3,12 @@ defmodule PrintClient.Settings.Printer do
 
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: ~w(name hostname port)a}
-  schema "printers" do
-    field(:name, :string)
-    field(:hostname, :string)
-    field(:port, :integer)
-    field(:selected, :integer)
+  @derive {JSON.Encoder, only: ~w(name hostname port)a}
+  schema "printers_v2" do
+    field :name, :string
+    field :hostname, :string
+    field :port, :integer
+    field :selected, :integer
   end
 
   def changeset(printer, attrs \\ %{}) do

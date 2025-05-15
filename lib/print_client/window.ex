@@ -5,17 +5,22 @@ defmodule PrintClient.Window do
 
   @default_window_size {400, 380}
 
+  @type frame_size :: {number(), number()} | nil
+
   @callback opts :: [
               window: pid(),
               title: String.t(),
-              size: {number(), number()},
-              fixed_size?: boolean(),
+              initial_size: frame_size,
+              min_size: frame_size,
+              max_size: frame_size,
               url: Function.t()
             ]
 
   defmacro __using__(module_opts) do
     quote do
       @behaviour PrintClient.Window
+
+      @type frame_size :: {number(), number()} | nil
 
       use GenServer
 
@@ -30,8 +35,9 @@ defmodule PrintClient.Window do
         window = Keyword.fetch!(unquote(module_opts), :window)
         title = Keyword.fetch!(unquote(module_opts), :title) <> " - Print Client"
         url = Keyword.fetch!(unquote(module_opts), :url)
-        size = Keyword.get(unquote(module_opts), :size, unquote(@default_window_size))
-        fixed_size = Keyword.get(unquote(module_opts), :fixed_size, false)
+        initial_size = Keyword.get(unquote(module_opts), :size, unquote(@default_window_size))
+        min_size = Keyword.get(unquote(module_opts), :min_size)
+        max_size = Keyword.get(unquote(module_opts), :max_size)
         menubar = Keyword.get(unquote(module_opts), :menubar, nil)
         icon_menu = Keyword.get(unquote(module_opts), :icon_menu, nil)
 
@@ -40,18 +46,17 @@ defmodule PrintClient.Window do
             app: :print_client,
             id: window,
             title: title,
-            size: size,
+            initial_size: initial_size,
+            min_size: min_size,
+            max_size: max_size,
             icon: "icon.png",
             menubar: menubar,
             icon_menu: icon_menu,
-            url: url
+            url: fn -> Path.join(PrintClientWeb.Endpoint.url(), url) end
           ]
           |> Desktop.Window.start_link()
-          |> dbg()
 
-        if fixed_size do
-          set_fixed_size(size)
-        end
+        set_window_size(initial_size, min_size, max_size)
 
         result
       end
@@ -66,26 +71,23 @@ defmodule PrintClient.Window do
 
       def hide, do: Desktop.Window.hide(unquote(module_opts)[:window])
 
-      @spec set_fixed_size({number(), number()}) :: :ok
-      def set_fixed_size(size) do
+      def load_url(url) do
+        window = Keyword.fetch!(unquote(module_opts), :window)
+        :wx.set_env(Desktop.Env.wx_env())
+        webview = Desktop.Window.webview(window)
+
+        :wxWebView.loadURL(webview, Path.join(PrintClientWeb.Endpoint.url(), url))
+      end
+
+      @spec set_window_size(frame_size, frame_size, frame_size) :: :ok
+      def set_window_size(initial_size, min_size, max_size) do
         window = Keyword.fetch!(unquote(module_opts), :window)
         :wx.set_env(Desktop.Env.wx_env())
         frame = Desktop.Window.frame(window)
 
-        {w, _h} = :wxWindow.getSize(frame)
-
-        # fixes wxwidgets complaining about max size < min size, vice versa
-        if elem(size, 0) <= w do
-          :wxWindow.setMinSize(frame, size)
-          :wxWindow.setMaxSize(frame, size)
-        else
-          :wxWindow.setMaxSize(frame, size)
-          :wxWindow.setMinSize(frame, size)
-        end
-
-        :wxWindow.setSize(frame, size)
-
-        :ok
+        if initial_size, do: :wxWindow.setSize(frame, initial_size)
+        if min_size, do: :wxWindow.setMinSize(frame, min_size)
+        if max_size, do: :wxWindow.setMaxSize(frame, max_size)
       end
     end
   end

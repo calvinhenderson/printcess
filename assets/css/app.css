@@ -1,8 +1,13 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+/* @plugin "daisyui"; */
 
 /* This file is for your main application CSS */
+
+body {
+  background-color: red !important;
+}
 
 /* Alerts and form errors used by phx.new */
 .alert {

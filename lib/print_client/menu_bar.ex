@@ -6,50 +6,57 @@ defmodule PrintClient.MenuBar do
 
   import PrintClientWeb.Gettext
   use Desktop.Menu
+  use PrintClientWeb, :verified_routes
 
   alias Desktop.Window
 
-  def render(assigns) do
-    ~H"""
-    <menubar>
-      <%= if Desktop.OS.type() != MacOS do %>
-        <menu label={gettext "File"}>
-          <item onclick="quit"><%= gettext "Quit" %></item>
-        </menu>
-      <% end %>
-
-      <%= if Enum.member?([:dev,:test], Application.get_env(:print_client, :env)) do %>
-        <menu label={gettext "Extra"}>
-          <item onclick="observer"><%= gettext "Show Observer" %></item>
-          <item onclick="browser"><%= gettext "Open Browser" %></item>
-        </menu>
-      <% end %>
-    </menubar>
-    """
+  @impl true
+  def mount(menu) do
+    {:ok, menu}
   end
 
+  @impl true
   def handle_info("", menu) do
     {:noreply, menu}
   end
 
+  @impl true
   def handle_event("observer", menu) do
     :observer.start()
     {:noreply, menu}
   end
 
+  @impl true
   def handle_event("quit", menu) do
     Window.quit()
     {:noreply, menu}
   end
 
+  @impl true
   def handle_event("browser", menu) do
-    Window.prepare_url(PrintClientWeb.Endpoint.url())
+    Window.prepare_url(~p"/")
     |> :wx_misc.launchDefaultBrowser()
 
     {:noreply, menu}
   end
 
-  def mount(menu) do
-    {:ok, menu}
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <menubar>
+      <%= if Desktop.OS.type() != MacOS do %>
+        <menu label={gettext("File")}>
+          <item onclick="quit">{gettext("Quit")}</item>
+        </menu>
+      <% end %>
+
+      <%= if Enum.member?([:dev,:test], Application.get_env(:print_client, :env)) do %>
+        <menu label={gettext("Extra")}>
+          <item onclick="observer">{gettext("Show Observer")}</item>
+          <item onclick="browser">{gettext("Open Browser")}</item>
+        </menu>
+      <% end %>
+    </menubar>
+    """
   end
 end

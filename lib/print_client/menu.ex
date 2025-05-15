@@ -3,12 +3,12 @@ defmodule PrintClient.Menu do
   Action Menu for the taskbar icon.
   """
   import PrintClientWeb.Gettext
+  use PrintClientWeb, :verified_routes
 
   use Desktop.Menu
   alias Desktop.Menu
 
-  alias PrintClientWeb.{Router, Endpoint}
-
+  @impl true
   def mount(menu) do
     # This impure function sets the icon externally through wxWidgets
     Menu.set_icon(menu, {:file, "icon32x32.png"})
@@ -16,40 +16,43 @@ defmodule PrintClient.Menu do
     {:ok, menu}
   end
 
+  @impl true
   def handle_info(_, menu) do
     {:noreply, menu}
   end
 
+  @impl true
   def handle_event("quit", menu),
     do: Desktop.Window.quit() |> then(fn _ -> {:noreply, menu} end)
 
-  def handle_event("show", menu) do
-    PrintClient.Window.Print.show()
-    {:noreply, menu}
-  end
+  @impl true
+  def handle_event("show", menu), do: show_url(menu, ~p"/")
 
-  def handle_event("asset-spam", menu) do
-    PrintClient.Window.BulkAssetPrint.show()
-    {:noreply, menu}
-  end
+  @impl true
+  def handle_event("asset-spam", menu), do: show_url(menu, ~p"/scan-mode")
 
-  def handle_event("settings", menu) do
-    PrintClient.Window.Settings.show()
-    {:noreply, menu}
-  end
+  @impl true
+  def handle_event("settings", menu), do: show_url(menu, ~p"/settings")
 
+  @impl true
   def render(assigns) do
     ~H"""
     <menu>
       <%= if Enum.member?([:dev,:test], Application.get_env(:print_client, :env)) do %>
-        <item><%= gettext("Dev build") %></item>
+        <item>{gettext("Dev build")}</item>
         <hr />
       <% end %>
-      <item onclick="show"><%= gettext("Show") %></item>
-      <item onclick="asset-spam"><%= gettext("Bulk") %></item>
-      <item onclick="settings"><%= gettext("Settings") %></item>
-      <item onclick="quit"><%= gettext("Quit") %></item>
+      <item onclick="show">{gettext("Show")}</item>
+      <item onclick="asset-spam">{gettext("Bulk")}</item>
+      <item onclick="settings">{gettext("Settings")}</item>
+      <item onclick="quit">{gettext("Quit")}</item>
     </menu>
     """
+  end
+
+  defp show_url(menu, url) do
+    PrintClient.Window.Print.show()
+    PrintClient.Window.Print.load_url(url)
+    {:noreply, menu}
   end
 end

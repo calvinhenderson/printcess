@@ -1,14 +1,10 @@
 defmodule PrintClient.Window.Print do
-  alias PrintClientWeb.{Router, Endpoint, IiqSearchLive}
+  use PrintClientWeb, :verified_routes
 
   use PrintClient.Window,
     window: PrintWindow,
-    title: "Label Printing",
-    size: {400, 483},
-    fixed_size: true,
+    title: "Print Client",
     menubar: PrintClient.MenuBar,
     icon_menu: PrintClient.Menu,
-    url: fn ->
-      Router.Helpers.live_url(Endpoint, IiqSearchLive)
-    end
+    url: ~p"/"
 end

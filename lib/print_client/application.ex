@@ -19,6 +19,7 @@ defmodule PrintClient.Application do
 
     Logger.info("Saving settings to path: #{config_dir()}")
 
+    # Update the repo to point to our actual database
     Application.put_env(:print_client, PrintClient.Repo,
       database: Path.join(config_dir(), "/settings.db")
     )
@@ -30,24 +31,27 @@ defmodule PrintClient.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: PrintClient.PubSub},
 
-      # Start the Endpoint (http/https)
-      PrintClientWeb.Endpoint,
+      # Start the printer registry
+      {Registry, name: PrintClient.Printer.Registry, keys: :unique},
 
       # Start the automatic clustering supervisor
       {Cluster.Supervisor, [topologies(), [name: PrintClient.ClusterSupervisor]]},
 
       # Start the Unix Socket API
-      {PrintClient.UnixSocketApi, name: UnixSocket},
-
-      # Start the printer queue
-      {PrintClient.Printer.Queue, name: PrintQueue},
-      PrintClient.Window.Print,
+      # {PrintClient.UnixSocketApi, name: UnixSocket},
 
       # Start the Repo
       PrintClient.Repo,
 
       # One-off post-startup tasks
-      PrintClient.StartupTasks
+      PrintClient.StartupTasks,
+
+      # Start the Endpoint (http/https)
+      PrintClientWeb.Endpoint,
+
+      # Start the printer queue
+      # {PrintClient.Printer.Queue, name: PrintQueue},
+      PrintClient.Window.Print
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
