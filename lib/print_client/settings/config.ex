@@ -3,7 +3,7 @@ defmodule PrintClient.Settings.Config do
 
   import Ecto.Changeset
 
-  @derive {JSON.Encoder, only: ~w(theme instance token)a}
+  @derive {Jason.Encoder, only: ~w(theme instance token)a}
   schema "settings_v2" do
     field :theme, :string
     field :instance, :string

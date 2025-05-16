@@ -3,7 +3,7 @@ defmodule PrintClient.Window do
   A base module for creating windows.
   """
 
-  @default_window_size {400, 380}
+  @default_window_size {800, 500}
 
   @type frame_size :: {number(), number()} | nil
 
@@ -38,8 +38,8 @@ defmodule PrintClient.Window do
         initial_size = Keyword.get(unquote(module_opts), :size, unquote(@default_window_size))
         min_size = Keyword.get(unquote(module_opts), :min_size)
         max_size = Keyword.get(unquote(module_opts), :max_size)
-        menubar = Keyword.get(unquote(module_opts), :menubar, nil)
-        icon_menu = Keyword.get(unquote(module_opts), :icon_menu, nil)
+        menubar = Keyword.get(unquote(module_opts), :menubar, PrintClient.MenuBar)
+        icon_menu = Keyword.get(unquote(module_opts), :icon_menu, PrintClient.Menu)
 
         result =
           [

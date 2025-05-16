@@ -125,7 +125,7 @@ defmodule PrintClient.Printer.Discovery do
     with priv_dir <- Application.app_dir(:print_client, "priv/static/"),
          usb_id_path <- Path.join(priv_dir, "./usb-ids.tsv"),
          true <- File.exists?(usb_id_path),
-         stream <- File.stream!(usb_id_path, :line),
+         stream <- File.stream!(usb_id_path, :line, [:utf8]),
          usb_id_map <- CSV.decode(stream, separator: ?\t, headers: true) do
       Enum.reduce(usb_id_map, %{}, fn info, acc ->
         case info do

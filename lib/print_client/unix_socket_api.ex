@@ -45,7 +45,7 @@ defmodule PrintClient.UnixSocketApi do
 
   @impl true
   def handle_info({:udp, _socket, _addr, _port, data}, state) do
-    with {:ok, json} <- JSON.decode(data) do
+    with {:ok, json} <- Jason.decode(data) do
       json =
         if not Map.has_key?(json, "printer") do
           printer = Enum.find(PrintClient.Settings.all_printers(), fn p -> p.selected == 1 end)
@@ -62,11 +62,11 @@ defmodule PrintClient.UnixSocketApi do
 
       {_, state} = handle_cast({:push, json}, state)
       Logger.debug("pushing job to queue: #{inspect(json)}")
-      {:reply, JSON.encode!(%{success: "adding job to queue."}), state}
+      {:reply, Jason.encode!(%{success: "adding job to queue."}), state}
     else
       error ->
         Logger.debug("invalid json struct: #{inspect(error)}")
-        {:reply, JSON.encode!(%{error: "invalid json struct", reason: inspect(error)}), state}
+        {:reply, Jason.encode!(%{error: "invalid json struct", reason: inspect(error)}), state}
     end
 
     {:noreply, state}

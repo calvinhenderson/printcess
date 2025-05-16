@@ -34,7 +34,7 @@ defmodule PrintClient.MenuBar do
 
   @impl true
   def handle_event("browser", menu) do
-    Window.prepare_url(~p"/")
+    Window.url(PrintWindow)
     |> :wx_misc.launchDefaultBrowser()
 
     {:noreply, menu}
@@ -50,7 +50,7 @@ defmodule PrintClient.MenuBar do
         </menu>
       <% end %>
 
-      <%= if Enum.member?([:dev,:test], Application.get_env(:print_client, :env)) do %>
+      <%= if Mix.env() in [:dev, :test] do %>
         <menu label={gettext("Extra")}>
           <item onclick="observer">{gettext("Show Observer")}</item>
           <item onclick="browser">{gettext("Open Browser")}</item>

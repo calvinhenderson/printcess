@@ -91,9 +91,7 @@ defmodule Mix.Tasks.Bundle do
 
     # Create regular icons
     for size <- sizes do
-      cmd(
-        "sips -z #{size} #{size} #{icon_file} --out #{icon_dir}/icon_#{size}x#{size}.png"
-      )
+      cmd("sips -z #{size} #{size} #{icon_file} --out #{icon_dir}/icon_#{size}x#{size}.png")
     end
 
     # Create retina icons

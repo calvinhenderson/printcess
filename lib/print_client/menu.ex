@@ -38,7 +38,7 @@ defmodule PrintClient.Menu do
   def render(assigns) do
     ~H"""
     <menu>
-      <%= if Enum.member?([:dev,:test], Application.get_env(:print_client, :env)) do %>
+      <%= if Mix.env() in [:dev, :test] do %>
         <item>{gettext("Dev build")}</item>
         <hr />
       <% end %>

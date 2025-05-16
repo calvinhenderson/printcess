@@ -1,7 +1,0 @@
-<!-- <PrintClient.Menu.render> lib/print_client/menu.ex:39 (print_client) --><menu>
-  
-  <item onclick="show">Show</item>
-  <item onclick="asset-spam">Bulk</item>
-  <item onclick="settings">Settings</item>
-  <item onclick="quit">Quit</item>
-</menu><!-- </PrintClient.Menu.render> -->

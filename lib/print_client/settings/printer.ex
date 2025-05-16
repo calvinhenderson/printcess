@@ -3,7 +3,7 @@ defmodule PrintClient.Settings.Printer do
 
   import Ecto.Changeset
 
-  @derive {JSON.Encoder, only: ~w(name hostname port)a}
+  @derive {Jason.Encoder, only: ~w(name hostname port)a}
   schema "printers_v2" do
     field :name, :string
     field :hostname, :string

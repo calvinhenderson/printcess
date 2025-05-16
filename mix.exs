@@ -7,7 +7,7 @@ defmodule PrintClient.MixProject do
     [
       app: @app,
       version: "1.1.0",
-      elixir: "~> 1.18.3",
+      elixir: "~> 1.16.3",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -93,11 +93,11 @@ defmodule PrintClient.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": [
         "esbuild.install --if-missing",
-        "tailwind.install --if-missing",
+        "tailwind.install --if-missing"
       ],
       "assets.build": [
         "esbuild print_client",
-        "tailwind print_client",
+        "tailwind print_client"
       ],
       "assets.deploy": [
         "esbuild print_client --minify",
