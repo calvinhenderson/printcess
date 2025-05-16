@@ -55,8 +55,18 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
 
   def print(%__MODULE__{usb_ref: ref, usb_timeout: usb_timeout} = adapter_state, data) do
     # Ensure the uart_pid is alive before writing.
-    case :usb.write_bulk(ref, 0, data, usb_timeout) do
-      :ok ->
+    case :usb.write_bulk(ref, 1, data, usb_timeout) do
+      {:ok, written} ->
+        dbg(data)
+
+        if written != byte_size(data) do
+          Logger.error(
+            "UsbPrinter: Message truncated during transit. Wrote #{written}/#{byte_size(data)} bytes."
+          )
+        else
+          Logger.info("UsbPrinter: Successfully wrote #{written}/#{byte_size(data)} bytes.")
+        end
+
         :ok
 
       {:error, reason} ->
@@ -104,14 +114,23 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
 
   defp merge_device_descriptors(devices) do
     Enum.reduce(devices, %{}, fn dev, acc ->
-      descriptor = :usb.get_device_descriptor(dev)
-      %{acc | dev => descriptor}
+      case :usb.get_device_descriptor(dev) do
+        {:ok, descriptor} ->
+          Map.put(acc, dev, descriptor)
+
+        error ->
+          Logger.warning(
+            "UsbPrinter: Skipping USB device discovery for #{inspect(dev)}. Unable to load descriptors: #{inspect(error)}."
+          )
+
+          acc
+      end
     end)
   end
 
   defp filter_usb_device(devices, vendor, product) do
     Enum.find(devices, fn {_, v} ->
-      v.vendor == vendor and v.product == product
+      v.vendor_id == vendor and v.product_id == product
     end)
   end
 
@@ -119,8 +138,8 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
     with {:ok, devices} <- :usb.get_device_list(),
          with_descriptors <- merge_device_descriptors(devices),
          {match, _} <- filter_usb_device(with_descriptors, vendor, product),
-         :ok <- :usb.claim_interface(match, 0),
-         {:ok, usb_ref} <- :usb.open_device(match) do
+         {:ok, usb_ref} <- :usb.open_device(match),
+         :ok <- :usb.claim_interface(usb_ref, 0) do
       {:ok, usb_ref}
     else
       _ ->

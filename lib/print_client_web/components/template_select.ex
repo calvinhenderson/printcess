@@ -76,30 +76,30 @@ defmodule PrintClientWeb.TemplateSelectComponent do
     |> assign(template_options: template_options)
   end
 
-  defp assign_selected(socket, template_name),
-    do:
-      assign(
-        socket,
-        :selected,
-        Enum.find(socket.assigns[:templates], &(&1.name == template_name))
-      )
+  defp assign_selected(%{assigns: %{templates: templates}} = socket, template_name),
+    do: assign(socket, :selected, Enum.find(templates, &(&1.name == template_name)))
 
-  defp notify_selected(%{assigns: %{selected: %{name: template_name}}} = socket) do
-    socket
-  end
+  defp list_templates, do: Template.load_templates()
 
-  defp notify_selected(socket), do: socket
-
-  defp list_templates,
+  defp _list_templates,
     do: [
       %Template{
         name: "Combined Chromebook Label",
-        template: """
-          <h1>Combined Chromebook Label</h1>
-          <p>Asset: {{ asset_number }}</p>
-          <p>Serial: {{ serial_number }}</p>
-          <p>Owner: {{ username }}</p>
-        """,
+        template:
+          "SIZE 1200 dot, 375 dot\r\n" <>
+            "DIRECTION 1\r\n" <>
+            "CLS\r\n" <>
+            "TEXT 10,10,\"4\",0,1,1,\"{{username}}\"\r\n" <>
+            "BARCODE 100,60,\"128\",90,1,0,2,2,0, \"{{asset}}\"" <>
+            "BARCODE 200,120, \"128\",90,1,0,2,2,0, \"{{serial}}\"\r\n" <>
+            "PRINT {{copies}}\r\n" <>
+            "END\r\n",
+        # template: """
+        #   <h1>Combined Chromebook Label</h1>
+        #   <p>Asset: {{ asset_number }}</p>
+        #   <p>Serial: {{ serial_number }}</p>
+        #   <p>Owner: {{ username }}</p>
+        # """,
         required_fields: [:username, :asset, :serial]
       }
     ]
