@@ -5,19 +5,22 @@ defmodule PrintClient.Assets do
 
   @all_assets [
     %{
-      "asset_number" => "10001",
-      "serial_number" => "ABC1234",
-      "owner_username" => "donald_trump"
+      "AssetId" => "A1000",
+      "AssetNumber" => "10001",
+      "SerialNumber" => "ABC1234",
+      "OwnerEmail" => "donald_trump"
     },
     %{
-      "asset_number" => "10002",
-      "serial_number" => "ZXV9830",
-      "owner_username" => "kamala_harris"
+      "AssetId" => "A1000",
+      "AssetNumber" => "10002",
+      "SerialNumber" => "ZXV9830",
+      "OwnerEmail" => "kamala_harris"
     },
     %{
-      "asset_number" => "10203",
-      "serial_number" => "EFGH458",
-      "owner_username" => "george_w_bush"
+      "AssetId" => "A1000",
+      "AssetNumber" => "10203",
+      "SerialNumber" => "EFGH458",
+      "OwnerEmail" => "george_w_bush"
     }
   ]
 
@@ -29,9 +32,9 @@ defmodule PrintClient.Assets do
 
     @all_assets
     |> Enum.filter(fn asset ->
-      String.contains?(String.downcase(asset["asset_number"]), query_low) or
-        String.contains?(String.downcase(asset["serial_number"]), query_low) or
-        String.contains?(String.downcase(asset["owner_username"]), query_low)
+      String.contains?(String.downcase(asset["AssetNumber"]), query_low) or
+        String.contains?(String.downcase(asset["SerialNumber"]), query_low) or
+        String.contains?(String.downcase(asset["OwnerEmail"]), query_low)
     end)
   end
 end

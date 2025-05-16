@@ -73,6 +73,11 @@ defmodule PrintClient.MixProject do
       {:usb, "~> 0.2.1"},
       {:csv, "~> 3.2"},
 
+      # Label generation
+      {:mustache, "~> 0.5.0"},
+      {:mogrify, "~> 0.9.3"},
+      {:qr_code, "~> 3.2.0"},
+
       # Clustering
       {:libcluster, "~> 3.5"}
     ]

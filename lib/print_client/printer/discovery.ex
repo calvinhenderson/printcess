@@ -9,8 +9,6 @@ defmodule PrintClient.Printer.Discovery do
   alias PrintClient.Printer
   alias PrintClient.Printer.Adapter.{NetworkPrinter, SerialPrinter, UsbPrinter}
 
-  use GenServer
-
   @default_baud_rate 9600
 
   @doc """

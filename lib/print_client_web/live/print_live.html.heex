@@ -1,57 +1,17 @@
-<.header>
-  Print Live
-</.header>
+<div class="flex justify-center items-center min-h-screen">
+  <div class="flex flex-col max-w-md mx-auto gap-4">
+    <.live_component id="printers" module={PrintClientWeb.PrinterSelectComponent} />
 
-<%= if @changeset do %>
-  <.form :let={f} for={@changeset} phx-change="validate" phx-submit="save">
-    <div class="space-y-4">
-      <hr class="my-6" />
+    <.live_component id="templates" module={PrintClientWeb.TemplateSelectComponent} />
 
-      <div>
-        <.input
-          type="text"
-          field={f[:username]}
-          id="username"
-          readonly={true}
-          label="Username"
-          placeholder="Auto-filled from search"
-        />
-      </div>
+    <.live_component id="api-search" module={PrintClientWeb.ApiSearchComponent} />
 
-      <div>
-        <.input
-          type="text"
-          field={f[:asset_number]}
-          id="asset_number"
-          label="Asset Number"
-          placeholder="00000"
-        />
-      </div>
-
-      <div>
-        <.input
-          type="text"
-          field={f[:serial_number]}
-          id="serial_number"
-          label="Serial Number"
-          placeholder="ABC1234"
-        />
-      </div>
-
-      <div>
-        <.input
-          type="number"
-          field={f[:copies]}
-          id="copies"
-          min="1"
-          label="Copies"
-          value={Phoenix.HTML.Form.input_value(f, :copies) || 1}
-        />
-      </div>
-
-      <div class="pt-4">
-        <.button type="submit" phx-disable-with="Saving...">Submit</.button>
-      </div>
-    </div>
-  </.form>
-<% end %>
+    <.label_form
+      id="label-form"
+      for={@changeset}
+      submit="print"
+      disabled={is_nil(@selected_printer) or is_nil(@selected_template)}
+      required={if @selected_template, do: @selected_template.required_fields, else: []}
+    />
+  </div>
+</div>

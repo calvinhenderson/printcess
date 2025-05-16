@@ -5,22 +5,25 @@ defmodule PrintClient.Users do
 
   @all_users [
     %{
-      "username" => "donald_trump",
-      "given_name" => "Donald",
-      "family_name" => "Trump",
-      "display_name" => "Donald Trump"
+      "UserId" => "U1000",
+      "Username" => "donald_trump",
+      "FirstName" => "Donald",
+      "LastName" => "Trump",
+      "DisplayName" => "Donald Trump"
     },
     %{
-      "username" => "kamala_harris",
-      "given_name" => "Kamala",
-      "family_name" => "Harris",
-      "display_name" => "Kamala Harris"
+      "UserId" => "U1000",
+      "Username" => "kamala_harris",
+      "FirstName" => "Kamala",
+      "LastName" => "Harris",
+      "DisplayName" => "Kamala Harris"
     },
     %{
-      "username" => "george_w_bush",
-      "given_name" => "George",
-      "family_name" => "Bush",
-      "display_name" => "George W. Bush"
+      "UserId" => "U1000",
+      "Username" => "george_w_bush",
+      "FirstName" => "George",
+      "LastName" => "Bush",
+      "DisplayName" => "George W. Bush"
     }
   ]
 
@@ -29,10 +32,10 @@ defmodule PrintClient.Users do
 
     @all_users
     |> Enum.filter(fn user ->
-      String.contains?(String.downcase(user["username"]), query_low) or
-        String.contains?(String.downcase(user["given_name"]), query_low) or
-        String.contains?(String.downcase(user["family_name"]), query_low) or
-        String.contains?(String.downcase(user["display_name"]), query_low)
+      String.contains?(String.downcase(user["Username"]), query_low) or
+        String.contains?(String.downcase(user["FirstName"]), query_low) or
+        String.contains?(String.downcase(user["LastName"]), query_low) or
+        String.contains?(String.downcase(user["DisplayName"]), query_low)
     end)
   end
 end

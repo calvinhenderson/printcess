@@ -23,7 +23,8 @@ defmodule PrintClient.Printer do
             connect_retry_delay_ms: 1000,
             connect_retries: 0,
             connect_max_retries: 5,
-            connection_monitor_ref: nil
+            connection_monitor_ref: nil,
+            stop: false
 
   @type t :: [
           printer_id: term(),
@@ -39,7 +40,8 @@ defmodule PrintClient.Printer do
           connect_retry_delay_ms: number(),
           connect_retries: number(),
           connect_max_retries: number(),
-          connection_monitor_ref: Process.monitor() | nil
+          connection_monitor_ref: Process.monitor() | nil,
+          stop: boolean()
         ]
 
   @pubsub PrintClient.PubSub
@@ -48,7 +50,8 @@ defmodule PrintClient.Printer do
 
   @spec start_link(map()) :: GenServer.start_link()
   def start_link(opts) do
-    printer_id = Keyword.fetch!(opts, :printer_id)
+    dbg(opts)
+    printer_id = Map.fetch!(opts, :printer_id)
     GenServer.start_link(__MODULE__, opts, name: Printer.Registry.via_tuple(printer_id))
   end
 
@@ -79,9 +82,9 @@ defmodule PrintClient.Printer do
 
   @impl true
   def init(opts) do
-    printer_id = Keyword.fetch!(opts, :printer_id)
-    adapter_module = Keyword.fetch!(opts, :adapter_module)
-    adapter_config = Keyword.fetch!(opts, :adapter_config)
+    printer_id = Map.fetch!(opts, :printer_id)
+    adapter_module = Map.fetch!(opts, :adapter_module)
+    adapter_config = Map.fetch!(opts, :adapter_config)
 
     adapter_state_instance = struct!(adapter_module, adapter_config)
 
@@ -94,7 +97,8 @@ defmodule PrintClient.Printer do
       prev_job_id: 0,
       connect_retry_timer: nil,
       connect_retries: 0,
-      connection_monitor_ref: nil
+      connection_monitor_ref: nil,
+      stop: false
     }
 
     Logger.info("Printer #{printer_id} initialized with adapter: #{inspect(adapter_module)}.")
@@ -143,7 +147,7 @@ defmodule PrintClient.Printer do
 
     Logger.debug(
       (
-        "Printer.Device #{state.printer_id}:"
+        "Printer #{state.printer_id}:"
         " Job #{job.id} added to queue."
         " Queue size: #{:queue.len(new_queue)}"
       )
@@ -156,14 +160,18 @@ defmodule PrintClient.Printer do
 
   @impl true
   def handle_cast(:process_queue, state) do
-    {:noreply, process_next_job(state)}
+    new_state = process_next_job(state)
+
+    if :queue.len(new_state.job_queue) == 0 and state.stop,
+      do: {:stop, :normal, new_state},
+      else: {:noreply, state}
   end
 
   # We monitor the adapter's GenServer. Here we handle if it goes down.
   @impl GenServer
   def handle_info({:DOWN, ref, :process, _pid, reason}, %{connection_monitor_ref: ref} = state) do
     Logger.error(
-      "Printer.Device #{state.printer_id}: Monitored resource (adapter connection) went down. Reason: #{inspect(reason)}. Attempting to reconnect."
+      "Printer #{state.printer_id}: Monitored resource (adapter connection) went down. Reason: #{inspect(reason)}. Attempting to reconnect."
     )
 
     # Clean up old monitor, mark as disconnected, and try to reconnect
@@ -185,6 +193,11 @@ defmodule PrintClient.Printer do
     {:noreply, state}
   end
 
+  def handle_info(:stop, state) do
+    Logger.debug("Printer: requested stop for #{inspect(state.printer_id)}")
+    {:noreply, %{state | stop: true}}
+  end
+
   # --- Internal API ---
 
   defp broadcast_job(printer_id, job_id, message),
@@ -199,7 +212,7 @@ defmodule PrintClient.Printer do
   defp attempt_connection(state) do
     case Adapter.connect(state.adapter_state) do
       {:ok, new_adapter_state} ->
-        Logger.info("Printer.Device #{state.printer_id}: Connection successful.")
+        Logger.info("Printer #{state.printer_id}: Connection successful.")
         # Monitor critical resources if applicable (e.g., UART pid)
         new_monitor_ref = monitor_adapter_resource(new_adapter_state)
 
@@ -217,9 +230,7 @@ defmodule PrintClient.Printer do
         process_next_job(new_state)
 
       {:error, reason} ->
-        Logger.error(
-          "Printer.Device #{state.printer_id}: Connection failed. Reason: #{inspect(reason)}"
-        )
+        Logger.error("Printer #{state.printer_id}: Connection failed. Reason: #{inspect(reason)}")
 
         schedule_connect_retry(%{state | is_connected: false})
     end
@@ -228,7 +239,7 @@ defmodule PrintClient.Printer do
   defp schedule_connect_retry(state) do
     if state.current_connect_retries < state.max_connect_retries do
       Logger.info(
-        "Printer.Device #{state.printer_id}: Scheduling connection retry (#{state.current_connect_retries + 1}/#{state.max_connect_retries}) in #{state.connect_retry_delay_ms}ms."
+        "Printer #{state.printer_id}: Scheduling connection retry (#{state.current_connect_retries + 1}/#{state.max_connect_retries}) in #{state.connect_retry_delay_ms}ms."
       )
 
       timer_ref = Process.send_after(self(), :connect_retry, state.connect_retry_delay_ms)
@@ -240,7 +251,7 @@ defmodule PrintClient.Printer do
       }
     else
       Logger.error(
-        "Printer.Device #{state.printer_id}: Max connection retries reached. Will not retry automatically for now."
+        "Printer #{state.printer_id}: Max connection retries reached. Will not retry automatically for now."
       )
 
       GenServer.stop(state.printer_id, :connection_failed)
@@ -258,14 +269,14 @@ defmodule PrintClient.Printer do
     case :queue.out(state.job_queue) do
       {{:value, data_to_print}, new_queue} ->
         Logger.debug(
-          "Printer.Device #{state.printer_id}: Printing next job. Jobs remaining: #{:queue.len(new_queue)}"
+          "Printer #{state.printer_id}: Printing next job. Jobs remaining: #{:queue.len(new_queue)}"
         )
 
         updated_state = %{state | job_queue: new_queue}
 
         case Adapter.print(state.adapter_state, data_to_print) do
           :ok ->
-            Logger.info("Printer.Device #{state.printer_id}: Job printed successfully.")
+            Logger.info("Printer #{state.printer_id}: Job printed successfully.")
             # Schedule processing of the next job, if any
             if :queue.is_empty(new_queue) do
               updated_state
@@ -277,7 +288,7 @@ defmodule PrintClient.Printer do
 
           {:error, reason} ->
             Logger.error(
-              "Printer.Device #{state.printer_id}: Print failed. Reason: #{inspect(reason)}. Re-queuing job and attempting to reconnect."
+              "Printer #{state.printer_id}: Print failed. Reason: #{inspect(reason)}. Re-queuing job and attempting to reconnect."
             )
 
             # Put job back at the front of the queue
@@ -307,7 +318,7 @@ defmodule PrintClient.Printer do
 
       {:empty, _new_queue} ->
         # Queue is empty, nothing to do
-        Logger.debug("Printer.Device #{state.printer_id}: Print queue is empty.")
+        Logger.debug("Printer #{state.printer_id}: Print queue is empty. Disconnecting.")
         state
     end
   end
@@ -319,7 +330,7 @@ defmodule PrintClient.Printer do
     if state.connection_monitor_ref, do: Process.demonitor(state.connection_monitor_ref, [:flush])
 
     {:ok, disconnected_adapter_state} = Adapter.disconnect(state.adapter_state)
-    Logger.info("Printer.Device #{state.printer_id}: Disconnected by request.")
+    Logger.info("Printer #{state.printer_id}: Disconnected by request.")
 
     %{
       state

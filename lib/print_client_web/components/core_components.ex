@@ -339,8 +339,8 @@ defmodule PrintClientWeb.CoreComponents do
         multiple={@multiple}
         {@rest}
       >
-        <option :if={@prompt} value="">{@prompt}</option>
-        {Phoenix.HTML.Form.options_for_select(@options, @value)}
+        <option value="">Select a printer</option>
+        {Phoenix.HTML.Form.options_for_select(@options, nil)}
       </select>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
@@ -378,6 +378,7 @@ defmodule PrintClientWeb.CoreComponents do
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
+          "disabled:border-zinc-200 disabled:bg-zinc-100",
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}

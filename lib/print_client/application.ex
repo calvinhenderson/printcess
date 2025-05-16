@@ -48,6 +48,7 @@ defmodule PrintClient.Application do
 
       # Start the Endpoint (http/https)
       PrintClientWeb.Endpoint,
+      PrintClient.Printer.Supervisor,
 
       # Start the printer queue
       # {PrintClient.Printer.Queue, name: PrintQueue},
