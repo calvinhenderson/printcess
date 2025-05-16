@@ -36,16 +36,18 @@ defmodule PrintClient.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7"},
+      {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.5"},
+      # {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, "~> 0.18.1"},
-      {:phoenix_html, "~> 4.2"},
-      {:phoenix_live_reload, "~> 1.5", only: :dev},
+      {:postgrex, ">= 0.0.0"},
+      {:phoenix_html, "~> 4.1"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.0"},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
@@ -53,11 +55,14 @@ defmodule PrintClient.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:telemetry_metrics, "~> 0.6"},
+      {:swoosh, "~> 1.5"},
+      {:finch, "~> 0.13"},
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.18"},
+      {:gettext, "~> 0.26"},
+      {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.0"},
+      {:bandit, "~> 1.5"},
 
       # Desktop application dependencies
       {:desktop, "~> 1.5"},
@@ -87,13 +92,16 @@ defmodule PrintClient.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": [
+        "esbuild.install --if-missing",
         "tailwind.install --if-missing",
-        "esbuild.install --if-missing"
       ],
-      "assets.build": ["tailwind default", "esbuild default"],
+      "assets.build": [
+        "esbuild print_client",
+        "tailwind print_client",
+      ],
       "assets.deploy": [
-        "tailwind default --minify",
-        "esbuild default --minify",
+        "esbuild print_client --minify",
+        "tailwind print_client --minify",
         "phx.digest"
       ]
     ]
