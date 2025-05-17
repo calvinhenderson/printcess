@@ -7,7 +7,7 @@ defmodule PrintClient.Printer.Discovery do
   alias PrintClient.Settings
   alias Circuits.UART
   alias PrintClient.Printer
-  alias PrintClient.Printer.Adapter.{NetworkPrinter, SerialPrinter, UsbPrinter}
+  alias PrintClient.Printer.Adapter.{MockPrinter, NetworkPrinter, SerialPrinter, UsbPrinter}
 
   @default_baud_rate 9600
 
@@ -17,6 +17,7 @@ defmodule PrintClient.Printer.Discovery do
   @spec discover_all_printers() :: [Printer.t()] | []
   def discover_all_printers do
     [
+      maybe_load_mock_printer(),
       discover_serial_printers(),
       discover_usb_printers(),
       discover_network_printers()
@@ -36,7 +37,7 @@ defmodule PrintClient.Printer.Discovery do
          printer_id: id_of_network_printer(network_printer),
          name: network_printer.name,
          type: :network,
-         adapter_module: Printer.Adapter.NetworkPrinter,
+         adapter_module: NetworkPrinter,
          adapter_config: network_printer
        }}
     end)
@@ -142,6 +143,22 @@ defmodule PrintClient.Printer.Discovery do
         )
 
         %{}
+    end
+  end
+
+  defp maybe_load_mock_printer do
+    if Mix.env() in [:dev, :test] do
+      [
+        %Printer{
+          printer_id: "mock_1",
+          name: "Mock 1",
+          type: :mock,
+          adapter_module: MockPrinter,
+          adapter_config: %{name: "Mock 1"}
+        }
+      ]
+    else
+      []
     end
   end
 end

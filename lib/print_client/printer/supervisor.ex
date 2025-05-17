@@ -21,7 +21,6 @@ defmodule PrintClient.Printer.Supervisor do
       {:error, {:already_started, pid}} -> {:ok, pid}
       error -> raise inspect(error)
     end
-    |> dbg()
   end
 
   def stop_printer(printer_id) do
