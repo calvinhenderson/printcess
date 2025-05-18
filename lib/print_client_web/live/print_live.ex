@@ -100,14 +100,19 @@ defmodule PrintClientWeb.PrintLive do
      |> case do
        %{} = validated when map_size(validated) == 0 ->
          # We don't have valid params..
-         socket |> assign_changes(params)
+         socket
+         |> assign_changes(params)
+         |> put_flash(:error, "check form errors")
 
        params ->
          # We have valid params, print the document and reset the form
          Logger.debug("PrintLive: printing #{template.name} with params #{inspect(params)}")
 
          print(printer, template, params)
-         socket |> assign_changes(%{})
+
+         socket
+         |> assign_changes(%{})
+         |> put_flash(:info, "sent job")
      end}
   end
 

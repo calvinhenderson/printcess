@@ -66,14 +66,12 @@ defmodule PrintClient.Label do
 
     with :ok <- File.write("/tmp/#{file}.svg", image) do
       %Mogrify.Image{} =
-        img = Mogrify.open("/tmp/#{file}.svg")
-
-      img =
-        img
+        img =
+        "/tmp/#{file}.svg"
+        |> Mogrify.open()
         |> Mogrify.format("BMP")
 
       Mogrify.save(img, path: "/tmp/#{file}.bmp")
-      Mogrify.save(img, path: "./#{file}.bmp")
 
       %{width: width, height: height} = Mogrify.identify("/tmp/#{file}.bmp")
 
@@ -81,16 +79,23 @@ defmodule PrintClient.Label do
       File.rm("/tmp/#{file}.svg")
       File.rm("/tmp/#{file}.bmp")
 
-      dbg({width, dpi})
-      dbg({height, dpi})
-
       {:ok,
        [
-         <<"SIZE #{width / dpi} in, #{height / dpi} in\r\n">>,
+         # Set the label size
+         <<"SIZE #{width / dpi},#{height / dpi}\r\n">>,
+         # Set the label direction
+         <<"DIRECTION 1,0\r\n">>,
+         # Clear the image buffer,
+         <<"CLS\r\n">>,
+         # Download bmp image
          <<"DOWNLOAD \"#{file}\",#{byte_size(bmp)},", bmp::binary, "\r\n">>,
-         <<"PUTBMP 0,0, \"#{file}\",,100\r\n">>,
+         # Draw bmp image: 8 BPP, default contrast
+         <<"PUTBMP 0,0, \"#{file}\",8\r\n">>,
+         # Print each copy
          <<"PRINT #{copies}\r\n">>,
+         # Remove the temporary graphic
          <<"KILL \"#{file}\"\r\n">>,
+         # End the program
          <<"END\r\n">>
        ]
        |> :binary.list_to_bin()}

@@ -1,7 +1,7 @@
 <div class="flex justify-center items-start min-h-screen m-8">
-  <div class="flex flex-col max-w-md mx-auto gap-4">
+  <div class="flex flex-col max-w-md mx-auto gap-4 w-md flex-grow">
     <%= if @selected_printer do %>
-      <.button :if={@selected_printer} phx-click="select_printer">
+      <.button :if={@selected_printer} phx-click="clear-printer">
         <.icon name="hero-trash" /> {@selected_printer.name}
       </.button>
     <% else %>
@@ -13,7 +13,7 @@
     <% end %>
 
     <%= if @selected_template do %>
-      <.button :if={@selected_template} phx-click="select_template">
+      <.button :if={@selected_template} phx-click="clear-template">
         <.icon name="hero-trash" /> {@selected_template.name}
       </.button>
     <% else %>
@@ -45,4 +45,5 @@
       <% end %>
     </div>
   </div>
+  <.flash_group flash={@flash} />
 </div>

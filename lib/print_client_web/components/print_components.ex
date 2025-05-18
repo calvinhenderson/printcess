@@ -15,52 +15,56 @@ defmodule PrintClientWeb.PrintComponents do
 
   def label_form(assigns) do
     ~H"""
-    <.header>{@title}</.header>
-    <.form
-      :let={f}
-      for={@for}
-      id={@id}
-      phx-submit={@submit}
-      phx-change={@change}
-      phx-debounce="250"
-      class="flex flex-col gap-3 rounded-md border-zinc-200 border-2"
-      disabled={@disabled}
-    >
-      <.input
-        field={f[:username]}
-        name="username"
-        type="text"
-        label="Username"
-        placeholder="john_doe"
-        disabled={@disabled or :username not in @required}
-      />
-      <.input
-        field={f[:asset]}
-        name="asset"
-        type="text"
-        label="Asset Number"
-        placeholder="00000"
-        disabled={@disabled or :asset not in @required}
-      />
-      <.input
-        field={f[:serial]}
-        name="serial"
-        type="text"
-        label="Serial Number"
-        placeholder="000000"
-        disabled={@disabled or :serial not in @required}
-      />
-      <.input
-        field={f[:copies]}
-        name="copies"
-        type="number"
-        label="Copies"
-        placeholder="1"
+    <div>
+      <.header>{@title}</.header>
+      <.form
+        :let={f}
+        for={@for}
+        id={@id}
+        phx-submit={@submit}
+        phx-change={@change}
+        phx-debounce="250"
+        class="flex flex-col gap-3"
         disabled={@disabled}
-      />
+      >
+        <.input
+          field={f[:username]}
+          name="username"
+          type="text"
+          label="Username"
+          placeholder="john_doe"
+          disabled={@disabled or :username not in @required}
+        />
+        <.input
+          field={f[:asset]}
+          name="asset"
+          type="text"
+          label="Asset Number"
+          placeholder="00000"
+          disabled={@disabled or :asset not in @required}
+        />
+        <.input
+          field={f[:serial]}
+          name="serial"
+          type="text"
+          label="Serial Number"
+          placeholder="000000"
+          disabled={@disabled or :serial not in @required}
+        />
+        <.input
+          field={f[:copies]}
+          name="copies"
+          type="number"
+          label="Copies"
+          placeholder="1"
+          disabled={@disabled}
+        />
 
-      <.button type="submit" class="mt-4" disabled={@disabled}>Submit</.button>
-    </.form>
+        <.button type="submit" class="mt-4" disabled={@disabled} phx-disable-with="Submitting..">
+          Submit
+        </.button>
+      </.form>
+    </div>
     """
   end
 
