@@ -339,7 +339,7 @@ defmodule PrintClientWeb.CoreComponents do
         multiple={@multiple}
         {@rest}
       >
-        <option value="">Select a printer</option>
+        <option value="">Choose from the list</option>
         {Phoenix.HTML.Form.options_for_select(@options, nil)}
       </select>
       <.error :for={msg <- @errors}>{msg}</.error>

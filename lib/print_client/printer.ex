@@ -49,7 +49,6 @@ defmodule PrintClient.Printer do
 
   @spec start_link(map()) :: GenServer.start_link()
   def start_link(opts) do
-    dbg(opts)
     printer_id = Map.fetch!(opts, :printer_id)
     GenServer.start_link(__MODULE__, opts, name: Registry.via_tuple(printer_id))
   end
@@ -68,12 +67,12 @@ defmodule PrintClient.Printer do
   """
   @spec add_job(term(), binary()) :: {:ok, number()} | {:error, term()}
   def add_job(printer_id, job_data) do
-    case Registry.get(printer_id) do
-      pid when is_pid(pid) ->
-        GenServer.call(pid, {:add_job, job_data})
-
-      other ->
-        other
+    with pid when is_pid(pid) <- Registry.get(printer_id),
+         {:ok, job_id} <- GenServer.call(pid, {:add_job, job_data}) do
+      {:ok, job_id}
+    else
+      error ->
+        error
     end
   end
 
@@ -173,7 +172,7 @@ defmodule PrintClient.Printer do
 
     if :queue.len(new_state.job_queue) == 0 and state.stop,
       do: {:stop, :shutdown, new_state},
-      else: {:noreply, state}
+      else: {:noreply, new_state}
   end
 
   # We monitor the adapter's GenServer. Here we handle if it goes down.
@@ -223,7 +222,7 @@ defmodule PrintClient.Printer do
       Phoenix.PubSub.broadcast_from(
         @pubsub,
         self(),
-        "#{printer_id}:#{job_id}",
+        job_topic(printer_id, job_id),
         message
       )
 
@@ -370,4 +369,6 @@ defmodule PrintClient.Printer do
   defp monitor_adapter_resource(_adapter_state) do
     nil
   end
+
+  defp job_topic(printer_id, job_id), do: "print_jobs:#{printer_id}:#{job_id}"
 end

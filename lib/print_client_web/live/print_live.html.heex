@@ -1,17 +1,48 @@
-<div class="flex justify-center items-center min-h-screen">
+<div class="flex justify-center items-start min-h-screen m-8">
   <div class="flex flex-col max-w-md mx-auto gap-4">
-    <.live_component id="printers" module={PrintClientWeb.PrinterSelectComponent} />
+    <%= if @selected_printer do %>
+      <.button :if={@selected_printer} phx-click="select_printer">
+        <.icon name="hero-trash" /> {@selected_printer.name}
+      </.button>
+    <% else %>
+      <.live_component
+        :if={is_nil(@selected_printer)}
+        id="printers"
+        module={PrintClientWeb.PrinterSelectComponent}
+      />
+    <% end %>
 
-    <.live_component id="templates" module={PrintClientWeb.TemplateSelectComponent} />
+    <%= if @selected_template do %>
+      <.button :if={@selected_template} phx-click="select_template">
+        <.icon name="hero-trash" /> {@selected_template.name}
+      </.button>
+    <% else %>
+      <.live_component
+        :if={is_nil(@selected_template)}
+        id="templates"
+        module={PrintClientWeb.TemplateSelectComponent}
+      />
+    <% end %>
 
     <.live_component id="api-search" module={PrintClientWeb.ApiSearchComponent} />
 
-    <.label_form
-      id="label-form"
-      for={@changeset}
-      submit="print"
-      disabled={is_nil(@selected_printer) or is_nil(@selected_template)}
-      required={if @selected_template, do: @selected_template.required_fields, else: []}
-    />
+    <.label_template template={@selected_template} params={@template_params} />
+
+    <div>
+      <%= if is_nil(@selected_template) do %>
+        <.label :if={is_nil(@selected_template)}>
+          Form is disabled. Please choose a template first.
+        </.label>
+      <% else %>
+        <.label_form
+          id="label-form"
+          for={@changeset}
+          submit="print"
+          change="validate"
+          disabled={is_nil(@selected_template)}
+          required={if @selected_template, do: @selected_template.required_fields, else: []}
+        />
+      <% end %>
+    </div>
   </div>
 </div>

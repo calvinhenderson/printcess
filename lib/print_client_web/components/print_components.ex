@@ -1,6 +1,8 @@
 defmodule PrintClientWeb.PrintComponents do
   use PrintClientWeb, :html
 
+  alias PrintClient.Label
+
   @doc """
   Renders a form for printing assets.
   """
@@ -19,10 +21,11 @@ defmodule PrintClientWeb.PrintComponents do
       for={@for}
       id={@id}
       phx-submit={@submit}
-      class="flex flex-col gap-3 p-4 rounded-md border-zinc-200 border-2"
+      phx-change={@change}
+      phx-debounce="250"
+      class="flex flex-col gap-3 rounded-md border-zinc-200 border-2"
       disabled={@disabled}
     >
-      <.label :if={@disabled}>Form is disabled. Please choose a printer and a template first.</.label>
       <.input
         field={f[:username]}
         name="username"
@@ -58,6 +61,21 @@ defmodule PrintClientWeb.PrintComponents do
 
       <.button type="submit" class="mt-4" disabled={@disabled}>Submit</.button>
     </.form>
+    """
+  end
+
+  @doc """
+  Renders a label template with the specified params.
+  """
+
+  attr :template, :map, required: true
+  attr :params, :map, default: %{}
+
+  def label_template(assigns) do
+    ~H"""
+    <div :if={not is_nil(@template)} class="flex flex-col justify-center items-center w-100 h-100">
+      {raw(Label.render(@template, @params))}
+    </div>
     """
   end
 end
