@@ -15,7 +15,7 @@ defmodule PrintClientWeb.SettingsLive do
       |> assign(printers: printers)
       |> assign(selected_printer: List.first(printers, %Settings.Printer{}))
       |> assign(tab: tab_form)
-      |> assign_settings()
+      |> assign_settings(Settings.change_settings(%{}))
 
     {:ok, socket}
   end
@@ -92,8 +92,20 @@ defmodule PrintClientWeb.SettingsLive do
      )}
   end
 
-  defp assign_settings(socket) do
+  def handle_event("update-settings", %{"config" => attrs}, socket) do
+    changeset =
+      case Settings.save_settings(attrs) do
+        {:ok, _settings} -> Settings.change_settings(%{})
+        {:error, changeset} -> changeset
+      end
+      |> dbg()
+
+    {:noreply, assign_settings(socket, changeset)}
+  end
+
+  defp assign_settings(socket, changeset) do
     socket
-    |> assign(settings_form: to_form(Settings.change_settings()))
+    |> assign(settings_form: to_form(changeset))
+    |> dbg()
   end
 end

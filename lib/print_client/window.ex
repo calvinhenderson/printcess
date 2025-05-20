@@ -3,7 +3,7 @@ defmodule PrintClient.Window do
   A base module for creating windows.
   """
 
-  @default_window_size {500, 900}
+  @default_window_size {900, 950}
 
   @type frame_size :: {number(), number()} | nil
 

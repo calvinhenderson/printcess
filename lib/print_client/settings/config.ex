@@ -8,11 +8,12 @@ defmodule PrintClient.Settings.Config do
     field :theme, :string
     field :instance, :string
     field :token, :string
+    field :product_id, :string
   end
 
   def changeset(config, attrs \\ %{}) do
     config
-    |> cast(attrs, [:theme, :instance, :token])
-    |> validate_required([:instance, :token])
+    |> cast(attrs, [:theme, :instance, :token, :product_id])
+    |> validate_required([:instance, :token, :product_id])
   end
 end

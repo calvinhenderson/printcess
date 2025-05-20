@@ -1,35 +1,43 @@
 defmodule PrintClient.AssetsApi.SearchResult do
+  # --- SearchResult.User ---
   defmodule User do
-    alias PrintClient.AssetsApi.SearchResult.Asset
-
     defstruct id: "",
               username: "",
               display_name: "",
-              assets: nil
+              grade: ""
 
     @type t :: [
             id: String.t(),
-            asset_number: String.t(),
-            serial_number: String.t(),
-            assets: [Asset.t()] | [] | nil
+            username: String.t(),
+            display_name: String.t(),
+            grade: String.t()
           ]
   end
 
+  # --- SearchResult.Asset ---
   defmodule Asset do
     alias PrintClient.AssetsApi.SearchResult.User
 
     defstruct id: "",
+              manufacturer: "",
+              model: "",
               asset_number: "",
               serial_number: "",
               owner: nil
 
     @type t :: [
             id: String.t(),
+            manufacturer: String.t(),
+            model: String.t(),
             asset_number: String.t(),
             serial_number: String.t(),
             owner: User.t()
           ]
   end
+
+  # --- SearchResult ---
+
+  alias PrintClient.AssetsApi.ApiAdapter
 
   defstruct api_module: nil,
             api_config: nil,

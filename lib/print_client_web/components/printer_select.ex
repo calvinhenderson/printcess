@@ -56,22 +56,19 @@ defmodule PrintClientWeb.PrinterSelectComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.header>Printer Select Form</.header>
-      <div class="flex flex-row gap-4">
-        <form id={@id <> "-form"} phx-change="select" phx-target={@myself}>
-          <.input
-            id={@id <> "-select"}
-            name="select"
-            type="select"
-            options={@printer_options}
-            disabled={@selected != nil}
-          />
-        </form>
-        <.button phx-target={@myself} phx-click="refresh">
-          <.icon name={if @selected == nil, do: "hero-arrow-path", else: "hero-trash"} />
-        </.button>
-      </div>
+    <div class="flex flex-row gap-4">
+      <form id={@id <> "-form"} phx-change="select" phx-target={@myself}>
+        <.input
+          id={@id <> "-select"}
+          name="select"
+          type="select"
+          options={@printer_options}
+          disabled={@selected != nil}
+        />
+      </form>
+      <.button phx-target={@myself} phx-click="refresh">
+        <.icon name={if @selected == nil, do: "hero-arrow-path", else: "hero-trash"} />
+      </.button>
     </div>
     """
   end

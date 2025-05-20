@@ -83,6 +83,7 @@ defmodule PrintClient.Settings do
   Returns the current Settings.Config. If it
   does not exist, a blank config is returned.
   """
+  @spec get_settings :: Config.t()
   def get_settings do
     Repo.one(Config)
     |> case do

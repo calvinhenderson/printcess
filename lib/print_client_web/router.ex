@@ -17,14 +17,10 @@ defmodule PrintClientWeb.Router do
   scope "/", PrintClientWeb do
     pipe_through :browser
 
-    live "/settings", SettingsLive
-    get "/asset-spam", AssetPrintController, :index
-    post "/asset-spam", AssetPrintController, :print
-
-    live "/job-queue", JobQueueLive
-
-    live "/", PrintLive
-    live "/search", IiqSearchLive
+    live_session :live do
+      live "/settings", SettingsLive
+      live "/", PrintLive
+    end
   end
 
   # Other scopes may use custom stacks.

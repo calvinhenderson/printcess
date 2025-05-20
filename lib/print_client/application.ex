@@ -40,7 +40,7 @@ defmodule PrintClient.Application do
       # Start the Unix Socket API
       # {PrintClient.UnixSocketApi, name: UnixSocket},
 
-      {Finch, name: PrintClient_Finch, pools: %{:default => [size: 10]}},
+      {Finch, name: PrintClient.Finch, pools: %{:default => [size: 10]}},
 
       # Start the Repo
       PrintClient.Repo,

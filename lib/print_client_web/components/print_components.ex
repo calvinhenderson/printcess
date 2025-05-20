@@ -78,7 +78,10 @@ defmodule PrintClientWeb.PrintComponents do
 
   def label_template(assigns) do
     ~H"""
-    <div :if={not is_nil(@template)} class="flex flex-col justify-center items-center w-100 h-100">
+    <div
+      :if={not is_nil(@template)}
+      class="flex flex-col justify-center items-center w-100 h-100 max-h-[100pt] max-w-md"
+    >
       {raw(Label.render(@template, @params))}
     </div>
     """

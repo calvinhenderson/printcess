@@ -32,14 +32,13 @@ defmodule PrintClient.Printer.Discovery do
   def discover_network_printers do
     Settings.all_printers()
     |> Enum.map(fn network_printer ->
-      {network_printer.name,
-       %Printer{
-         printer_id: id_of_network_printer(network_printer),
-         name: network_printer.name,
-         type: :network,
-         adapter_module: NetworkPrinter,
-         adapter_config: network_printer
-       }}
+      %Printer{
+        printer_id: id_of_network_printer(network_printer),
+        name: network_printer.name,
+        type: :network,
+        adapter_module: NetworkPrinter,
+        adapter_config: %{ip: network_printer.hostname, port: network_printer.port}
+      }
     end)
   end
 
@@ -117,6 +116,7 @@ defmodule PrintClient.Printer.Discovery do
     "#{formatted_hostname}_#{formatted_port}"
   end
 
+  defp format_id_string(id) when not is_binary(id), do: id |> to_string |> format_id_string
   defp format_id_string(id_string), do: String.replace(id_string, ~r"[^A-z0-9-_]", "_")
 
   # Hacky way to load in USB vendor IDs

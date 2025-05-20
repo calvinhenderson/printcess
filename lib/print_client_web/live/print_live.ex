@@ -29,10 +29,13 @@ defmodule PrintClientWeb.PrintLive do
     end
   end
 
+  alias Phoenix.LiveView.AsyncResult
+  alias PrintClient.AssetsApi
   use PrintClientWeb, :live_view
 
   alias __MODULE__.{AssetForm, OptionsForm}
   alias PrintClient.{Assets, Users, Printer, Label}
+  alias PrintClientWeb.ApiSearchComponent
   import PrintClientWeb.PrintComponents
 
   require Logger
@@ -64,9 +67,10 @@ defmodule PrintClientWeb.PrintLive do
       |> assign_changes()
       |> assign_options()
 
-    {:ok, socket}
+    {:ok, socket, temporary_assigns: [results: %AsyncResult{}]}
   end
 
+  @impl true
   def handle_info({:select_printer, printer}, socket) do
     # Tell the current printer to stop.
     if is_struct(socket.assigns.selected_printer, Printer) do
@@ -139,6 +143,16 @@ defmodule PrintClientWeb.PrintLive do
   def handle_event("options", params, socket),
     do: {:noreply, socket |> assign_options(params)}
 
+  @impl true
+  def handle_event("select-user", %{"value" => value, "id" => id}, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("select-raw", %{"value" => value}, socket) do
+    {:noreply, socket}
+  end
+
   defp assign_changes(socket, changes \\ %{}) do
     changeset =
       if socket.assigns.selected_template do
@@ -157,6 +171,42 @@ defmodule PrintClientWeb.PrintLive do
         {:ok, applied} -> applied
         {:error, _changeset} -> %{}
       end
+
+    socket =
+      socket
+      |> assign_async([:results], fn ->
+        backend = AssetsApi.backend()
+
+        changes = Map.get(changes, "asset_form", %{})
+
+        all_results =
+          changes
+          |> Map.take(["asset", "serial", "username"])
+          |> Enum.filter(fn {_, v} -> String.length(v) > 3 end)
+          |> Enum.reduce(%{}, fn {k, v}, acc ->
+            k = String.to_existing_atom(k)
+
+            field_results =
+              if k in [:username] do
+                AssetsApi.search_users(backend, v)
+              else
+                AssetsApi.search_assets(backend, v)
+              end
+              |> case do
+                {:ok, results} ->
+                  results
+
+                {:error, reason} ->
+                  Logger.error("PrintLive: unable to perform search #{inspect(reason)}")
+                  []
+              end
+              |> then(&[%{value: v} | &1])
+
+            Map.put(acc, k, field_results)
+          end)
+
+        {:ok, %{results: all_results}}
+      end)
 
     socket
     |> assign(:changeset, %{changeset | action: :validate})

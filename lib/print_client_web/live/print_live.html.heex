@@ -1,5 +1,5 @@
-<div class="flex justify-center items-start min-h-screen m-8">
-  <div class="flex flex-col max-w-md mx-auto gap-4 w-md flex-grow">
+<Layouts.app flash={@flash}>
+  <:actions>
     <%= if @selected_printer do %>
       <.button :if={@selected_printer} phx-click="clear-printer">
         <.icon name="hero-trash" /> {@selected_printer.name}
@@ -23,39 +23,39 @@
         module={PrintClientWeb.TemplateSelectComponent}
       />
     <% end %>
-    
-<!-- <.header>Additional Options</.header> -->
-    <!-- <.form :let={f} for={@options} id="options-form" phx-change="options"> -->
-    <!--   <.input -->
-    <!--     field={f[:bind_to_user]} -->
-    <!--     type="checkbox" -->
-    <!--     label="Bind Asset to User. This will assign the asset upon printing." -->
-    <!--   /> -->
-    <!-- </.form> -->
+  </:actions>
+
+  <div class="flex flex-col max-w-lg mx-auto gap-4 w-md flex-grow">
+    <.header>Additional Options</.header>
+    <.form :let={f} for={@options} id="options-form" phx-change="options">
+      <.input
+        field={f[:bind_to_user]}
+        type="checkbox"
+        label="Bind Asset to User. This will assign the asset upon printing."
+      />
+    </.form>
 
     <.label_template template={@selected_template} params={@template_params} />
 
     <div :if={not is_nil(@selected_template)} class="flex flex-col gap-4">
-      <.live_component id="api-search" module={PrintClientWeb.ApiSearchComponent} />
-
       <.form
         :let={f}
         for={@changeset}
         id="asset-form"
         phx-submit="print"
         phx-change="validate"
-        phx-debounce="300"
+        phx-debounce="500"
         phx-reset="reset"
         class="flex flex-col gap-3"
       >
-        <.input
+        <ApiSearchComponent.search
           :for={field <- @selected_template.required_fields}
+          id={f[field].id}
           field={f[field]}
-          name={field |> to_string()}
-          type="text"
-          label={field |> to_string() |> String.capitalize()}
-          id={"asset-form-field-#{field}"}
-          placeholder={"Enter a #{field |> to_string()}"}
+          phx-debounce="500"
+          loading={@results.loading}
+          error={@results.failed}
+          results={if is_nil(@results.result), do: [], else: Map.get(@results.result, field, [])}
         />
 
         <.input field={f[:copies]} name="copies" type="number" label="Copies" placeholder="1" />
@@ -71,4 +71,4 @@
       </.form>
     </div>
   </div>
-</div>
+</Layouts.app>
