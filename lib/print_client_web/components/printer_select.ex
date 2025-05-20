@@ -8,11 +8,16 @@ defmodule PrintClientWeb.PrinterSelectComponent do
 
   @impl true
   def mount(socket) do
-    {:ok,
-     socket
-     |> assign(selected: nil)
-     |> assign_printers()
-     |> notify_selected()}
+    socket =
+      socket
+      |> assign(selected: nil)
+      |> assign_printers()
+      |> notify_selected()
+
+    # if Mix.env() in [:dev, :test],
+    #   do: send(self(), {:select_printer, socket.assigns.printers |> Enum.at(0)})
+
+    {:ok, socket}
   end
 
   @impl true

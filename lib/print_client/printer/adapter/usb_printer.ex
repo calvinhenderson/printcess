@@ -10,7 +10,7 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
             product: nil,
             serial_number: nil,
             usb_ref: nil,
-            usb_timeout: 1000
+            usb_timeout: 10_000
 
   @type t :: %__MODULE__{
           vendor: non_neg_integer() | nil,

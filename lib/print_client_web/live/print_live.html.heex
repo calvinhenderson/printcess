@@ -23,27 +23,52 @@
         module={PrintClientWeb.TemplateSelectComponent}
       />
     <% end %>
-
-    <.live_component id="api-search" module={PrintClientWeb.ApiSearchComponent} />
+    
+<!-- <.header>Additional Options</.header> -->
+    <!-- <.form :let={f} for={@options} id="options-form" phx-change="options"> -->
+    <!--   <.input -->
+    <!--     field={f[:bind_to_user]} -->
+    <!--     type="checkbox" -->
+    <!--     label="Bind Asset to User. This will assign the asset upon printing." -->
+    <!--   /> -->
+    <!-- </.form> -->
 
     <.label_template template={@selected_template} params={@template_params} />
 
-    <div>
-      <%= if is_nil(@selected_template) do %>
-        <.label :if={is_nil(@selected_template)}>
-          Form is disabled. Please choose a template first.
-        </.label>
-      <% else %>
-        <.label_form
-          id="label-form"
-          for={@changeset}
-          submit="print"
-          change="validate"
-          disabled={is_nil(@selected_template)}
-          required={if @selected_template, do: @selected_template.required_fields, else: []}
+    <div :if={not is_nil(@selected_template)} class="flex flex-col gap-4">
+      <.live_component id="api-search" module={PrintClientWeb.ApiSearchComponent} />
+
+      <.form
+        :let={f}
+        for={@changeset}
+        id="asset-form"
+        phx-submit="print"
+        phx-change="validate"
+        phx-debounce="300"
+        phx-reset="reset"
+        class="flex flex-col gap-3"
+      >
+        <.input
+          :for={field <- @selected_template.required_fields}
+          field={f[field]}
+          name={field |> to_string()}
+          type="text"
+          label={field |> to_string() |> String.capitalize()}
+          id={"asset-form-field-#{field}"}
+          placeholder={"Enter a #{field |> to_string()}"}
         />
-      <% end %>
+
+        <.input field={f[:copies]} name="copies" type="number" label="Copies" placeholder="1" />
+
+        <div class="flex flex-row gap-2">
+          <.button type="reset" name="reset" class="h-12">
+            <.icon name="hero-arrow-path-rounded-square" />
+          </.button>
+          <.button type="submit" class="flex-grow h-12" phx-disable-with="Submitting..">
+            Submit
+          </.button>
+        </div>
+      </.form>
     </div>
   </div>
-  <.flash_group flash={@flash} />
 </div>

@@ -22,11 +22,25 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import {AutoCompleteHook} from "./hooks/autocomplete";
+
+let Hooks = {};
+Hooks.AutoComplete = AutoCompleteHook;
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken}
+  params: {_csrf_token: csrfToken},
+  hooks: Hooks,
+  dom: {
+    onBeforeElUpdated(from, to) {
+      for (const attr of from.attributes) {
+        if (attr.name.startsWith("data-js-")) {
+          to.setAttribute(attr.name, attr.value);
+        }
+      }
+    }
+  }
 })
 
 // Show progress bar on live navigation and form submits
@@ -77,3 +91,6 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
+
+console.log(Hooks);
+

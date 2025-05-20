@@ -69,34 +69,42 @@ defmodule PrintClient.Label do
         img =
         "/tmp/#{file}.svg"
         |> Mogrify.open()
-        |> Mogrify.format("BMP")
+        |> Mogrify.custom("alpha", "off")
+        |> Mogrify.custom("depth", "1")
+        |> Mogrify.custom("type", "bilevel")
+        |> Mogrify.custom("density", "200")
+        |> Mogrify.custom("units", "pixelsperinch")
+        |> Mogrify.custom("negate")
+        |> Mogrify.format("PCX")
 
-      Mogrify.save(img, path: "/tmp/#{file}.bmp")
+      Mogrify.save(img, path: "/tmp/#{file}.pcx")
 
-      %{width: width, height: height} = Mogrify.identify("/tmp/#{file}.bmp")
+      %{width: width, height: height} = Mogrify.identify("/tmp/#{file}.pcx")
 
-      {:ok, bmp} = File.read("/tmp/#{file}.bmp")
+      {:ok, img} = File.read("/tmp/#{file}.pcx")
       File.rm("/tmp/#{file}.svg")
-      File.rm("/tmp/#{file}.bmp")
+      # File.rm("/tmp/#{file}.pcx")
 
       {:ok,
        [
-         # Set the label size
+         # Set the label size and offset
          <<"SIZE #{width / dpi},#{height / dpi}\r\n">>,
-         # Set the label direction
-         <<"DIRECTION 1,0\r\n">>,
          # Clear the image buffer,
          <<"CLS\r\n">>,
-         # Download bmp image
-         <<"DOWNLOAD \"#{file}\",#{byte_size(bmp)},", bmp::binary, "\r\n">>,
-         # Draw bmp image: 8 BPP, default contrast
-         <<"PUTBMP 0,0, \"#{file}\",8\r\n">>,
+         # Set the label direction
+         <<"DIRECTION 1,0\r\n">>,
+         # Download image
+         <<"DOWNLOAD \"#{file}\",#{byte_size(img)},", img::binary, "\r\n">>,
+         # Draw image: 1 BPP, default contrast
+         <<"PUTPCX 0,0, \"#{file}\"\r\n">>,
+         # <<"TEXT 0,0,\"0\",0,12,12, \"test\"\r\n">>,
+         # <<"DISPLAY IMAGE\r\n">>,
+         # <<"DELAY 1000\r\n">>,
+         # <<"DISPLAY OFF\r\n">>,
          # Print each copy
-         <<"PRINT #{copies}\r\n">>,
+         <<"PRINT 2\r\n">>,
          # Remove the temporary graphic
-         <<"KILL \"#{file}\"\r\n">>,
-         # End the program
-         <<"END\r\n">>
+         <<"KILL \"#{file}\"\r\n">>
        ]
        |> :binary.list_to_bin()}
     else
@@ -110,8 +118,9 @@ defmodule PrintClient.Label do
 
   def encode(protocol, _template, _opts), do: raise("unsupported protocol: #{inspect(protocol)}")
 
-  @random_chars "0123456789ABCDEFGHIMNOPQRSTUVWXYZabcdefghimnopqrstuvwxyz"
-  def random_str(len \\ 8) when len > 0,
+  # @random_chars "0123456789ABCDEFGHIMNOPQRSTUVWXYZ"
+  @random_chars "ABCDEFGHIMNOPQRSTUVWXYZ" |> String.downcase()
+  def random_str(len \\ 4) when len > 0,
     do:
       for(
         _ <- 1..len,

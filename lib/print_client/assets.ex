@@ -21,6 +21,36 @@ defmodule PrintClient.Assets do
       "AssetNumber" => "10203",
       "SerialNumber" => "EFGH458",
       "OwnerEmail" => "george_w_bush"
+    },
+    %{
+      "AssetId" => "A1000",
+      "AssetNumber" => "10203",
+      "SerialNumber" => "EFGH458",
+      "OwnerEmail" => "george_w_bush"
+    },
+    %{
+      "AssetId" => "A1000",
+      "AssetNumber" => "10203",
+      "SerialNumber" => "EFGH458",
+      "OwnerEmail" => "george_w_bush"
+    },
+    %{
+      "AssetId" => "A1000",
+      "AssetNumber" => "10203",
+      "SerialNumber" => "EFGH458",
+      "OwnerEmail" => "george_w_bush"
+    },
+    %{
+      "AssetId" => "A1000",
+      "AssetNumber" => "10203",
+      "SerialNumber" => "EFGH458",
+      "OwnerEmail" => "george_w_bush"
+    },
+    %{
+      "AssetId" => "A1000",
+      "AssetNumber" => "10203",
+      "SerialNumber" => "EFGH458",
+      "OwnerEmail" => "george_w_bush"
     }
   ]
 

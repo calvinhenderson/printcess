@@ -7,10 +7,15 @@ defmodule PrintClientWeb.TemplateSelectComponent do
 
   @impl true
   def mount(socket) do
-    {:ok,
-     socket
-     |> assign(selected: nil)
-     |> assign_templates()}
+    socket =
+      socket
+      |> assign(selected: nil)
+      |> assign_templates()
+
+    if Mix.env() in [:dev, :test],
+      do: send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
+
+    {:ok, socket}
   end
 
   @impl true

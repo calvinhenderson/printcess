@@ -34,6 +34,7 @@ defmodule PrintClientWeb.PrintComponents do
           label="Username"
           placeholder="john_doe"
           disabled={@disabled or :username not in @required}
+          id={@id <> "-username"}
         />
         <.input
           field={f[:asset]}

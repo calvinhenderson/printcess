@@ -1,13 +1,13 @@
 defmodule PrintClientWeb.PrintLive do
-  defmodule QueryForm do
+  defmodule OptionsForm do
     use Ecto.Schema
     import Ecto.Changeset
 
     embedded_schema do
-      field :query, :string
+      field :bind_asset_to_user, :boolean
     end
 
-    def changeset(query, attrs \\ %{}), do: cast(query, attrs, [:query])
+    def changeset(options, attrs \\ %{}), do: cast(options, attrs, [:bind_asset_to_user])
   end
 
   defmodule AssetForm do
@@ -25,15 +25,14 @@ defmodule PrintClientWeb.PrintLive do
       asset
       |> cast(attrs, [:username, :asset, :serial, :copies])
       |> validate_required(required)
-      |> validate_number(:copies, min: 1)
+      |> validate_number(:copies, greater_than: 0)
     end
   end
 
   use PrintClientWeb, :live_view
 
-  alias PrintClient.Printer
-  alias PrintClient.Label
-  alias __MODULE__.AssetForm
+  alias __MODULE__.{AssetForm, OptionsForm}
+  alias PrintClient.{Assets, Users, Printer, Label}
   import PrintClientWeb.PrintComponents
 
   require Logger
@@ -63,12 +62,11 @@ defmodule PrintClientWeb.PrintLive do
       |> assign(selected_template: nil)
       |> assign(template_params: %{})
       |> assign_changes()
-      |> assign_query()
+      |> assign_options()
 
     {:ok, socket}
   end
 
-  @impl true
   def handle_info({:select_printer, printer}, socket) do
     # Tell the current printer to stop.
     if is_struct(socket.assigns.selected_printer, Printer) do
@@ -120,6 +118,10 @@ defmodule PrintClientWeb.PrintLive do
   def handle_event("print", _params, socket), do: {:noreply, socket}
 
   @impl true
+  def handle_event("validate", %{"_target" => ["reset"]}, socket),
+    do: {:noreply, assign_changes(socket, %{})}
+
+  @impl true
   def handle_event("validate", params, socket), do: {:noreply, assign_changes(socket, params)}
 
   @impl true
@@ -134,10 +136,8 @@ defmodule PrintClientWeb.PrintLive do
     {:noreply, socket}
   end
 
-  defp assign_query(socket, query \\ %{}) do
-    changeset = QueryForm.changeset(%QueryForm{}, query)
-    assign(socket, :query, %{changeset | action: :validate})
-  end
+  def handle_event("options", params, socket),
+    do: {:noreply, socket |> assign_options(params)}
 
   defp assign_changes(socket, changes \\ %{}) do
     changeset =
@@ -161,5 +161,18 @@ defmodule PrintClientWeb.PrintLive do
     socket
     |> assign(:changeset, %{changeset | action: :validate})
     |> assign(template_params: applied)
+  end
+
+  defp assign_options(socket, params \\ %{}) do
+    changeset = OptionsForm.changeset(%OptionsForm{}, params)
+
+    socket
+    |> assign(options: %{changeset | action: :validate})
+  end
+
+  defp get_options(socket) do
+    %OptionsForm{}
+    |> OptionsForm.changeset(socket.assigns.options)
+    |> Ecto.Changeset.apply_action(:validate)
   end
 end
