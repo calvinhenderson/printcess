@@ -40,12 +40,14 @@ defmodule PrintClientWeb.ApiSearchComponent do
       
     <!-- Query Results -->
       <ul
-        class={[
-          "hidden group-focus-within:visible",
-          "-mb-2 py-2 text-sm text-gray-800 flex space-y-2 flex-col",
-          "max-h-[90pt] overflow-y-scroll rounded-md overflow-x-clip",
-          if(is_nil(@error) and @results != [], do: "", else: "hidden")
-        ]}
+        class={
+          [
+            # "hidden group-focus-within:visible",
+            "-mb-2 py-2 text-sm text-gray-800 flex space-y-2 flex-col",
+            "max-h-[90pt] overflow-y-scroll rounded-md overflow-x-clip",
+            if(is_nil(@error) and @results != [], do: "", else: "hidden")
+          ]
+        }
         id="options"
         role="listbox"
       >

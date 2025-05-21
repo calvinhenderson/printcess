@@ -5,7 +5,6 @@ function getByAttribute(element, attr) {
 export const AutoCompleteHook = {
   mounted() {
     // element was added to DOM
-    console.log("connected timestamp hook");
     this.template = getByAttribute(this.el, 'template');
     this.container = getByAttribute(this.el, 'container');
   },

@@ -12,7 +12,7 @@ defmodule PrintClient.AssetsApi do
   Searches an API for users 
   """
   def backend do
-    if Mix.env() in [:dev, :test] do
+    if Mix.env() in [] do
       %{
         module: Mock,
         config: %Mock{}

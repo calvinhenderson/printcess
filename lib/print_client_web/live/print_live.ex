@@ -43,6 +43,14 @@ defmodule PrintClientWeb.PrintLive do
   # For now, we only persist the copies field.
   @persisted_form_fields ~w(copies)
 
+  # Handle multiple printers
+  def print(printers, template, params) when is_list(printers) do
+    Enum.map(printers, fn printer ->
+      print(printer, template, params)
+    end)
+  end
+
+  # Print to a single printer
   def print(%Printer{} = printer, %Label.Template{} = template, params) do
     Logger.info(
       "PrintLive: printing #{template.name} to #{printer.printer_id} with params #{inspect(params)}"
@@ -100,24 +108,30 @@ defmodule PrintClientWeb.PrintLive do
         %{"asset_form" => params},
         %{assigns: %{selected_printers: printers, selected_template: template}} = socket
       ) do
-    dbg(socket.assigns)
-
     with true <- length(printers) > 0,
          %Label.Template{required_fields: fields} <- template,
          changeset <- AssetForm.changeset(%AssetForm{}, params, fields),
-         {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate),
-         {:ok, job_id} <- print(printers, template, validated) do
+         {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate) do
       # We have valid params, print the document and reset the form
       Logger.debug("PrintLive: sent job #{template.name} with params #{inspect(params)}")
+
+      print(printers, template, validated)
+      |> Enum.reduce(socket, fn result, socket ->
+        case result do
+          {:ok, _job_id} ->
+            socket
+
+          {:error, reason} ->
+            socket |> put_flash(:error, "job failed: #{inspect(reason)}")
+        end
+      end)
 
       persisted =
         params
         |> Map.take(@persisted_form_fields)
-        |> dbg()
 
       socket
       |> assign_changes(persisted)
-      |> put_flash(:info, "Printing..")
     else
       false ->
         socket

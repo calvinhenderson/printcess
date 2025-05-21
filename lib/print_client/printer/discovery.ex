@@ -154,7 +154,14 @@ defmodule PrintClient.Printer.Discovery do
           name: "Mock 1",
           type: :mock,
           adapter_module: MockPrinter,
-          adapter_config: %{name: "Mock 1"}
+          adapter_config: %{name: "1"}
+        },
+        %Printer{
+          printer_id: "mock_2",
+          name: "Mock 2",
+          type: :mock,
+          adapter_module: MockPrinter,
+          adapter_config: %{name: "2"}
         }
       ]
     else

@@ -80,7 +80,7 @@ defmodule PrintClientWeb.PrintComponents do
     ~H"""
     <div
       :if={not is_nil(@template)}
-      class="flex flex-col justify-center items-center w-100 h-100 max-h-[100pt] max-w-md"
+      class="flex flex-col justify-center items-center w-full h-full max-w-full max-h-[100pt] border-2 border-gray-200 rounded-md mx-auto"
     >
       {raw(Label.render(@template, @params))}
     </div>

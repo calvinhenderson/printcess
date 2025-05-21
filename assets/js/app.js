@@ -23,9 +23,11 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import {AutoCompleteHook} from "./hooks/autocomplete";
+import {AutoFocusHook} from "./hooks/autofocus";
 
 let Hooks = {};
 Hooks.AutoComplete = AutoCompleteHook;
+Hooks.AutoFocus = AutoFocusHook;
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

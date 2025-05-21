@@ -12,8 +12,8 @@ defmodule PrintClientWeb.TemplateSelectComponent do
       |> assign(selected: nil)
       |> assign_templates()
 
-    if Mix.env() in [:dev, :test],
-      do: send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
+    # if Mix.env() in [:dev, :test],
+    #   do: send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
 
     {:ok, socket}
   end
@@ -46,22 +46,19 @@ defmodule PrintClientWeb.TemplateSelectComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <.header>Template Select Form</.header>
-      <div class="flex flex-row gap-4">
-        <form id={@id <> "-form"} phx-change="select" phx-target={@myself}>
-          <.input
-            id={@id <> "-select"}
-            name="select"
-            type="select"
-            options={@template_options}
-            disabled={@selected != nil}
-          />
-        </form>
-        <.button phx-target={@myself} phx-click="refresh">
-          <.icon name={if @selected == nil, do: "hero-arrow-path", else: "hero-trash"} />
-        </.button>
-      </div>
+    <div class="flex flex-row gap-4">
+      <form id={@id <> "-form"} phx-change="select" phx-target={@myself}>
+        <.input
+          id={@id <> "-select"}
+          name="select"
+          type="select"
+          options={@template_options}
+          disabled={@selected != nil}
+        />
+      </form>
+      <.button phx-target={@myself} phx-click="refresh">
+        <.icon name={if @selected == nil, do: "hero-arrow-path", else: "hero-trash"} />
+      </.button>
     </div>
     """
   end

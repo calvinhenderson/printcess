@@ -26,9 +26,9 @@ defmodule PrintClient.Printer do
             stop: false
 
   @type t :: [
-          printer_id: term(),
+          printer_id: String.t(),
           name: :string | nil,
-          type: :network | :serial | :usb | nil,
+          type: atom() | nil,
           adapter_module: Module.t() | nil,
           adapter_config: Map.t() | nil,
           adapter_state: term(),
@@ -206,7 +206,14 @@ defmodule PrintClient.Printer do
 
   def handle_info(:stop, state) do
     Logger.debug("Printer #{state.printer_id}: requested to stop")
-    {:noreply, %{state | stop: true}}
+    new_state = %{state | stop: true}
+
+    if :queue.len(state.job_queue) == 0 do
+      {:stop, :shutdown, new_state}
+    else
+      # Just set the stop flag so we can close when the print queue is finished.
+      {:noreply, state}
+    end
   end
 
   def handle_info(:connect_retry, state) do

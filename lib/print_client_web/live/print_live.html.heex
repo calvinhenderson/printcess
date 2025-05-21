@@ -45,6 +45,8 @@
         phx-reset="reset"
         class="flex flex-col gap-3"
         target="_blank"
+        phx-hook="AutoFocus"
+        data-focus-input={"asset-form_#{@selected_template.required_fields |> Enum.at(0)}"}
       >
         <ApiSearchComponent.search
           :for={field <- @selected_template.required_fields}

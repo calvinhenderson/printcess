@@ -35,13 +35,18 @@ defmodule PrintClientWeb.PrinterSelectComponent do
     ~H"""
     <div class="flex flex-row gap-4">
       <form id={@id <> "-form"} phx-change="select" phx-target={@myself}>
-        <.input
+        <select
           id={@id <> "-select"}
           name="select"
-          type="select"
-          options={@printer_options}
+          class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm sm:w-min"
           value={@value}
-        />
+          list={@id <> "-list"}
+        >
+          <option value="" selected={true}>Select a printer</option>
+          <option :for={{name, value} <- @printer_options} value={value} selected={false}>
+            {name}
+          </option>
+        </select>
       </form>
       <.button phx-target={@myself} phx-click="refresh">
         <.icon name="hero-arrow-path" />
@@ -75,7 +80,7 @@ defmodule PrintClientWeb.PrinterSelectComponent do
     if not is_nil(printer), do: send(self(), {:select_printer, printer})
 
     socket
-    |> assign(value: nil)
+    |> assign(value: "")
   end
 
   defp notify_selected(socket), do: socket
