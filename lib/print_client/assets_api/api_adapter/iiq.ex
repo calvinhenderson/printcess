@@ -71,7 +71,6 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
 
   defp parse_api_resp(%Finch.Response{} = resp) do
     Jason.decode(resp.body)
-    |> dbg()
     |> case do
       {:ok, %{"Items" => items}} ->
         items

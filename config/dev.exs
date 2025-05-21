@@ -55,10 +55,11 @@ config :print_client, PrintClientWeb.Endpoint,
 # Watch static and templates for browser reloading.
 config :print_client, PrintClientWeb.Endpoint,
   live_reload: [
+    web_console_logger: true,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/print_client_web/(controllers|live|components)/.*(ex|heex)$"
+      ~r"lib/print_client_web/(controllers|live|components|router)/.*(ex|heex)$"
     ]
   ]
 

@@ -52,6 +52,7 @@ defmodule PrintClientWeb.TemplateSelectComponent do
           id={@id <> "-select"}
           name="select"
           type="select"
+          value=""
           options={@template_options}
           disabled={@selected != nil}
         />

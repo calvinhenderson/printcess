@@ -12,22 +12,15 @@ defmodule PrintClient.AssetsApi do
   Searches an API for users 
   """
   def backend do
-    if Mix.env() in [] do
-      %{
-        module: Mock,
-        config: %Mock{}
-      }
-    else
-      config = Settings.get_settings()
+    config = Settings.get_settings()
 
-      %{
-        module: Iiq,
-        config: %Iiq{
-          instance: config.instance,
-          token: config.token,
-          product_id: config.product_id
-        }
+    %{
+      module: Iiq,
+      config: %Iiq{
+        instance: config.instance,
+        token: config.token,
+        product_id: config.product_id
       }
-    end
+    }
   end
 end

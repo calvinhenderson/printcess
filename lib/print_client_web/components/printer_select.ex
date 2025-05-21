@@ -38,12 +38,12 @@ defmodule PrintClientWeb.PrinterSelectComponent do
         <select
           id={@id <> "-select"}
           name="select"
-          class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm sm:w-min"
+          class="select"
           value={@value}
           list={@id <> "-list"}
         >
-          <option value="" selected={true}>Select a printer</option>
-          <option :for={{name, value} <- @printer_options} value={value} selected={false}>
+          <option value="" selected>Select a printer</option>
+          <option :for={{name, value} <- @printer_options} value={value}>
             {name}
           </option>
         </select>

@@ -8,65 +8,36 @@ defmodule PrintClient.Settings do
   ##
   ## Printers
 
+  @doc """
+  Retreives a single printer from the database.
+  """
   def get_printer(printer_id), do: Repo.get(Printer, printer_id)
 
+  @doc """
+  Builds a printer changeset for making changes.
+  """
   def change_printer(printer, attrs \\ %{}), do: Printer.changeset(printer, attrs)
 
+  @doc """
+  Fetches all saved printers.
+  """
   def all_printers() do
     Repo.all(
       from(p in Printer,
         select: p,
         order_by: p.id,
-        order_by: p.selected
+        order_by: p.name
       )
     )
   end
 
-  def update_printer(%Ecto.Changeset{} = changeset) do
-    multi =
-      if changeset.data.selected == 1 do
-        unset_selected_printers_multi()
-      else
-        Ecto.Multi.new()
-      end
-
-    with {:ok, transaction} <-
-           multi
-           |> Ecto.Multi.update(:update_printer, changeset)
-           |> Repo.transaction() do
-      {:ok, transaction.update_printer}
-    else
-      _ -> :error
-    end
-  end
-
-  def create_printer(attrs) do
-    multi =
-      if attrs.selected == 1 do
-        unset_selected_printers_multi()
-      else
-        Ecto.Multi.new()
-      end
-
-    changeset = Printer.changeset(%Printer{}, attrs)
-
-    with {:ok, transaction} <-
-           multi
-           |> Ecto.Multi.insert(:create_printer, changeset)
-           |> Repo.transaction() do
-      {:ok, transaction.create_printer}
-    else
-      _ -> :error
-    end
-  end
-
-  defp unset_selected_printers_multi() do
-    Ecto.Multi.new()
-    |> Ecto.Multi.update_all(
-      :unset_selected_all,
-      Printer,
-      set: [selected: 0]
-    )
+  @doc """
+  Saves a printer to the database.
+  """
+  def save_printer(printer, attrs \\ %{}) do
+    printer
+    |> Printer.changeset(attrs)
+    |> Repo.insert_or_update()
   end
 
   def delete_printer(printer = %Printer{}) do
@@ -74,7 +45,7 @@ defmodule PrintClient.Settings do
     |> Repo.delete()
   end
 
-  def delete_printer(_), do: raise("Invalid printer given")
+  def delete_printer(printer), do: Logger.error("Invalid printer given: #{inspect(printer)}")
 
   ##
   ## IncidentIQ

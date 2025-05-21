@@ -25,9 +25,10 @@ import topbar from "../vendor/topbar"
 import {AutoCompleteHook} from "./hooks/autocomplete";
 import {AutoFocusHook} from "./hooks/autofocus";
 
-let Hooks = {};
-Hooks.AutoComplete = AutoCompleteHook;
-Hooks.AutoFocus = AutoFocusHook;
+let Hooks = {
+  AutoComplete: AutoCompleteHook,
+  AutoFocus: AutoFocusHook,
+};
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
@@ -93,6 +94,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-
-console.log(Hooks);
-

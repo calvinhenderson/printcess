@@ -8,12 +8,12 @@ defmodule PrintClient.Settings.Printer do
     field :name, :string
     field :hostname, :string
     field :port, :integer
-    field :selected, :integer
+    field :autoconnect, :boolean
   end
 
   def changeset(printer, attrs \\ %{}) do
     printer
-    |> cast(attrs, [:name, :hostname, :port, :selected])
+    |> cast(attrs, [:name, :hostname, :port, :autoconnect])
     |> validate_required([:name, :hostname])
     |> unique_constraint([:hostname])
   end

@@ -212,12 +212,10 @@ defmodule PrintClientWeb.PrintLive do
       |> assign_async([:results], fn ->
         backend = AssetsApi.backend()
 
-        changes = Map.get(changes, "asset_form", %{})
-
         all_results =
           changes
           |> Map.take(["asset", "serial", "username"])
-          |> Enum.filter(fn {_, v} -> String.length(v) > 3 end)
+          |> Enum.filter(fn {_, v} -> String.length(v) >= 3 end)
           |> Enum.reduce(%{}, fn {k, v}, acc ->
             k = String.to_existing_atom(k)
 

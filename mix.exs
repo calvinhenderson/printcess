@@ -36,18 +36,18 @@ defmodule PrintClient.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.21"},
+      {:phoenix, "~> 1.8.0-rc.3"},
       {:phoenix_ecto, "~> 4.5"},
       # {:ecto_sql, "~> 3.10"},
       {:ecto_sqlite3, "~> 0.18.1"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_live_view, "~> 1.0.9"},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
@@ -65,7 +65,7 @@ defmodule PrintClient.MixProject do
       {:bandit, "~> 1.5"},
 
       # Desktop application dependencies
-      {:desktop, "~> 1.5"},
+      {:desktop, "~> 1.5.3"},
 
       # Serial printer connections
       {:circuits_uart, "~> 1.5"},

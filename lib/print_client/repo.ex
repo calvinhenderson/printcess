@@ -12,7 +12,7 @@ defmodule PrintClient.Repo do
         name VARCHAR NOT NULL,
         hostname VARCHAR NOT NULL,
         port INTEGER NOT NULL DEFAULT 9100,
-        selected INTEGER NOT NULL DEFAULT 0
+        autoconnect BOOLEAN DEFAULT false
       );
 
       CREATE UNIQUE INDEX IF NOT EXISTS printers_v2_hostname_index ON printers_v2( hostname );

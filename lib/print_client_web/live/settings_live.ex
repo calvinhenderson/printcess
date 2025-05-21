@@ -6,23 +6,12 @@ defmodule PrintClientWeb.SettingsLive do
   require Logger
 
   def mount(_params, _assigns, socket) do
-    printers = Settings.all_printers()
-
-    tab_form = to_form(%{"selected" => "printers"})
-
     socket =
       socket
-      |> assign(printers: printers)
-      |> assign(selected_printer: List.first(printers, %Settings.Printer{}))
-      |> assign(tab: tab_form)
+      |> assign_printers(Settings.change_printer(%Settings.Printer{}))
       |> assign_settings(Settings.change_settings(%{}))
 
     {:ok, socket}
-  end
-
-  def handle_event("show-tab", %{"selected" => tab}, socket) do
-    form = to_form(%{"selected" => tab})
-    {:noreply, socket |> assign(tab: form)}
   end
 
   def handle_event("update-printer", attrs, socket) do
@@ -44,7 +33,7 @@ defmodule PrintClientWeb.SettingsLive do
       if !Map.has_key?(attrs, "printer_id") or attrs["printer_id"] == "" do
         Settings.create_printer(changeset)
       else
-        {printer_id, _} = Integer.parse(attrs["printer_id"])
+        {printer_id, _} = attrs["printer_id"]
         Settings.update_printer(%Settings.Printer{id: printer_id}, changeset)
       end
 
@@ -103,9 +92,16 @@ defmodule PrintClientWeb.SettingsLive do
     {:noreply, assign_settings(socket, changeset)}
   end
 
+  defp assign_printers(socket, changeset) do
+    printers = Settings.all_printers()
+
+    socket
+    |> assign(printers: printers)
+    |> assign(printer_form: to_form(changeset))
+  end
+
   defp assign_settings(socket, changeset) do
     socket
     |> assign(settings_form: to_form(changeset))
-    |> dbg()
   end
 end
