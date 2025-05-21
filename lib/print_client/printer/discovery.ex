@@ -18,7 +18,7 @@ defmodule PrintClient.Printer.Discovery do
   def discover_all_printers do
     [
       maybe_load_mock_printer(),
-      discover_serial_printers(),
+      # discover_serial_printers(),
       discover_usb_printers(),
       discover_network_printers()
     ]

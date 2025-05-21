@@ -24,7 +24,7 @@ defmodule PrintClientWeb.PrintLive do
     def changeset(asset, attrs \\ %{}, required \\ [:username, :asset, :serial, :copies]) do
       asset
       |> cast(attrs, [:username, :asset, :serial, :copies])
-      |> validate_required(required)
+      |> validate_required([:copies | required])
       |> validate_number(:copies, greater_than: 0)
     end
   end
@@ -39,6 +39,9 @@ defmodule PrintClientWeb.PrintLive do
   import PrintClientWeb.PrintComponents
 
   require Logger
+
+  # For now, we only persist the copies field.
+  @persisted_form_fields ~w(copies)
 
   def print(%Printer{} = printer, %Label.Template{} = template, params) do
     Logger.info(
@@ -61,7 +64,7 @@ defmodule PrintClientWeb.PrintLive do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(selected_printer: nil)
+      |> assign(selected_printers: [])
       |> assign(selected_template: nil)
       |> assign(template_params: %{})
       |> assign_changes()
@@ -73,19 +76,19 @@ defmodule PrintClientWeb.PrintLive do
   @impl true
   def handle_info({:select_printer, printer}, socket) do
     # Tell the current printer to stop.
-    if is_struct(socket.assigns.selected_printer, Printer) do
-      Printer.Supervisor.stop_printer(socket.assigns.selected_printer.printer_id)
-    end
+    socket =
+      case printer do
+        %Printer{printer_id: _} = printer ->
+          Printer.Supervisor.start_printer(printer)
 
-    case printer do
-      %Printer{printer_id: _} = printer ->
-        Printer.Supervisor.start_printer(printer)
+          socket
+          |> assign(selected_printers: [printer | socket.assigns.selected_printers])
 
-      _ ->
-        nil
-    end
+        _ ->
+          socket
+      end
 
-    {:noreply, socket |> assign(:selected_printer, printer)}
+    {:noreply, socket}
   end
 
   def handle_info({:select_template, template}, socket),
@@ -94,47 +97,71 @@ defmodule PrintClientWeb.PrintLive do
   @impl true
   def handle_event(
         "print",
-        params,
-        %{assigns: %{selected_printer: printer, selected_template: template}} = socket
+        %{"asset_form" => params},
+        %{assigns: %{selected_printers: printers, selected_template: template}} = socket
       ) do
-    {:noreply,
-     socket.assigns.template_params
-     |> case do
-       %{} = validated when map_size(validated) == 0 ->
-         # We don't have valid params..
-         socket
-         |> assign_changes(params)
-         |> put_flash(:error, "check form errors")
+    dbg(socket.assigns)
 
-       params ->
-         # We have valid params, print the document and reset the form
-         Logger.debug("PrintLive: printing #{template.name} with params #{inspect(params)}")
+    with true <- length(printers) > 0,
+         %Label.Template{required_fields: fields} <- template,
+         changeset <- AssetForm.changeset(%AssetForm{}, params, fields),
+         {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate),
+         {:ok, job_id} <- print(printers, template, validated) do
+      # We have valid params, print the document and reset the form
+      Logger.debug("PrintLive: sent job #{template.name} with params #{inspect(params)}")
 
-         print(printer, template, params)
+      persisted =
+        params
+        |> Map.take(@persisted_form_fields)
+        |> dbg()
 
-         socket
-         |> assign_changes(%{})
-         |> put_flash(:info, "sent job")
-     end}
+      socket
+      |> assign_changes(persisted)
+      |> put_flash(:info, "Printing..")
+    else
+      false ->
+        socket
+        |> assign_changes(params)
+        |> put_flash(:error, "Please select a printer.")
+
+      nil ->
+        socket
+        |> assign_changes(params)
+        |> put_flash(:error, "Please select a template.")
+
+      {:error, %Ecto.Changeset{}} ->
+        socket
+        |> assign_changes(params)
+        |> put_flash(:error, "Check form errors")
+
+      {:error, reason} ->
+        socket
+        |> assign_changes(params)
+        |> put_flash(:error, "Error printing: #{inspect(reason)}")
+    end
+    |> then(&{:noreply, &1})
   end
 
-  @impl true
   def handle_event("print", _params, socket), do: {:noreply, socket}
 
-  @impl true
   def handle_event("validate", %{"_target" => ["reset"]}, socket),
     do: {:noreply, assign_changes(socket, %{})}
 
-  @impl true
-  def handle_event("validate", params, socket), do: {:noreply, assign_changes(socket, params)}
+  def handle_event("validate", %{"asset_form" => params}, socket),
+    do: {:noreply, assign_changes(socket, params)}
 
-  @impl true
-  def handle_event("clear-printer", _params, socket) do
-    send(self(), {:select_printer, nil})
-    {:noreply, socket}
+  def handle_event("clear-printer", %{"id" => printer_id}, socket) do
+    # Stop the printer service
+    Printer.Supervisor.stop_printer(printer_id)
+
+    # Remove it from the selected list
+    printers =
+      socket.assigns.selected_printers
+      |> Enum.reject(&(&1.printer_id == printer_id))
+
+    {:noreply, socket |> assign(selected_printers: printers)}
   end
 
-  @impl true
   def handle_event("clear-template", _params, socket) do
     send(self(), {:select_template, nil})
     {:noreply, socket}
@@ -143,13 +170,7 @@ defmodule PrintClientWeb.PrintLive do
   def handle_event("options", params, socket),
     do: {:noreply, socket |> assign_options(params)}
 
-  @impl true
   def handle_event("select-user", %{"value" => value, "id" => id}, socket) do
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("select-raw", %{"value" => value}, socket) do
     {:noreply, socket}
   end
 
@@ -200,7 +221,6 @@ defmodule PrintClientWeb.PrintLive do
                   Logger.error("PrintLive: unable to perform search #{inspect(reason)}")
                   []
               end
-              |> then(&[%{value: v} | &1])
 
             Map.put(acc, k, field_results)
           end)
@@ -218,11 +238,5 @@ defmodule PrintClientWeb.PrintLive do
 
     socket
     |> assign(options: %{changeset | action: :validate})
-  end
-
-  defp get_options(socket) do
-    %OptionsForm{}
-    |> OptionsForm.changeset(socket.assigns.options)
-    |> Ecto.Changeset.apply_action(:validate)
   end
 end

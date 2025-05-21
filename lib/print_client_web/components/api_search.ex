@@ -21,22 +21,27 @@ defmodule PrintClientWeb.ApiSearchComponent do
           {@rest}
           type="text"
           class="h-12 w-full border-none focus:ring-0 text-gray-800 placeholder-gray-400 sm:text-sm"
-          placeholder={"Search for or enter a #{normalize_field_name(@field.name)}"}
+          placeholder={"Search for or enter a #{normalize_field_name(@field.name, false)}"}
           role="combobox"
           aria-expanded="false"
           aria-controls="options"
+          spellcheck="false"
+          autocomplete="off"
           name={@field.name}
-          value={@field.value}
+          value={Phoenix.HTML.Form.normalize_value("text", @field.value)}
         />
       </div>
-      <.error :for={msg <- Enum.map(@field.errors, &translate_error/1)}>
+      <.error
+        :for={msg <- Enum.map(@field.errors, &translate_error/1)}
+        :if={Phoenix.Component.used_input?(@field)}
+      >
         {msg}
       </.error>
       
     <!-- Query Results -->
       <ul
         class={[
-          "group-focus:not:hidden",
+          "hidden group-focus-within:visible",
           "-mb-2 py-2 text-sm text-gray-800 flex space-y-2 flex-col",
           "max-h-[90pt] overflow-y-scroll rounded-md overflow-x-clip",
           if(is_nil(@error) and @results != [], do: "", else: "hidden")
@@ -48,11 +53,6 @@ defmodule PrintClientWeb.ApiSearchComponent do
           <span :if={@loading}>Loading...</span>
           <%= for result <- @results do %>
             <%= case result do %>
-              <% %{:value => value} -> %>
-                <.result_item phx-value-value={value} phx-click="select-raw">
-                  <:icon><.icon name="hero-pencil" /></:icon>
-                  <span>{value}</span>
-                </.result_item>
               <% %{:id => id, :asset_number => asset, :serial_number => serial} -> %>
                 <.result_item
                   id={id}
@@ -90,8 +90,6 @@ defmodule PrintClientWeb.ApiSearchComponent do
                     <span>{name} ({username})</span>
                   </:info>
                 </.result_item>
-              <% _ -> %>
-                {inspect(result)}
             <% end %>
           <% end %>
         </div>
@@ -117,7 +115,7 @@ defmodule PrintClientWeb.ApiSearchComponent do
         "flex flex-row gap-4 items-center"
       ]}
       role="option"
-      tabindex="-1"
+      tabindex="1"
       {@rest}
     >
       <div class="w-8">
@@ -135,9 +133,9 @@ defmodule PrintClientWeb.ApiSearchComponent do
 
   defp is_asset(_), do: false
 
-  defp normalize_field_name(name) when is_binary(name) do
+  defp normalize_field_name(name, capitalize \\ true) when is_binary(name) do
     case Regex.named_captures(~r/^[^\[]*\[(?<name>[^\]]*)\].*$/, name) do
-      %{"name" => name} -> String.capitalize(name)
+      %{"name" => name} -> if capitalize, do: String.capitalize(name), else: name
       other -> name
     end
   end

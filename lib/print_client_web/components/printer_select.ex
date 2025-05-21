@@ -10,47 +10,24 @@ defmodule PrintClientWeb.PrinterSelectComponent do
   def mount(socket) do
     socket =
       socket
-      |> assign(selected: nil)
+      |> assign(value: nil)
       |> assign_printers()
       |> notify_selected()
-
-    # if Mix.env() in [:dev, :test],
-    #   do: send(self(), {:select_printer, socket.assigns.printers |> Enum.at(0)})
 
     {:ok, socket}
   end
 
   @impl true
   def handle_event("select", %{"select" => printer_id}, socket) do
-    Logger.info("PrinterSelectComponent: selected #{inspect(printer_id)}")
-
-    socket = socket |> assign_selected(printer_id)
-
-    send(self(), {:select_printer, socket.assigns.selected})
-
-    {:noreply,
-     socket
-     |> assign_selected(printer_id)}
+    {:noreply, socket |> notify_selected(printer_id)}
   end
 
-  def handle_event("select", _, socket) do
-    Logger.info("PrinterSelectComponent: deselected")
-
-    socket = socket |> assign_selected(nil)
-
-    send(self(), {:select_printer, nil})
-
-    {:noreply,
-     socket
-     |> assign_selected(nil)}
-  end
+  def handle_event("select", _params, socket), do: {:noreply, socket}
 
   def handle_event("refresh", _params, socket) do
-    Logger.info("PrinterSelectComponent: refreshing printers")
+    Logger.debug("PrinterSelectComponent: refreshing printers")
 
-    send(self(), {:select_printer, nil})
-
-    {:noreply, socket |> assign_printers() |> assign(selected: nil)}
+    {:noreply, socket |> assign_printers()}
   end
 
   @impl true
@@ -63,11 +40,11 @@ defmodule PrintClientWeb.PrinterSelectComponent do
           name="select"
           type="select"
           options={@printer_options}
-          disabled={@selected != nil}
+          value={@value}
         />
       </form>
       <.button phx-target={@myself} phx-click="refresh">
-        <.icon name={if @selected == nil, do: "hero-arrow-path", else: "hero-trash"} />
+        <.icon name="hero-arrow-path" />
       </.button>
     </div>
     """
@@ -79,7 +56,7 @@ defmodule PrintClientWeb.PrinterSelectComponent do
     printer_options =
       printers
       |> Enum.reduce([], fn printer, acc ->
-        [{printer.name, printer.printer_id} | acc]
+        [{"[#{printer.type}] #{printer.name}", printer.printer_id} | acc]
       end)
       |> Enum.reverse()
 
@@ -88,19 +65,17 @@ defmodule PrintClientWeb.PrinterSelectComponent do
     |> assign(printer_options: printer_options)
   end
 
-  defp assign_selected(socket, printer_id),
-    do:
-      assign(
-        socket,
-        :selected,
-        Enum.find(socket.assigns[:printers], &(&1.printer_id == printer_id))
-      )
+  defp notify_selected(socket, printer_id) do
+    Logger.debug("PrinterSelectComponent: selected #{inspect(printer_id)}")
 
-  defp notify_selected(%{assigns: %{selected: %{printer_id: printer_id}}} = socket) do
-    # We need to notify Printer.Supervisor to start the queue
-    Printer.Supervisor.start_printer(printer_id)
+    printer =
+      socket.assigns.printers
+      |> Enum.find(&(&1.printer_id == printer_id))
+
+    if not is_nil(printer), do: send(self(), {:select_printer, printer})
 
     socket
+    |> assign(value: nil)
   end
 
   defp notify_selected(socket), do: socket

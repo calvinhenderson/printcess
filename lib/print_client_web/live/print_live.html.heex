@@ -1,17 +1,14 @@
 <Layouts.app flash={@flash}>
   <:actions>
-    <%= if @selected_printer do %>
-      <.button :if={@selected_printer} phx-click="clear-printer">
-        <.icon name="hero-trash" /> {@selected_printer.name}
-      </.button>
-    <% else %>
-      <.live_component
-        :if={is_nil(@selected_printer)}
-        id="printers"
-        module={PrintClientWeb.PrinterSelectComponent}
-      />
-    <% end %>
+    <.live_component id="printers" module={PrintClientWeb.PrinterSelectComponent} />
 
+    <.button
+      :for={printer <- @selected_printers}
+      phx-click="clear-printer"
+      phx-value-id={printer.printer_id}
+    >
+      <.icon name="hero-trash" /> {printer.name}
+    </.button>
     <%= if @selected_template do %>
       <.button :if={@selected_template} phx-click="clear-template">
         <.icon name="hero-trash" /> {@selected_template.name}
@@ -47,6 +44,7 @@
         phx-debounce="500"
         phx-reset="reset"
         class="flex flex-col gap-3"
+        target="_blank"
       >
         <ApiSearchComponent.search
           :for={field <- @selected_template.required_fields}
@@ -58,7 +56,7 @@
           results={if is_nil(@results.result), do: [], else: Map.get(@results.result, field, [])}
         />
 
-        <.input field={f[:copies]} name="copies" type="number" label="Copies" placeholder="1" />
+        <.input field={f[:copies]} type="number" label="Copies" placeholder="1" />
 
         <div class="flex flex-row gap-2">
           <.button type="reset" name="reset" class="h-12">

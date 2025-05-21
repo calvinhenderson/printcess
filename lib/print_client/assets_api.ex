@@ -1,6 +1,6 @@
 defmodule PrintClient.AssetsApi do
   alias PrintClient.Settings
-  alias PrintClient.AssetsApi.ApiAdapter.{Iiq}
+  alias PrintClient.AssetsApi.ApiAdapter.{Iiq, Mock}
 
   def search_users(backend, query, opts \\ []),
     do: backend.module.search_users(backend.config, query, opts)
@@ -12,15 +12,22 @@ defmodule PrintClient.AssetsApi do
   Searches an API for users 
   """
   def backend do
-    config = Settings.get_settings()
-
-    %{
-      module: Iiq,
-      config: %Iiq{
-        instance: config.instance,
-        token: config.token,
-        product_id: config.product_id
+    if Mix.env() in [:dev, :test] do
+      %{
+        module: Mock,
+        config: %Mock{}
       }
-    }
+    else
+      config = Settings.get_settings()
+
+      %{
+        module: Iiq,
+        config: %Iiq{
+          instance: config.instance,
+          token: config.token,
+          product_id: config.product_id
+        }
+      }
+    end
   end
 end
