@@ -28,34 +28,40 @@ defmodule PrintClientWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
+  slot :actions, required: false
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <div class="grid [grid-template-areas:'header_header''aside_main''footer_footer'] grid-cols-[50px_1fr] grid-rows-[auto_1fr] min-h-screen bg-gray-200">
-      <header class="px-4 sm:px-6 lg:px-8 [grid-area:header]">
-        <div class="flex items-center justify-between py-2 text-sm">
-          <div class="flex items-center gap-4">
-            <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-              v{Application.spec(:print_client, :vsn)}
-            </p>
-          </div>
-          <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-            {render_slot(@actions)}
-          </div>
+    <div class="grid [grid-template-areas:'aside_header''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen bg-base-100">
+      
+    <!-- Header -->
+      <header class="[grid-area:header] px-4 sm:px-6 lg:px-8 w-full flex flex-row flex-wrap justify-between min-h-12 bg-base-300">
+        <span class="grow" />
+        <div>
+          {render_slot(@actions)}
         </div>
       </header>
-      <div class="[grid-area:aside] flex flex-col gap-0 justify-start items-center py-1">
-        <.link href="/" class="p-2 rounded-md hover:bg-gray-300">
+      
+    <!-- Sidebar navigation -->
+      <nav class="[grid-area:aside] bg-primary text-primary-content flex flex-col gap-0 justify-start items-center py-1 w-32">
+        <div class="flex items-center gap-4">
+          <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
+            v{Application.spec(:print_client, :vsn)}
+          </p>
+        </div>
+        <.link href="/" class="p-2 rounded-md hover:bg-base-300">
           <.icon name="hero-home-solid" />
         </.link>
         <span class="flex-grow" />
-        <.link href="/settings" class="p-2 rounded-md hover:bg-gray-300">
+        <.link href="/settings" class="p-2 rounded-md hover:bg-base-300">
           <.icon name="hero-cog-solid" />
         </.link>
-      </div>
-      <main class="[grid-area:main] bg-white rounded-tl-lg">
-        <div class="p-2">
+      </nav>
+      
+    <!-- Main content -->
+      <main class="[grid-area:main] p-4">
+        <div class="container mx-auto">
           {render_slot(@inner_block)}
         </div>
       </main>

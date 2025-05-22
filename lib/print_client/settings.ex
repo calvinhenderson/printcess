@@ -5,8 +5,9 @@ defmodule PrintClient.Settings do
 
   import Ecto.Query
 
-  ##
-  ## Printers
+  require Logger
+
+  # --- Printers ---
 
   @doc """
   Retreives a single printer from the database.
@@ -47,36 +48,56 @@ defmodule PrintClient.Settings do
 
   def delete_printer(printer), do: Logger.error("Invalid printer given: #{inspect(printer)}")
 
-  ##
-  ## IncidentIQ
-
-  @doc """
-  Returns the current Settings.Config. If it
-  does not exist, a blank config is returned.
-  """
-  @spec get_settings :: Config.t()
-  def get_settings do
-    Repo.one(Config)
-    |> case do
-      nil -> %Config{}
-      config -> config
-    end
-  end
+  # --- API Settings ---
 
   @doc """
   Returns an `Ecto.Changeset` for tracking config changes.
   """
-  def change_settings(attrs \\ %{}) do
-    get_settings()
-    |> Config.changeset(attrs)
+  def change_api(attrs \\ %{}) do
+    get_config()
+    |> Config.api_changeset(attrs)
   end
 
   @doc """
   Writes the config to the database.
   """
-  def save_settings(attrs \\ %{}) do
-    get_settings()
-    |> Config.changeset(attrs)
+  def save_api(attrs \\ %{}) do
+    get_config()
+    |> Config.api_changeset(attrs)
     |> Repo.insert_or_update()
+  end
+
+  # --- User Preferences ---
+
+  @doc """
+  Returns a list of available UI themes.
+  """
+  def available_themes, do: Config.available_themes()
+
+  @doc """
+  Returns an `Ecto.Changeset` for tracking config changes.
+  """
+  def change_preferences(attrs \\ %{}) do
+    get_config()
+    |> Config.preferences_changeset(attrs)
+  end
+
+  @doc """
+  Writes the config to the database.
+  """
+  def save_preferences(attrs \\ %{}) do
+    get_config()
+    |> Config.preferences_changeset(attrs)
+    |> Repo.insert_or_update()
+  end
+
+  # --- Internal API ---
+
+  def get_config do
+    Repo.one(Config)
+    |> case do
+      nil -> %Config{}
+      config -> config
+    end
   end
 end

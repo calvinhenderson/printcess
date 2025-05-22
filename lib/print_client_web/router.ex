@@ -19,7 +19,9 @@ defmodule PrintClientWeb.Router do
     pipe_through :browser
 
     live_session :live do
-      live "/settings", SettingsLive
+      live "/settings/printers", SettingsLive, :printers
+      live "/settings/api", SettingsLive, :api
+      live "/settings", SettingsLive, :preferences
       live "/", PrintLive
     end
   end
