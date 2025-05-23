@@ -50,6 +50,7 @@ defmodule PrintClient.Printer.Discovery do
     usb_vendors_map = load_usb_vendor_ids()
 
     :usb.get_device_list()
+    |> dbg()
     |> case do
       {:ok, devices} ->
         devices |> Enum.map(&format_discovered_usb/1)

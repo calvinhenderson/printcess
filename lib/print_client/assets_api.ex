@@ -12,7 +12,7 @@ defmodule PrintClient.AssetsApi do
   Searches an API for users 
   """
   def backend do
-    config = Settings.get_settings()
+    config = Settings.get_config()
 
     %{
       module: Iiq,

@@ -4,6 +4,30 @@ defmodule PrintClientWeb.PrintComponents do
   alias PrintClient.Label
 
   @doc """
+
+  """
+  attr :label, :string, required: true, doc: "the dropdown button text"
+  attr :options, :list, default: []
+  attr :side, :string, default: "start"
+  attr :class, :string, default: ""
+  attr :rest, :global
+  slot :inner_block
+
+  def dropdown(assigns) do
+    ~H"""
+    <div class={"dropdown dropdown-#{@side}"} {@rest}>
+      <div tabindex="0" role="button" class={["btn btn-bordered", @class]}>{@label}</div>
+      <ul
+        tabindex="0"
+        class="menu dropdown-content bg-base-200 rounded-box z-1 mt-4 w-52 p-2 shadow-sm"
+      >
+        <li :for={row <- @options}>{render_slot(@inner_block, row)}</li>
+      </ul>
+    </div>
+    """
+  end
+
+  @doc """
   Renders a form for printing assets.
   """
   attr :id, :any, required: true

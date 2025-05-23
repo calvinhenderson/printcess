@@ -1,25 +1,7 @@
 <Layouts.app flash={@flash}>
   <:actions>
     <.live_component id="printers" module={PrintClientWeb.PrinterSelectComponent} />
-
-    <.button
-      :for={printer <- @selected_printers}
-      phx-click="clear-printer"
-      phx-value-id={printer.printer_id}
-    >
-      <.icon name="hero-trash" /> {printer.name}
-    </.button>
-    <%= if @selected_template do %>
-      <.button :if={@selected_template} phx-click="clear-template">
-        <.icon name="hero-trash" /> {@selected_template.name}
-      </.button>
-    <% else %>
-      <.live_component
-        :if={is_nil(@selected_template)}
-        id="templates"
-        module={PrintClientWeb.TemplateSelectComponent}
-      />
-    <% end %>
+    <.live_component id="templates" module={PrintClientWeb.TemplateSelectComponent} />
   </:actions>
 
   <div class="flex flex-col max-w-lg mx-auto gap-4 w-md flex-grow">
@@ -31,6 +13,18 @@
         label="Bind Asset to User. This will assign the asset upon printing."
       />
     </.form>
+
+    <div class="flex flex-row gap-2">
+      <button
+        :for={printer <- @selected_printers}
+        phx-click="clear-printer"
+        phx-value-id={printer.printer_id}
+        class="btn btn-bordered flex flex-row items-center"
+      >
+        <.icon name="hero-trash" class="join-item" />
+        <span class="join-item">{printer.name}</span>
+      </button>
+    </div>
 
     <.label_template template={@selected_template} params={@template_params} />
 
@@ -61,7 +55,7 @@
         <.input field={f[:copies]} type="number" label="Copies" placeholder="1" />
 
         <div class="flex flex-row gap-2">
-          <.button type="reset" name="reset" class="h-12">
+          <.button type="reset" class="h-12">
             <.icon name="hero-arrow-path-rounded-square" />
           </.button>
           <.button type="submit" class="flex-grow h-12" phx-disable-with="Submitting..">

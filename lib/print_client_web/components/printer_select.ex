@@ -1,8 +1,8 @@
 defmodule PrintClientWeb.PrinterSelectComponent do
-  alias PrintClient.Printer
   use PrintClientWeb, :live_component
 
   alias PrintClient.Printer.Discovery
+  import PrintClientWeb.PrintComponents, only: [dropdown: 1]
 
   require Logger
 
@@ -14,11 +14,30 @@ defmodule PrintClientWeb.PrinterSelectComponent do
       |> assign_printers()
       |> notify_selected()
 
+    Enum.take(socket.assigns.printers, 2)
+    |> Enum.each(&send(self(), {:select_printer, &1}))
+
     {:ok, socket}
   end
 
   @impl true
-  def handle_event("select", %{"select" => printer_id}, socket) do
+  def render(assigns) do
+    ~H"""
+    <div class="join join-horizontal">
+      <.dropdown :let={printer} options={@printers} label="Printer" class="join-item">
+        <div phx-click="select" phx-target={@myself} phx-value-id={printer.printer_id}>
+          {printer.name}
+        </div>
+      </.dropdown>
+      <.button phx-target={@myself} phx-click="refresh" class="join-item">
+        <.icon name="hero-arrow-path" />
+      </.button>
+    </div>
+    """
+  end
+
+  @impl true
+  def handle_event("select", %{"id" => printer_id}, socket) do
     {:noreply, socket |> notify_selected(printer_id)}
   end
 
@@ -28,31 +47,6 @@ defmodule PrintClientWeb.PrinterSelectComponent do
     Logger.debug("PrinterSelectComponent: refreshing printers")
 
     {:noreply, socket |> assign_printers()}
-  end
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <div class="flex flex-row gap-4">
-      <form id={@id <> "-form"} phx-change="select" phx-target={@myself}>
-        <select
-          id={@id <> "-select"}
-          name="select"
-          class="select"
-          value={@value}
-          list={@id <> "-list"}
-        >
-          <option value="" selected>Select a printer</option>
-          <option :for={{name, value} <- @printer_options} value={value}>
-            {name}
-          </option>
-        </select>
-      </form>
-      <.button phx-target={@myself} phx-click="refresh">
-        <.icon name="hero-arrow-path" />
-      </.button>
-    </div>
-    """
   end
 
   defp assign_printers(socket) do

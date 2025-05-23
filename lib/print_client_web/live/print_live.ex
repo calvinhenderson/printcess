@@ -89,8 +89,19 @@ defmodule PrintClientWeb.PrintLive do
         %Printer{printer_id: _} = printer ->
           Printer.Supervisor.start_printer(printer)
 
+          printers =
+            [printer | socket.assigns.selected_printers]
+            |> Enum.reduce([], fn printer, acc ->
+              if Enum.find(acc, &(&1.printer_id == printer.printer_id)) do
+                acc
+              else
+                Printer.subscribe(printer)
+                [printer | acc]
+              end
+            end)
+
           socket
-          |> assign(selected_printers: [printer | socket.assigns.selected_printers])
+          |> assign(selected_printers: printers)
 
         _ ->
           socket
@@ -101,6 +112,9 @@ defmodule PrintClientWeb.PrintLive do
 
   def handle_info({:select_template, template}, socket),
     do: {:noreply, socket |> assign(:selected_template, template)}
+
+  def handle_info(type, message, socket) when type in [:info, :error],
+    do: {:noreply, socket |> put_flash(type, message)}
 
   @impl true
   def handle_event(
@@ -167,6 +181,8 @@ defmodule PrintClientWeb.PrintLive do
   def handle_event("clear-printer", %{"id" => printer_id}, socket) do
     # Stop the printer service
     Printer.Supervisor.stop_printer(printer_id)
+
+    Printer.unsubscribe(%{printer_id: printer_id})
 
     # Remove it from the selected list
     printers =

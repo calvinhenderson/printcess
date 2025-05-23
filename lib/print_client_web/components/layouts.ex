@@ -36,7 +36,10 @@ defmodule PrintClientWeb.Layouts do
     <div class="grid [grid-template-areas:'aside_header''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen bg-base-100">
       
     <!-- Header -->
-      <header class="[grid-area:header] px-4 sm:px-6 lg:px-8 w-full flex flex-row flex-wrap justify-between min-h-12 bg-base-300">
+      <header class="[grid-area:header] px-4 sm:px-6 lg:px-8 w-full flex flex-row flex-wrap justify-between items-center min-h-12 bg-base-300">
+        <a onclick="history.back()" href="#" class="btn btn-ghost">
+          <.icon name="hero-arrow-left-solid" class="w-3 h-3" /> Back
+        </a>
         <span class="grow" />
         <div>
           {render_slot(@actions)}
@@ -44,19 +47,30 @@ defmodule PrintClientWeb.Layouts do
       </header>
       
     <!-- Sidebar navigation -->
-      <nav class="[grid-area:aside] bg-primary text-primary-content flex flex-col gap-0 justify-start items-center py-1 w-32">
+      <nav class="[grid-area:aside] bg-primary text-primary-content flex flex-col gap-0 justify-start items-center p-1 md:px-2 w-16 md:w-32">
         <div class="flex items-center gap-4">
           <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
             v{Application.spec(:print_client, :vsn)}
           </p>
         </div>
-        <.link href="/" class="p-2 rounded-md hover:bg-base-300">
-          <.icon name="hero-home-solid" />
-        </.link>
-        <span class="flex-grow" />
-        <.link href="/settings" class="p-2 rounded-md hover:bg-base-300">
-          <.icon name="hero-cog-solid" />
-        </.link>
+        <%= for item <- [
+              {"/", "Printing", "hero-printer-solid"},
+              :spacer,
+              {"/settings", "Settings", "hero-cog-solid"},
+            ] do %>
+          <%= case item do %>
+            <% {href, label, icon} -> %>
+              <a
+                href={href}
+                class="w-full px-1 md:px-4 py-2 flex flex-row justify-center items-center gap-2 btn btn-ghost"
+              >
+                <.icon name={icon} />
+                <span class="hidden md:inline">{label}</span>
+              </a>
+            <% :spacer -> %>
+              <span class="grow" />
+          <% end %>
+        <% end %>
       </nav>
       
     <!-- Main content -->

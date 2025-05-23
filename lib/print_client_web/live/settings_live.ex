@@ -3,42 +3,70 @@ defmodule PrintClientWeb.SettingsLive do
 
   alias PrintClientWeb.Settings
 
+  @tabs [
+    %{
+      id: :preferences,
+      href: "/settings",
+      title: "User Preferences",
+      icon: "hero-cog-solid",
+      module: Settings.UserPreferencesComponent
+    },
+    %{
+      id: :printers,
+      href: "/settings/printers",
+      title: "Printer Settings",
+      icon: "hero-cog-solid",
+      module: Settings.PrinterComponent
+    },
+    %{
+      id: :api,
+      href: "/settings/api",
+      title: "API Settings",
+      icon: "hero-cog-solid",
+      module: Settings.ApiComponent
+    }
+  ]
+
   @impl true
-  def mount(params, _session, socket) do
-    {:ok, apply_action(socket, socket.assigns.live_action, params)}
+  def mount(_params, _session, socket) do
+    tab = Enum.find(@tabs, &(&1.id == socket.assigns.live_action))
+
+    {:ok,
+     socket
+     |> assign(tabs: @tabs)
+     |> assign_tab(tab)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
-      <.live_component :if={@tab == :printers} id="printers" module={Settings.PrinterComponent} />
-      <.live_component
-        :if={@tab == :preferences}
-        id="preferences"
-        module={Settings.UserPreferencesComponent}
-      />
-      <.live_component :if={@tab == :api} id="api" module={Settings.ApiComponent} />
+      <div class="tabs tabs-border">
+        <%= for %{id: id, title: title, href: href, icon: icon, module: mod} <- @tabs do %>
+          <a
+            href={href}
+            class={[
+              "tab gap-1",
+              @tab.id == id && "tab-active"
+            ]}
+          >
+            <.icon name={icon} />
+            {title}
+          </a>
+          <div :if={@tab.id == id} class="tab-content bg-base-100 border-base-300 p-6">
+            <.live_component id={id} module={mod} />
+          </div>
+        <% end %>
+      </div>
     </Layouts.app>
     """
   end
 
-  defp apply_action(socket, action, _params) do
-    case action do
-      :printers ->
-        assign_tab(socket, :printers, "Printer Settings")
+  defp assign_tab(socket, nil), do: assign_tab(socket, :preferences)
 
-      :preferences ->
-        assign_tab(socket, :preferences, "User Preferences")
-
-      :api ->
-        assign_tab(socket, :api, "API Settings")
-    end
-  end
-
-  defp assign_tab(socket, tab, page_title \\ nil) do
+  defp assign_tab(socket, tab) do
     socket
-    |> assign(:page_title, page_title)
     |> assign(:tab, tab)
+    |> assign(page_title: tab.title)
   end
 end

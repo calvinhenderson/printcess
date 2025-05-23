@@ -53,6 +53,18 @@ defmodule PrintClient.Printer do
     GenServer.start_link(__MODULE__, opts, name: Registry.via_tuple(printer_id))
   end
 
+  @doc """
+  Subscribes the calling process to the printer's topic.
+  """
+  def subscribe(%{printer_id: printer_id}),
+    do: Phoenix.PubSub.subscribe(@pubsub, "printers:#{printer_id}")
+
+  @doc """
+  Unsubscribes the calling process from the printer's topic.
+  """
+  def unsubscribe(%{printer_id: printer_id}),
+    do: Phoenix.PubSub.unsubscribe(@pubsub, "printers:#{printer_id}")
+
   @doc "Opens a connection to the physical printer."
   def connect(printer_id), do: GenServer.call(printer_id, :connect)
 
@@ -160,7 +172,7 @@ defmodule PrintClient.Printer do
       )
     )
 
-    broadcast_job(state.printer_id, job.id, "created")
+    broadcast(state.printer_id, "Printer: created job #{job.id} for #{state.name}")
 
     {:reply, {:ok, job.id}, new_state}
   end
@@ -224,12 +236,12 @@ defmodule PrintClient.Printer do
 
   # --- Internal API ---
 
-  defp broadcast_job(printer_id, job_id, message),
+  defp broadcast(printer_id, message, type \\ :info),
     do:
       Phoenix.PubSub.broadcast_from(
         @pubsub,
         self(),
-        job_topic(printer_id, job_id),
+        {type, "printers:#{printer_id}"},
         message
       )
 
@@ -265,6 +277,8 @@ defmodule PrintClient.Printer do
       Logger.info(
         "Printer #{state.printer_id}: Scheduling connection retry (#{state.current_connect_retries + 1}/#{state.max_connect_retries}) in #{state.connect_retry_delay_ms}ms."
       )
+
+      broadcast(state.printer_id, "Printer #{state.name} disconnected. Reconnecting..", :error)
 
       timer_ref = Process.send_after(self(), :connect_retry, state.connect_retry_delay_ms)
 
@@ -314,6 +328,11 @@ defmodule PrintClient.Printer do
           {:error, reason} ->
             Logger.error(
               "Printer #{state.printer_id}: Print failed. Reason: #{inspect(reason)}. Re-queuing job and attempting to reconnect."
+            )
+
+            broadcast(
+              state.printer_id,
+              "Print job #{id} failed for #{state.name}. Trying again."
             )
 
             # Put job back at the front of the queue
@@ -376,6 +395,4 @@ defmodule PrintClient.Printer do
   defp monitor_adapter_resource(_adapter_state) do
     nil
   end
-
-  defp job_topic(printer_id, job_id), do: "print_jobs:#{printer_id}:#{job_id}"
 end
