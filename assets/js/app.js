@@ -94,3 +94,9 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
+
+window.maybeNavigateBack = () => {
+  // Only allow navigating back when we are not at the page root.
+  if (document.location.pathname == "/") return;
+  history.back();
+};

@@ -4,6 +4,10 @@ defprotocol PrintClient.AssetsApi.ApiAdapter do
   """
   alias PrintClient.AssetsApi.SearchResult
 
+  @doc "Returns an Api Adapter configured with the provided settings"
+  @spec config(Map.t()) :: struct()
+  def config(settings)
+
   @doc "Establishes a connection to the printer."
   @spec search_assets(struct(), String.t(), Keyword.t()) ::
           {:ok, SearchResult.t()} | {:error, term()}

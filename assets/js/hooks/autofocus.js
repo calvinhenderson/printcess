@@ -1,11 +1,11 @@
-function getByAttribute(element, attr) {
-  return document.getElementById(element.getAttribute('data-' + attr));
-}
-
 export const AutoFocusHook = {
   mounted() {
     // element was added to DOM
-    this.input = getByAttribute(this.el, 'focus-input');
+    let inputs = this.el.querySelectorAll('input:not(:disabled)')
+
+    this.input = this.el;
+    if (inputs.length > 0) this.input = inputs[0];
+
     this.el.addEventListener("submit", () => this.submitted());
   },
 

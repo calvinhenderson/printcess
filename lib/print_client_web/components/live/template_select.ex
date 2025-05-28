@@ -19,17 +19,24 @@ defmodule PrintClientWeb.TemplateSelectComponent do
   end
 
   @impl true
+  attr :id, :string, required: true
+
   def render(assigns) do
     ~H"""
-    <div class="join">
-      <.dropdown :let={template} options={@templates} label="Template" side="end" class="join-item">
-        <div phx-click="select" phx-target={@myself} phx-value-id={template.name}>
-          <span>{template.name}</span>
-        </div>
+    <div id={@id} class="contents">
+      <.dropdown results={@templates} class="rounded-l-md">
+        <:label class="join">
+          <div class="btn btn-soft join-item" role="button" tabindex="0">Templates</div>
+          <span phx-target={@myself} phx-click="refresh" class="btn btn-soft join-item">
+            <.icon name="hero-arrow-path" />
+          </span>
+        </:label>
+        <:option :let={template}>
+          <div phx-click="select" phx-target={@myself} phx-value-id={template.id} tabindex="0">
+            {template.name}
+          </div>
+        </:option>
       </.dropdown>
-      <button type="button" phx-target={@myself} phx-click="refresh" class="btn join-item">
-        <.icon name={if @selected == nil, do: "hero-arrow-path", else: "hero-trash"} />
-      </button>
     </div>
     """
   end
@@ -53,10 +60,7 @@ defmodule PrintClientWeb.TemplateSelectComponent do
 
   def handle_event("refresh", _params, socket) do
     Logger.info("TemplateSelectComponent: refreshing templates")
-
-    send(self(), {:select_template, nil})
-
-    {:noreply, socket |> assign_templates() |> assign(selected: nil)}
+    {:noreply, socket |> assign_templates()}
   end
 
   defp assign_templates(socket) do

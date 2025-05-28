@@ -11,6 +11,13 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
 
   require Logger
 
+  def config(settings),
+    do: %__MODULE__{
+      instance: settings.instance,
+      token: settings.token,
+      product_id: settings.product_id
+    }
+
   def search_assets(config, query, opts \\ []) do
     req =
       %{
@@ -111,13 +118,14 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
 
   defp api_object_to_search_result(item) do
     case item do
-      %{"AssetId" => id, "AssetNumber" => asset, "SerialNumber" => serial} ->
+      %{"AssetId" => id, "AssetNumber" => asset_number, "SerialNumber" => serial_number} = asset ->
         struct!(SearchResult.Asset,
           id: id,
-          asset_number: asset,
-          serial_number: serial,
+          asset: asset_number,
+          serial: serial_number,
           manufacturer: Map.get(asset, ["Model", "Manufacturer", "Name"], ""),
-          model: Map.get(asset, ["Model", "Name"], "")
+          model: Map.get(asset, ["Model", "Name"], ""),
+          username: Map.get(asset, ["Owner", "Username"])
         )
 
       %{"UserId" => id, "Username" => username, "Name" => display_name} = user ->

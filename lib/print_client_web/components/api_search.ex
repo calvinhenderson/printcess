@@ -1,99 +1,80 @@
 defmodule PrintClientWeb.ApiSearchComponent do
   use PrintClientWeb, :html
 
+  alias Phoenix.LiveView.AsyncResult
+  import PrintClientWeb.PrintComponents
+
   require Logger
 
   attr :field, Phoenix.HTML.FormField
-  attr :results, :list, default: []
-  attr :loading, :boolean, default: false
-  attr :error, :any, default: nil
+  attr :results, AsyncResult, default: AsyncResult.loading()
+  attr :debounce, :any, default: "500"
+  attr :target, :any, required: true
   attr :rest, :global
 
   def search(assigns) do
     ~H"""
-    <div>
-      <!-- Form Input -->
-      <label for={@field.id} class="label">{normalize_field_name(@field.name)}</label>
-      <div class="relative flex flex-row border-[1px] border-zinc-300 justify-space-between items-center px-2 gap-0 rounded-md">
-        <.icon name="hero-magnifying-glass-mini" />
-
-        <input
-          {@rest}
-          type="text"
-          class="h-12 w-full border-none focus:ring-0 text-gray-800 placeholder-gray-400 sm:text-sm"
-          placeholder={"Search for or enter a #{normalize_field_name(@field.name, false)}"}
-          role="combobox"
-          aria-expanded="false"
-          aria-controls="options"
-          spellcheck="false"
-          autocomplete="off"
-          name={@field.name}
-          value={Phoenix.HTML.Form.normalize_value("text", @field.value)}
-        />
-        
-    <!-- Query Results -->
-        <ul
-          class={[
-            "hidden in-focus:block",
-            "-mb-2 py-2 text-sm text-gray-800 flex space-y-2 flex-col",
-            "max-h-[90pt] overflow-y-scroll rounded-md overflow-x-clip"
-          ]}
-          id="options"
-          role="listbox"
-        >
-          <div>
-            <.error
-              :for={msg <- Enum.map(@field.errors, &translate_error/1)}
-              :if={Phoenix.Component.used_input?(@field)}
-            >
-              {msg}
-            </.error>
-            <span :if={@loading}>Loading...</span>
-            <span :if={@results == []}>No Results..</span>
-            <%= for result <- @results do %>
-              <%= case result do %>
-                <% %{:id => id, :asset_number => asset, :serial_number => serial} -> %>
-                  <.result_item
-                    id={id}
-                    phx-value-id={id}
-                    phx-value-value={if is_asset(@field), do: asset, else: serial}
-                    phx-click="select-asset"
+    <div id={@field.id <> "-container"} class="contents">
+      <.dropdown results={@results}>
+        <:label>
+          <span>{normalized_field_name(@field)}</span>
+          <.input
+            field={@field}
+            type="text"
+            spellcheck="off"
+            autocomplete="off"
+            phx-debounce={@debounce}
+            placeholder={gettext("Lookup or enter a value")}
+          />
+        </:label>
+        <!-- Query Results -->
+        <:option :let={result}>
+          <%= case result do %>
+            <% %{:id => id, :asset => asset, :serial => serial} = result -> %>
+              <.result_item id={id} phx-value-id={id} phx-click="select" phx-target={@target}>
+                <:icon>
+                  <svg
+                    class="size-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    data-darkreader-inline-fill=""
+                    style="--darkreader-inline-fill: currentColor;"
                   >
-                    <:icon>
-                      <svg
-                        class="w-6 h-6"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        data-darkreader-inline-fill=""
-                        style="--darkreader-inline-fill: currentColor;"
-                      >
-                        <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z">
-                        </path>
-                      </svg>
-                    </:icon>
-                    <:info>
-                      <span>Asset: {asset}</span>
-                      <span>Serial: {serial}</span>
-                    </:info>
-                  </.result_item>
-                <% %{:id => id, :username => username, :display_name => name} -> %>
-                  <.result_item
-                    id={id}
-                    phx-value-id={id}
-                    phx-value-value={username}
-                    phx-click="select-user"
-                  >
-                    <:icon><.icon name="hero-user-circle-solid" /></:icon>
-                    <:info>
-                      <span>{name} ({username})</span>
-                    </:info>
-                  </.result_item>
-              <% end %>
-            <% end %>
-          </div>
-        </ul>
-      </div>
+                    <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z">
+                    </path>
+                  </svg>
+                </:icon>
+                <:info>
+                  <div class="flex flex-col">
+                    <div class="flex flex-row gap-2">
+                      <span>
+                        {"#{Map.get(result, :manufacturer, "")} #{Map.get(result, :model, "")}"}
+                      </span>
+                      <span>
+                        Owner: {Map.get(result, :username, "")}
+                      </span>
+                    </div>
+                    <div class="flex flex-row gap-2">
+                      <span>#{asset}</span>
+                      <span>{serial}</span>
+                    </div>
+                  </div>
+                </:info>
+              </.result_item>
+            <% %{:id => id, :username => username, :display_name => name} = result -> %>
+              <.result_item id={id} phx-click="select" phx-value-id={id} phx-target={@target}>
+                <:icon><.icon name="hero-user-circle-solid" class="size-4" /></:icon>
+                <:info>
+                  <span>
+                    {name} ({username}) {# {result.grade}"
+                    if is_nil(result.grade), do: "", else: "Grade #{result.grade}"}
+                  </span>
+                </:info>
+              </.result_item>
+          <% end %>
+        </:option>
+      </.dropdown>
     </div>
     """
   end
@@ -107,24 +88,14 @@ defmodule PrintClientWeb.ApiSearchComponent do
 
   defp result_item(assigns) do
     ~H"""
-    <li
-      class={[
-        "cursor-default select-none first:rounded-t-md last:rounded-b-md px-4 py-2",
-        "border-b-2 border-zinc-200 last:border-none",
-        "text-xl bg-zinc-100 hover:bg-zinc-800 hover:text-white hover:cursor-pointer",
-        "flex flex-row gap-4 items-center"
-      ]}
-      role="option"
-      tabindex="1"
-      {@rest}
-    >
+    <div class="flex flex-row" role="option" tabindex="1" {@rest}>
       <div class="w-8">
         {render_slot(@icon)}
       </div>
       <div class="flex-grow flex flex-row gap-4">
         {render_slot(@info)}
       </div>
-    </li>
+    </div>
     """
   end
 
@@ -133,10 +104,19 @@ defmodule PrintClientWeb.ApiSearchComponent do
 
   defp is_asset(_), do: false
 
-  defp normalize_field_name(name, capitalize \\ true) when is_binary(name) do
-    case Regex.named_captures(~r/^[^\[]*\[(?<name>[^\]]*)\].*$/, name) do
-      %{"name" => name} -> if capitalize, do: String.capitalize(name), else: name
-      other -> name
+  defp normalized_field_name(field, capitalize \\ true) do
+    ~r/^[^\[]*\[(?<name>[^\]]*)\].*$/
+    |> Regex.named_captures(Map.get(field, :name, ""))
+    |> case do
+      %{"name" => name} ->
+        name
+
+      _other ->
+        Map.get(field, :name, "")
     end
+    |> then(&if capitalize, do: String.capitalize(&1), else: &1)
   end
+
+  defp get_results(%AsyncResult{result: options}) when is_list(options), do: options
+  defp get_results(_), do: []
 end

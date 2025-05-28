@@ -17,7 +17,7 @@ defmodule PrintClient.Menu do
   end
 
   @impl true
-  def handle_info(_, menu) do
+  def handle_info(event, menu) do
     {:noreply, menu}
   end
 
@@ -27,9 +27,6 @@ defmodule PrintClient.Menu do
 
   @impl true
   def handle_event("show", menu), do: show_url(menu, ~p"/")
-
-  @impl true
-  def handle_event("asset-spam", menu), do: show_url(menu, ~p"/scan-mode")
 
   @impl true
   def handle_event("settings", menu), do: show_url(menu, ~p"/settings")
@@ -43,7 +40,6 @@ defmodule PrintClient.Menu do
         <hr />
       <% end %>
       <item onclick="show">{gettext("Show")}</item>
-      <item onclick="asset-spam">{gettext("Bulk")}</item>
       <item onclick="settings">{gettext("Settings")}</item>
       <item onclick="quit">{gettext("Quit")}</item>
     </menu>

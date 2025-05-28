@@ -23,6 +23,9 @@ config :print_client, PrintClientWeb.Endpoint,
 # In test we don't send emails
 config :print_client, PrintClient.Mailer, adapter: Swoosh.Adapters.Test
 
+# Configure Mock API Backend Adapter
+config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Mock
+
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 

@@ -11,6 +11,65 @@ defmodule PrintClient.Printer.Discovery do
 
   @default_baud_rate 9600
 
+  @pubsub PrintClient.PubSub
+  @topic "printers:discovery"
+
+  # --- GenServer Implementation ---
+
+  use GenServer
+
+  @impl true
+  def init(opts) do
+    state = %{
+      printers: [],
+      last_scan: Time.utc_now(),
+      scan_interval: Keyword.get(opts, :scan_interval, 1_000)
+    }
+
+    Process.send_after(self(), :scan, state.scan_interval)
+
+    {:ok, state}
+  end
+
+  @spec start_link(map()) :: GenServer.start_link()
+  def start_link(opts) do
+    name = Keyword.fetch!(opts, :name)
+    GenServer.start_link(__MODULE__, opts, name: name)
+  end
+
+  @impl true
+  def handle_info(:scan, state) do
+    discovered = discover_all_printers()
+    state.printers
+
+    # Notify of printers added
+    difference(discovered, state.printers)
+    |> Enum.each(&notify(:added, &1))
+
+    # Notify of printers removed
+    difference(state.printers, discovered)
+    |> Enum.each(&notify(:removed, &1))
+
+    new_state =
+      state
+      |> Map.put(:printers, discovered)
+      |> Map.put(:last_scan, Time.utc_now())
+
+    Process.send_after(self(), :scan, state.scan_interval)
+
+    {:noreply, new_state}
+  end
+
+  # --- Discovery API ---
+
+  @doc """
+  Subscribes to discovery events.
+  """
+  @spec subscribe :: :ok
+  def subscribe do
+    Phoenix.PubSub.subscribe(@pubsub, @topic)
+  end
+
   @doc """
   Lists all available printers.
   """
@@ -47,10 +106,7 @@ defmodule PrintClient.Printer.Discovery do
   """
   @spec discover_usb_printers() :: [Printer.t()] | []
   def discover_usb_printers do
-    usb_vendors_map = load_usb_vendor_ids()
-
     :usb.get_device_list()
-    |> dbg()
     |> case do
       {:ok, devices} ->
         devices |> Enum.map(&format_discovered_usb/1)
@@ -169,4 +225,9 @@ defmodule PrintClient.Printer.Discovery do
       []
     end
   end
+
+  defp difference(list_a, list_b), do: MapSet.difference(MapSet.new(list_a), MapSet.new(list_b))
+
+  defp notify(state, printer),
+    do: Phoenix.PubSub.broadcast_from(@pubsub, self(), @topic, {state, printer})
 end

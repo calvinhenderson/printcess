@@ -34,7 +34,7 @@ defmodule PrintClient.MenuBar do
 
   @impl true
   def handle_event("browser", menu) do
-    Window.url(PrintWindow)
+    (Window.url(PrintWindow) <> "?k=" <> Desktop.Auth.login_key())
     |> :wx_misc.launchDefaultBrowser()
 
     {:noreply, menu}

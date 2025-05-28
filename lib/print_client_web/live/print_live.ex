@@ -1,47 +1,13 @@
 defmodule PrintClientWeb.PrintLive do
-  defmodule OptionsForm do
-    use Ecto.Schema
-    import Ecto.Changeset
-
-    embedded_schema do
-      field :bind_asset_to_user, :boolean
-    end
-
-    def changeset(options, attrs \\ %{}), do: cast(options, attrs, [:bind_asset_to_user])
-  end
-
-  defmodule AssetForm do
-    use Ecto.Schema
-    import Ecto.Changeset
-
-    embedded_schema do
-      field :username, :string
-      field :asset, :string
-      field :serial, :string
-      field :copies, :integer, default: 1
-    end
-
-    def changeset(asset, attrs \\ %{}, required \\ [:username, :asset, :serial, :copies]) do
-      asset
-      |> cast(attrs, [:username, :asset, :serial, :copies])
-      |> validate_required([:copies | required])
-      |> validate_number(:copies, greater_than: 0)
-    end
-  end
-
-  alias Phoenix.LiveView.AsyncResult
-  alias PrintClient.AssetsApi
   use PrintClientWeb, :live_view
 
-  alias __MODULE__.{AssetForm, OptionsForm}
-  alias PrintClient.{Assets, Users, Printer, Label}
-  alias PrintClientWeb.ApiSearchComponent
+  alias PrintClientWeb.PrintForm
+  alias PrintClientWeb.Forms.{OptionsForm}
+  alias PrintClient.{Printer, Label}
+  alias PrintClient.Printer.Discovery
   import PrintClientWeb.PrintComponents
 
   require Logger
-
-  # For now, we only persist the copies field.
-  @persisted_form_fields ~w(copies)
 
   # Handle multiple printers
   def print(printers, template, params) when is_list(printers) do
@@ -72,13 +38,15 @@ defmodule PrintClientWeb.PrintLive do
   def mount(_params, _session, socket) do
     socket =
       socket
+      |> assign(print_params: %{})
       |> assign(selected_printers: [])
       |> assign(selected_template: nil)
-      |> assign(template_params: %{})
-      |> assign_changes()
       |> assign_options()
 
-    {:ok, socket, temporary_assigns: [results: %AsyncResult{}]}
+    if connected?(socket),
+      do: Discovery.subscribe()
+
+    {:ok, socket}
   end
 
   @impl true
@@ -110,26 +78,27 @@ defmodule PrintClientWeb.PrintLive do
     {:noreply, socket}
   end
 
+  def handle_info({:added, %Printer{} = _printer}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_info({:removed, %Printer{} = printer}, socket) do
+    socket =
+      socket
+      |> assign(
+        printers: Enum.reject(socket.assigns.printers, &(&1.printer_id == printer.printer_id))
+      )
+
+    {:noreply, socket}
+  end
+
   def handle_info({:select_template, template}, socket),
     do: {:noreply, socket |> assign(:selected_template, template)}
 
-  def handle_info(type, message, socket) when type in [:info, :error],
-    do: {:noreply, socket |> put_flash(type, message)}
-
-  @impl true
-  def handle_event(
-        "print",
-        %{"asset_form" => params},
-        %{assigns: %{selected_printers: printers, selected_template: template}} = socket
-      ) do
-    with true <- length(printers) > 0,
-         %Label.Template{required_fields: fields} <- template,
-         changeset <- AssetForm.changeset(%AssetForm{}, params, fields),
-         {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate) do
-      # We have valid params, print the document and reset the form
-      Logger.debug("PrintLive: sent job #{template.name} with params #{inspect(params)}")
-
-      print(printers, template, validated)
+  def handle_info({:print, params}, socket) do
+    with printers when printers != [] <- Map.get(socket.assigns, :selected_printers, []),
+         %Label.Template{} = template <- Map.get(socket.assigns, :selected_template) do
+      print(printers, template, params)
       |> Enum.reduce(socket, fn result, socket ->
         case result do
           {:ok, _job_id} ->
@@ -139,45 +108,23 @@ defmodule PrintClientWeb.PrintLive do
             socket |> put_flash(:error, "job failed: #{inspect(reason)}")
         end
       end)
-
-      persisted =
-        params
-        |> Map.take(@persisted_form_fields)
-
-      socket
-      |> assign_changes(persisted)
     else
-      false ->
-        socket
-        |> assign_changes(params)
-        |> put_flash(:error, "Please select a printer.")
+      reason ->
+        dbg(reason)
 
-      nil ->
         socket
-        |> assign_changes(params)
-        |> put_flash(:error, "Please select a template.")
-
-      {:error, %Ecto.Changeset{}} ->
-        socket
-        |> assign_changes(params)
-        |> put_flash(:error, "Check form errors")
-
-      {:error, reason} ->
-        socket
-        |> assign_changes(params)
-        |> put_flash(:error, "Error printing: #{inspect(reason)}")
+        |> put_flash(:error, "Select a printer and a template first.")
     end
     |> then(&{:noreply, &1})
   end
 
-  def handle_event("print", _params, socket), do: {:noreply, socket}
+  def handle_info({:changed, params}, socket),
+    do: {:noreply, assign(socket, :print_params, params)}
 
-  def handle_event("validate", %{"_target" => ["reset"]}, socket),
-    do: {:noreply, assign_changes(socket, %{})}
+  def handle_info({type, message}, socket) when type in [:info, :error],
+    do: {:noreply, socket |> put_flash(type, message)}
 
-  def handle_event("validate", %{"asset_form" => params}, socket),
-    do: {:noreply, assign_changes(socket, params)}
-
+  @impl true
   def handle_event("clear-printer", %{"id" => printer_id}, socket) do
     # Stop the printer service
     Printer.Supervisor.stop_printer(printer_id)
@@ -199,67 +146,6 @@ defmodule PrintClientWeb.PrintLive do
 
   def handle_event("options", params, socket),
     do: {:noreply, socket |> assign_options(params)}
-
-  def handle_event("select-user", %{"value" => value, "id" => id}, socket) do
-    {:noreply, socket}
-  end
-
-  defp assign_changes(socket, changes \\ %{}) do
-    changeset =
-      if socket.assigns.selected_template do
-        AssetForm.changeset(
-          %AssetForm{},
-          changes,
-          socket.assigns.selected_template.required_fields
-        )
-      else
-        AssetForm.changeset(%AssetForm{})
-      end
-
-    applied =
-      Ecto.Changeset.apply_action(changeset, :validate)
-      |> case do
-        {:ok, applied} -> applied
-        {:error, _changeset} -> %{}
-      end
-
-    socket =
-      socket
-      |> assign_async([:results], fn ->
-        backend = AssetsApi.backend()
-
-        all_results =
-          changes
-          |> Map.take(["asset", "serial", "username"])
-          |> Enum.filter(fn {_, v} -> String.length(v) >= 3 end)
-          |> Enum.reduce(%{}, fn {k, v}, acc ->
-            k = String.to_existing_atom(k)
-
-            field_results =
-              if k in [:username] do
-                AssetsApi.search_users(backend, v)
-              else
-                AssetsApi.search_assets(backend, v)
-              end
-              |> case do
-                {:ok, results} ->
-                  results
-
-                {:error, reason} ->
-                  Logger.error("PrintLive: unable to perform search #{inspect(reason)}")
-                  []
-              end
-
-            Map.put(acc, k, field_results)
-          end)
-
-        {:ok, %{results: all_results}}
-      end)
-
-    socket
-    |> assign(:changeset, %{changeset | action: :validate})
-    |> assign(template_params: applied)
-  end
 
   defp assign_options(socket, params \\ %{}) do
     changeset = OptionsForm.changeset(%OptionsForm{}, params)

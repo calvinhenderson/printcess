@@ -8,21 +8,29 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Mock do
 
   require Logger
 
-  def search_assets(config, query, opts \\ []) do
+  def config(settings),
+    do: %__MODULE__{
+      instance: settings.instance,
+      token: settings.token,
+      product_id: settings.product_id
+    }
+
+  def search_assets(_config, _query, _opts \\ []) do
     results = [
       %SearchResult.Asset{
         id: "asset-id-001",
-        asset_number: "A001",
-        serial_number: "SN001",
+        asset: "A001",
+        serial: "SN001",
         manufacturer: "Mock",
-        model: "Asset"
+        model: "Asset",
+        username: "user001"
       }
     ]
 
     {:ok, results}
   end
 
-  def search_users(config, query, opts \\ []) do
+  def search_users(_config, _query, _opts \\ []) do
     results = [
       %SearchResult.User{
         id: "user-id-001",

@@ -16,22 +16,20 @@ defmodule PrintClient.AssetsApi.SearchResult do
 
   # --- SearchResult.Asset ---
   defmodule Asset do
-    alias PrintClient.AssetsApi.SearchResult.User
-
     defstruct id: "",
               manufacturer: "",
               model: "",
-              asset_number: "",
-              serial_number: "",
-              owner: nil
+              asset: "",
+              serial: "",
+              username: ""
 
     @type t :: [
             id: String.t(),
             manufacturer: String.t(),
             model: String.t(),
-            asset_number: String.t(),
-            serial_number: String.t(),
-            owner: User.t()
+            asset: String.t(),
+            serial: String.t(),
+            username: String.t()
           ]
   end
 

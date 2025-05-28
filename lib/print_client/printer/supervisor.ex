@@ -27,7 +27,7 @@ defmodule PrintClient.Printer.Supervisor do
     |> case do
       pid when is_pid(pid) ->
         send(pid, :stop)
-        :timer.send_after(self(), {:kill, pid}, 30_000)
+        :timer.send_after(30_000, self(), {:kill, pid})
 
       error ->
         error

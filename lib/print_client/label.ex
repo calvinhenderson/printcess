@@ -17,7 +17,7 @@ defmodule PrintClient.Label do
   The rendered SVG data.
   """
   @spec render(Template.t(), Map.t()) :: binary()
-  def render(%Template{} = template, params) when is_map(params) do
+  def render(%Template{} = template, %{} = params) do
     params =
       Enum.reduce(template.required_fields, %{}, fn field, acc ->
         val = get_param(params, field)
@@ -28,6 +28,10 @@ defmodule PrintClient.Label do
       end)
 
     Mustache.render(template.template, params)
+  end
+
+  def render(%Template{} = template, nil) do
+    Mustache.render(template.template, %{})
   end
 
   defp get_param(params, key, default \\ nil)
@@ -102,7 +106,7 @@ defmodule PrintClient.Label do
          # <<"DELAY 1000\r\n">>,
          # <<"DISPLAY OFF\r\n">>,
          # Print each copy
-         <<"PRINT 2\r\n">>,
+         <<"PRINT #{copies}\r\n">>,
          # Remove the temporary graphic
          <<"KILL \"#{file}\"\r\n">>
        ]

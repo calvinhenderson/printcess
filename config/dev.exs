@@ -66,6 +66,9 @@ config :print_client, PrintClientWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :print_client, dev_routes: true
 
+# Configure Mock API Backend Adapter
+config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Mock
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

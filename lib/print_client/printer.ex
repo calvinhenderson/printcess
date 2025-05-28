@@ -101,12 +101,13 @@ defmodule PrintClient.Printer do
   @impl true
   def init(opts) do
     printer_id = Map.fetch!(opts, :printer_id)
+    name = Map.get(opts, :name, printer_id)
     adapter_module = Map.fetch!(opts, :adapter_module)
     adapter_config = Map.fetch!(opts, :adapter_config)
-
     adapter_state_instance = struct!(adapter_module, adapter_config)
 
     state = %__MODULE__{
+      name: name,
       printer_id: printer_id,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
@@ -172,7 +173,7 @@ defmodule PrintClient.Printer do
       )
     )
 
-    broadcast(state.printer_id, "Printer: created job #{job.id} for #{state.name}")
+    broadcast(state.printer_id, "Printer #{state.name}: created job #{job.id}")
 
     {:reply, {:ok, job.id}, new_state}
   end
@@ -241,8 +242,8 @@ defmodule PrintClient.Printer do
       Phoenix.PubSub.broadcast_from(
         @pubsub,
         self(),
-        {type, "printers:#{printer_id}"},
-        message
+        "printers:#{printer_id}",
+        {type, message}
       )
 
   defp attempt_connection(state) do

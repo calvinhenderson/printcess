@@ -1,26 +1,32 @@
 defmodule PrintClient.AssetsApi do
-  alias PrintClient.Settings
-  alias PrintClient.AssetsApi.ApiAdapter.{Iiq, Mock}
-
-  def search_users(backend, query, opts \\ []),
-    do: backend.module.search_users(backend.config, query, opts)
-
-  def search_assets(backend, query, opts \\ []),
-    do: backend.module.search_assets(backend.config, query, opts)
-
   @doc """
   Searches an API for users 
   """
-  def backend do
-    config = Settings.get_config()
+  def search_users(query, opts \\ []) do
+    backend = adapter()
+    backend.module.search_users(backend.config, query, opts)
+  end
+
+  @doc """
+  Searches an API for assets
+  """
+  def search_assets(query, opts \\ []) do
+    backend = adapter()
+    backend.module.search_assets(backend.config, query, opts)
+  end
+
+  defp adapter do
+    adapter = config(:adapter)
+    settings = PrintClient.Settings.get_config()
 
     %{
-      module: Iiq,
-      config: %Iiq{
-        instance: config.instance,
-        token: config.token,
-        product_id: config.product_id
-      }
+      module: adapter,
+      config: adapter.config(settings)
     }
+  end
+
+  defp config(key) when is_atom(key) do
+    Application.get_env(:print_client, __MODULE__, [])
+    |> Keyword.fetch!(key)
   end
 end

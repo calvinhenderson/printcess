@@ -98,6 +98,7 @@ defmodule PrintClient.Settings do
     |> case do
       nil -> %Config{}
       config -> config
+      [config | _] -> config
     end
   end
 end

@@ -37,7 +37,7 @@ defmodule PrintClientWeb.Layouts do
       
     <!-- Header -->
       <header class="[grid-area:header] px-4 sm:px-6 lg:px-8 w-full flex flex-row flex-wrap justify-between items-center min-h-12 bg-base-300">
-        <a onclick="history.back()" href="#" class="btn btn-ghost">
+        <a onclick="maybeNavigateBack()" href="#" class="btn btn-ghost">
           <.icon name="hero-arrow-left-solid" class="w-3 h-3" /> Back
         </a>
         <span class="grow" />
