@@ -4,13 +4,17 @@ defmodule PrintClient.AssetsApi.SearchResult do
     defstruct id: "",
               username: "",
               display_name: "",
+              role: "",
+              location: "",
               grade: ""
 
     @type t :: [
             id: String.t(),
             username: String.t(),
             display_name: String.t(),
-            grade: String.t()
+            role: String.t() | nil,
+            location: String.t() | nil,
+            grade: String.t() | nil
           ]
   end
 
@@ -21,15 +25,19 @@ defmodule PrintClient.AssetsApi.SearchResult do
               model: "",
               asset: "",
               serial: "",
+              status: "",
+              location: "",
               username: ""
 
     @type t :: [
             id: String.t(),
-            manufacturer: String.t(),
-            model: String.t(),
+            manufacturer: String.t() | nil,
+            model: String.t() | nil,
             asset: String.t(),
             serial: String.t(),
-            username: String.t()
+            status: String.t() | nil,
+            location: String.t() | nil,
+            username: String.t() | nil
           ]
   end
 

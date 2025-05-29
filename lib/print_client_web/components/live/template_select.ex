@@ -13,7 +13,7 @@ defmodule PrintClientWeb.TemplateSelectComponent do
       |> assign(selected: nil)
       |> assign_templates()
 
-    send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
+    # send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
 
     {:ok, socket}
   end
@@ -47,7 +47,7 @@ defmodule PrintClientWeb.TemplateSelectComponent do
 
     send(
       self(),
-      {:select_template, socket.assigns.templates |> Enum.find(&(&1.name == template_id))}
+      {:select_template, socket.assigns.templates |> Enum.find(&(&1.id == template_id))}
     )
 
     {:noreply,
@@ -56,7 +56,10 @@ defmodule PrintClientWeb.TemplateSelectComponent do
   end
 
   @impl true
-  def handle_event("select", _, socket), do: {:noreply, socket}
+  def handle_event("select", params, socket) do
+    dbg(params)
+    {:noreply, socket}
+  end
 
   def handle_event("refresh", _params, socket) do
     Logger.info("TemplateSelectComponent: refreshing templates")

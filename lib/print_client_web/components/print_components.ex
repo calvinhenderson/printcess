@@ -25,22 +25,18 @@ defmodule PrintClientWeb.PrintComponents do
         {render_slot(@label)}
       </div>
       <ul
-        :if={
-          not is_nil(@results) and ((is_list(@results) and @results != []) or @results.result != [])
-        }
-        class="menu dropdown-content bg-base-200 rounded-box z-1 w-full p-2 shadow-sm"
+        :if={not is_nil(@results)}
+        class="menu menu-vertical flex-nowrap dropdown-content bg-base-200 rounded-box h-auto overflow-y-scroll max-h-40 z-1 w-full p-2 shadow-sm"
       >
         <%= case @results do %>
-          <% %AsyncResult{} = result -> %>
-            <.async_result :let={options} assign={result}>
-              <:loading>
-                <li><.loading_indicator /></li>
-              </:loading>
-              <:failed :let={_failure}>
-                <li class="text-error">An error occurred.</li>
-              </:failed>
-              <li :for={row <- options} class="contents">{render_slot(@option, row)}</li>
-            </.async_result>
+          <% %AsyncResult{} -> %>
+            <li :if={@results.loading} class="contents"><.loading_indicator /></li>
+            <li :if={@results.failed} class="text-error">An error occurred.</li>
+            <li :for={row <- @results.result} :if={@results.result} class="contents">
+              {render_slot(@option, row)}
+            </li>
+          <% options when options == [] -> %>
+            <li>No results..</li>
           <% options when is_list(options) -> %>
             <li :for={row <- options} class="contents">{render_slot(@option, row)}</li>
         <% end %>
@@ -70,10 +66,12 @@ defmodule PrintClientWeb.PrintComponents do
   @doc """
   An animated loading indicator component.
   """
+  attr :class, :string, default: ""
+
   def loading_indicator(assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-      <circle stroke-width="15" r="15" cx="40" cy="100">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class={["w-auto h-8", @class]}>
+      <circle class="fill-base-content stroke-base-content" stroke-width="15" r="15" cx="40" cy="100">
         <animate
           attributeName="opacity"
           calcMode="spline"
@@ -85,7 +83,7 @@ defmodule PrintClientWeb.PrintComponents do
         >
         </animate>
       </circle>
-      <circle stroke-width="15" r="15" cx="100" cy="100">
+      <circle class="fill-base-content stroke-base-content" stroke-width="15" r="15" cx="100" cy="100">
         <animate
           attributeName="opacity"
           calcMode="spline"
@@ -97,7 +95,7 @@ defmodule PrintClientWeb.PrintComponents do
         >
         </animate>
       </circle>
-      <circle stroke-width="15" r="15" cx="160" cy="100">
+      <circle class="fill-base-content stroke-base-content" stroke-width="15" r="15" cx="160" cy="100">
         <animate
           attributeName="opacity"
           calcMode="spline"

@@ -18,7 +18,7 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
       product_id: settings.product_id
     }
 
-  def search_assets(config, query, opts \\ []) do
+  def search_assets(config, query, opts \\ []) when is_binary(query) do
     req =
       %{
         "Query" => query,
@@ -26,6 +26,7 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
         "SearchManufacturer" => false,
         "SearchRoom" => false,
         "SearchModelName" => false,
+        "SearchName" => true,
         "SearchAsset" => true,
         "SearchSerial" => true,
         "SearchAssetName" => true
@@ -33,7 +34,7 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
       |> Jason.encode!()
 
     with {:ok, %Finch.Response{} = resp} <-
-           post(config, "/api/v1.0/assets/search?$s=#{@max_results}&$o=AssetTag&$d=ASC", req),
+           post(config, "/api/v1.0/search?$s=#{@max_results}&$o=AssetTag&$d=ASC", req),
          {:ok, results} <- parse_api_resp(resp) do
       {:ok, results}
     else
@@ -42,7 +43,7 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
     end
   end
 
-  def search_users(config, query, opts \\ []) do
+  def search_users(config, query, opts \\ []) when is_binary(query) do
     req =
       %{
         "Query" => query,
@@ -62,18 +63,24 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
   end
 
   def post(%{token: "" <> token} = config, api, body) do
+    headers = [
+      {"Authorization", "Bearer #{token}"},
+      {"Content-Type", "application/json"}
+    ]
+
+    headers =
+      if config.product_id == nil or config.product_id == "",
+        do: headers,
+        else: [{"productid", config.product_id} | headers]
+
     Finch.build(
       :post,
       api(config, api),
-      [
-        {"Authorization", "Bearer #{token}"},
-        {"Content-Type", "application/json"},
-        {"productid", Map.get(config, :product_id, "")}
-      ],
+      headers,
       body
     )
-    |> dbg()
     |> Finch.request(@finch)
+    |> dbg()
   end
 
   defp parse_api_resp(%Finch.Response{} = resp) do
@@ -88,18 +95,18 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
         |> Enum.reverse()
         |> then(&{:ok, &1})
 
-      {:ok, %{"Item" => %{"Users" => items}}} ->
-        items
-        |> Enum.map(fn item ->
-          api_object_to_search_result(item)
-        end)
-        |> Enum.reject(&is_nil/1)
-        |> Enum.reverse()
-        |> then(&{:ok, &1})
-
-      {:ok, %{"Item" => item}} ->
-        item
-        |> api_object_to_search_result()
+      {:ok, %{"Item" => %{} = item}} ->
+        if Map.has_key?(item, "Users") or Map.has_key?(item, "Assets") do
+          (Map.get(item, "Users", []) ++ Map.get(item, "Assets", []))
+          |> Enum.map(fn item ->
+            api_object_to_search_result(item)
+          end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.reverse()
+        else
+          item
+          |> api_object_to_search_result()
+        end
         |> then(&{:ok, &1})
 
       {:error, reason} ->
@@ -118,14 +125,28 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
 
   defp api_object_to_search_result(item) do
     case item do
-      %{"AssetId" => id, "AssetNumber" => asset_number, "SerialNumber" => serial_number} = asset ->
+      %{"AssetId" => id, "AssetTag" => asset_number, "SerialNumber" => serial_number} = asset ->
+        username =
+          get_in(asset, ["Owner", "Username"])
+          |> then(
+            &case &1 do
+              "" <> username ->
+                Regex.replace(~r/@[^@]*$/, username, "")
+
+              nil ->
+                ""
+            end
+          )
+
         struct!(SearchResult.Asset,
           id: id,
           asset: asset_number,
           serial: serial_number,
-          manufacturer: Map.get(asset, ["Model", "Manufacturer", "Name"], ""),
-          model: Map.get(asset, ["Model", "Name"], ""),
-          username: Map.get(asset, ["Owner", "Username"])
+          manufacturer: get_in(asset, ["Model", "Manufacturer", "Name"]),
+          model: get_in(asset, ["Model", "ModelName"]),
+          status: get_in(asset, ["Status", "Name"]),
+          location: get_in(asset, ["Location", "Name"]),
+          username: username
         )
 
       %{"UserId" => id, "Username" => username, "Name" => display_name} = user ->
@@ -136,6 +157,8 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
           id: id,
           username: username,
           display_name: display_name,
+          role: get_in(user, ["Role", "Name"]),
+          location: get_in(user, ["Location", "Name"]),
           grade: Map.get(user, "Grade")
         )
 

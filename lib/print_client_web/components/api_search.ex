@@ -46,18 +46,28 @@ defmodule PrintClientWeb.ApiSearchComponent do
                   </svg>
                 </:icon>
                 <:info>
-                  <div class="flex flex-col">
-                    <div class="flex flex-row gap-2">
+                  <div class="flex flex-col w-full">
+                    <div class="flex flex-row gap-2 w-full">
+                      <span>#{asset}</span>
+                      <span>{serial}</span>
+                      <span class="grow" />
+                      <span>{Map.get(result, :location, "")}</span>
+                      <span class="grow" />
+                      <span :if={result.status} class="badge badge-neutral">
+                        {Map.get(result, :status, "")}
+                      </span>
+                    </div>
+                    <div class="flex flex-row gap-2 w-full">
+                      <span>
+                        Owner: {Map.get(result, :username, "") |> String.slice(0..16)}
+                        {if Map.get(result, :username, "") |> String.length() > 16,
+                          do: "...",
+                          else: ""}
+                      </span>
+                      <span class="grow" />
                       <span>
                         {"#{Map.get(result, :manufacturer, "")} #{Map.get(result, :model, "")}"}
                       </span>
-                      <span>
-                        Owner: {Map.get(result, :username, "")}
-                      </span>
-                    </div>
-                    <div class="flex flex-row gap-2">
-                      <span>#{asset}</span>
-                      <span>{serial}</span>
                     </div>
                   </div>
                 </:info>
@@ -65,11 +75,23 @@ defmodule PrintClientWeb.ApiSearchComponent do
             <% %{:id => id, :username => username, :display_name => name} = result -> %>
               <.result_item id={id} phx-click="select" phx-value-id={id} phx-target={@target}>
                 <:icon><.icon name="hero-user-circle-solid" class="size-4" /></:icon>
-                <:info>
-                  <span>
-                    {name} ({username}) {# {result.grade}"
-                    if is_nil(result.grade), do: "", else: "Grade #{result.grade}"}
-                  </span>
+                <:info class="grid grid-cols-[3fr_2fr]">
+                  <div class="flex flex-col">
+                    <span>
+                      {name}
+                    </span>
+                    <span>{username}</span>
+                  </div>
+                  <div class="flex flex-col justify-between items-end">
+                    <span :if={result.role} class="badge badge-neutral">
+                      {Map.get(result, :role, "")}
+                    </span>
+                    <span>
+                      {if is_nil(result.grade),
+                        do: "",
+                        else: "Grade #{result.grade}"}
+                    </span>
+                  </div>
                 </:info>
               </.result_item>
           <% end %>
@@ -84,7 +106,10 @@ defmodule PrintClientWeb.ApiSearchComponent do
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the result item container"
 
   slot :icon, doc: "the optional slot that renders in the result icon"
-  slot :info, doc: "the slot that renders the result info"
+
+  slot :info, required: true, doc: "the slot that renders the result info" do
+    attr :class, :string
+  end
 
   defp result_item(assigns) do
     ~H"""
@@ -92,17 +117,12 @@ defmodule PrintClientWeb.ApiSearchComponent do
       <div class="w-8">
         {render_slot(@icon)}
       </div>
-      <div class="flex-grow flex flex-row gap-4">
+      <div class={["flex-grow flex flex-row gap-4", Enum.at(@info, 0) |> Map.get(:class, "")]}>
         {render_slot(@info)}
       </div>
     </div>
     """
   end
-
-  defp is_asset(%Phoenix.HTML.FormField{field: field}) when field in [:asset],
-    do: true
-
-  defp is_asset(_), do: false
 
   defp normalized_field_name(field, capitalize \\ true) do
     ~r/^[^\[]*\[(?<name>[^\]]*)\].*$/
@@ -116,7 +136,4 @@ defmodule PrintClientWeb.ApiSearchComponent do
     end
     |> then(&if capitalize, do: String.capitalize(&1), else: &1)
   end
-
-  defp get_results(%AsyncResult{result: options}) when is_list(options), do: options
-  defp get_results(_), do: []
 end

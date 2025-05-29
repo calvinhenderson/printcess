@@ -24,14 +24,14 @@ defmodule PrintClient.Label do
 
         acc
         |> Map.put("#{field}", val)
-        |> Map.put("#{field}_qr", render_qr_code(val))
+        |> Map.put("#{field} qrcode", render_qr_code(val))
       end)
 
-    Mustache.render(template.template, params)
+    render_template(template.template, params)
   end
 
   def render(%Template{} = template, nil) do
-    Mustache.render(template.template, %{})
+    render_template(template.template, %{})
   end
 
   defp get_param(params, key, default \\ nil)
@@ -46,7 +46,7 @@ defmodule PrintClient.Label do
            |> QRCode.create(:high)
            |> QRCode.render(:svg, %QRCode.Render.SvgSettings{scale: 50, quiet_zone: 1}),
          encoded <- Base.encode64(qrcode, padding: true) do
-      encoded
+      "data:image/svg+xml;base64," <> encoded
     else
       true ->
         ""
@@ -87,27 +87,16 @@ defmodule PrintClient.Label do
 
       {:ok, img} = File.read("/tmp/#{file}.pcx")
       File.rm("/tmp/#{file}.svg")
-      # File.rm("/tmp/#{file}.pcx")
+      File.rm("/tmp/#{file}.pcx")
 
       {:ok,
        [
-         # Set the label size and offset
          <<"SIZE #{width / dpi},#{height / dpi}\r\n">>,
-         # Clear the image buffer,
          <<"CLS\r\n">>,
-         # Set the label direction
          <<"DIRECTION 1,0\r\n">>,
-         # Download image
          <<"DOWNLOAD \"#{file}\",#{byte_size(img)},", img::binary, "\r\n">>,
-         # Draw image: 1 BPP, default contrast
          <<"PUTPCX 0,0, \"#{file}\"\r\n">>,
-         # <<"TEXT 0,0,\"0\",0,12,12, \"test\"\r\n">>,
-         # <<"DISPLAY IMAGE\r\n">>,
-         # <<"DELAY 1000\r\n">>,
-         # <<"DISPLAY OFF\r\n">>,
-         # Print each copy
          <<"PRINT #{copies}\r\n">>,
-         # Remove the temporary graphic
          <<"KILL \"#{file}\"\r\n">>
        ]
        |> :binary.list_to_bin()}
@@ -124,11 +113,17 @@ defmodule PrintClient.Label do
 
   # @random_chars "0123456789ABCDEFGHIMNOPQRSTUVWXYZ"
   @random_chars "ABCDEFGHIMNOPQRSTUVWXYZ" |> String.downcase()
-  def random_str(len \\ 4) when len > 0,
+  defp random_str(len \\ 4) when len > 0,
     do:
       for(
         _ <- 1..len,
         into: "",
         do: <<@random_chars |> String.to_charlist() |> Enum.random()>>
       )
+
+  defp render_template(template, params) do
+    Enum.reduce(params, template, fn {k, v}, template ->
+      Regex.replace(~r/{{\s*#{to_string(k)}\s*}}/, template, to_string(v))
+    end)
+  end
 end

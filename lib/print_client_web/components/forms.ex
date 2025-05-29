@@ -23,7 +23,7 @@ defmodule PrintClientWeb.Forms do
 
     def changeset(asset, attrs \\ %{}, required \\ [:username, :asset, :serial, :copies]) do
       asset
-      |> cast(attrs, [:username, :asset, :serial, :copies])
+      |> cast(attrs, [:copies | required])
       |> validate_required([:copies | required])
       |> validate_number(:copies, greater_than: 0)
     end

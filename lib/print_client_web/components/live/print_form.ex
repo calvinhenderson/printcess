@@ -19,7 +19,6 @@ defmodule PrintClientWeb.PrintForm do
       |> assign(:query_field, nil)
       |> assign(:field, nil)
       |> assign(:results, AsyncResult.loading())
-      |> assign(:query_field, AsyncResult.loading())
       |> assign_changes()
 
     {:ok, socket}
@@ -49,7 +48,7 @@ defmodule PrintClientWeb.PrintForm do
           field={f[field]}
           debounce="300"
           target={@myself}
-          results={if @query_field.result == field, do: @results, else: nil}
+          results={if @query_field == field, do: @results, else: nil}
         />
 
         <.input field={f[:copies]} phx-debounce="300" type="number" label="Copies" placeholder="1" />
@@ -125,9 +124,6 @@ defmodule PrintClientWeb.PrintForm do
         {:noreply,
          socket |> assign(:field, String.to_existing_atom(field)) |> assign_changes(params)}
 
-  def handle_event("clear", %{"selection" => key}, socket),
-    do: {:noreply, socket |> assign(:selection, Map.put(socket.assigns.selection, key, nil))}
-
   def handle_event("select", %{"id" => id}, socket) do
     case socket.assigns.results do
       %AsyncResult{result: results} when is_list(results) ->
@@ -201,12 +197,13 @@ defmodule PrintClientWeb.PrintForm do
     with %{} = changes <- Map.get(socket.assigns, :changeset, %{changes: %{}}).changes,
          field when field != nil <- Map.get(socket.assigns, :field) do
       socket
-      |> assign_async([:results, :query_field], fn -> query_api(field, changes[field]) end)
+      |> assign(:query_field, field)
+      |> assign_async([:results], fn -> query_api(field, changes[field]) end)
     else
       _ ->
         socket
-        |> assign_async([:results, :query_field], fn ->
-          {:ok, %{results: [], query_field: nil}}
+        |> assign_async([:results], fn ->
+          {:ok, %{results: []}}
         end)
     end
   end
@@ -215,17 +212,17 @@ defmodule PrintClientWeb.PrintForm do
     with value when is_binary(value) <- value,
          len when len >= 3 <- String.length(value),
          {:ok, results} <- perform_query(field, value) do
-      {:ok, %{results: results, query_field: field}}
+      {:ok, %{results: results}}
     else
       {:error, reason} ->
         Logger.error("PrintForm: Failed to perform API query: #{inspect(reason)}")
-        {:ok, %{results: [], query_field: field}}
+        {:ok, %{results: []}}
 
       _ ->
-        {:ok, %{results: [], query_field: field}}
+        {:ok, %{results: []}}
     end
   end
 
-  defp perform_query(field, value) when field in [:username], do: AssetsApi.search_users(value)
   defp perform_query(_field, value), do: AssetsApi.search_assets(value)
+  defp perform_query(field, value) when field in [:username], do: AssetsApi.search_users(value)
 end
