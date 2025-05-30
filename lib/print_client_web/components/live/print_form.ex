@@ -3,7 +3,7 @@ defmodule PrintClientWeb.PrintForm do
   use PrintClientWeb, :live_component
 
   alias Phoenix.LiveView.AsyncResult
-  alias PrintClientWeb.Forms.AssetForm
+  alias PrintClientWeb.Forms.PrintForm
   alias PrintClient.AssetsApi
   alias PrintClientWeb.ApiSearchComponent
 
@@ -72,7 +72,7 @@ defmodule PrintClientWeb.PrintForm do
   def handle_event("print", %{"asset_form" => params}, socket) do
     fields = Map.get(socket.assigns, :fields, [])
 
-    with changeset <- AssetForm.changeset(%AssetForm{}, params, fields),
+    with changeset <- PrintForm.changeset(fields, params, fields),
          {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate) do
       send(self(), {:print, validated})
 
@@ -173,8 +173,8 @@ defmodule PrintClientWeb.PrintForm do
 
   defp assign_changes(socket, changes) do
     changeset =
-      AssetForm.changeset(
-        %AssetForm{},
+      PrintForm.changeset(
+        socket.assigns.fields,
         changes,
         Map.get(socket.assigns, :fields, [])
       )

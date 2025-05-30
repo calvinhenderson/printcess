@@ -86,7 +86,7 @@
    y="120"
    width="296"
    height="296"
-   xlink:href="data:image/svg+xml;base64,{{asset_qr}}"
+   xlink:href="{{asset qrcode}}"
    style="stroke:none;"
    preserveAspectRatio="xMidYMid" />&#10;    <defs
    id="defs6">&#10;        <image

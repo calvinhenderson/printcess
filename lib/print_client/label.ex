@@ -121,9 +121,12 @@ defmodule PrintClient.Label do
         do: <<@random_chars |> String.to_charlist() |> Enum.random()>>
       )
 
-  defp render_template(template, params) do
-    Enum.reduce(params, template, fn {k, v}, template ->
-      Regex.replace(~r/{{\s*#{to_string(k)}\s*}}/, template, to_string(v))
+  def render_template(template, params) do
+    Regex.replace(~r/{{\s*(\w+)\s*(\[[^\]]+\])?\s*}}/, template, fn _match, var, opts ->
+      case Map.get(params, var, "") do
+        "" <> val -> val
+        _ -> ""
+      end
     end)
   end
 end

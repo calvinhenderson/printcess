@@ -80,7 +80,6 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
       body
     )
     |> Finch.request(@finch)
-    |> dbg()
   end
 
   defp parse_api_resp(%Finch.Response{} = resp) do

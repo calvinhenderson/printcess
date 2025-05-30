@@ -109,9 +109,7 @@ defmodule PrintClientWeb.PrintLive do
         end
       end)
     else
-      reason ->
-        dbg(reason)
-
+      _error ->
         socket
         |> put_flash(:error, "Select a printer and a template first.")
     end

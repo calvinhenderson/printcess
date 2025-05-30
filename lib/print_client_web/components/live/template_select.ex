@@ -55,16 +55,14 @@ defmodule PrintClientWeb.TemplateSelectComponent do
      |> assign_selected(template_id)}
   end
 
-  @impl true
-  def handle_event("select", params, socket) do
-    dbg(params)
-    {:noreply, socket}
-  end
+  def handle_event("select", _params, socket), do: {:noreply, socket}
 
   def handle_event("refresh", _params, socket) do
     Logger.info("TemplateSelectComponent: refreshing templates")
     {:noreply, socket |> assign_templates()}
   end
+
+  # --- Internal API ---
 
   defp assign_templates(socket) do
     templates = list_templates()
