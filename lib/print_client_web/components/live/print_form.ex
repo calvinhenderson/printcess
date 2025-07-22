@@ -3,7 +3,7 @@ defmodule PrintClientWeb.PrintForm do
   use PrintClientWeb, :live_component
 
   alias Phoenix.LiveView.AsyncResult
-  alias PrintClientWeb.Forms.PrintForm
+  alias PrintClient.Label.Forms.LabelForm
   alias PrintClient.AssetsApi
   alias PrintClientWeb.ApiSearchComponent
 
@@ -14,14 +14,21 @@ defmodule PrintClientWeb.PrintForm do
 
   @impl true
   def mount(socket) do
-    socket =
-      socket
-      |> assign(:query_field, nil)
-      |> assign(:field, nil)
-      |> assign(:results, AsyncResult.loading())
-      |> assign_changes()
-
     {:ok, socket}
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    {:ok,
+     %{
+       :query_field => nil,
+       :field => nil,
+       :results => AsyncResult.loading()
+     }
+     |> Map.merge(assigns)
+     |> Map.merge(socket.assigns)
+     |> then(&Map.put(socket, :assigns, &1))
+     |> assign_changes()}
   end
 
   @impl true
@@ -33,6 +40,7 @@ defmodule PrintClientWeb.PrintForm do
       <.form
         :let={f}
         for={@changeset}
+        as={:form}
         id="print-form"
         phx-target={@myself}
         phx-submit="print"
@@ -69,10 +77,10 @@ defmodule PrintClientWeb.PrintForm do
   # --- Event handlers ---
 
   @impl true
-  def handle_event("print", %{"asset_form" => params}, socket) do
+  def handle_event("print", %{"form" => params}, socket) do
     fields = Map.get(socket.assigns, :fields, [])
 
-    with changeset <- PrintForm.changeset(fields, params, fields),
+    with changeset <- LabelForm.changeset(fields, params),
          {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate) do
       send(self(), {:print, validated})
 
@@ -103,7 +111,7 @@ defmodule PrintClientWeb.PrintForm do
 
   def handle_event(
         "validate",
-        %{"_target" => ["undefined"], "asset_form" => params},
+        %{"_target" => ["undefined"], "form" => params},
         socket
       ) do
     persisted =
@@ -117,7 +125,7 @@ defmodule PrintClientWeb.PrintForm do
 
   def handle_event(
         "validate",
-        %{"_target" => ["asset_form", field], "asset_form" => params},
+        %{"_target" => ["form", field], "form" => params},
         socket
       ),
       do:
@@ -173,23 +181,20 @@ defmodule PrintClientWeb.PrintForm do
 
   defp assign_changes(socket, changes) do
     changeset =
-      PrintForm.changeset(
-        socket.assigns.fields,
-        changes,
-        Map.get(socket.assigns, :fields, [])
-      )
-      |> dbg()
+      socket.assigns.fields
+      |> LabelForm.changeset(changes)
 
-    case Ecto.Changeset.apply_action(changeset, :validate) do
+    changeset
+    |> Ecto.Changeset.apply_action(:validate)
+    |> case do
       {:ok, applied} ->
         send(self(), {:changed, applied})
 
-      {:error, changeset} ->
-        send(self(), {:changed, changeset.changes})
-    end
+        assign(socket, :changeset, changeset)
 
-    socket
-    |> assign(:changeset, %{changeset | action: :validate})
+      {:error, changeset} ->
+        assign(socket, :changeset, %{changeset | action: :validate})
+    end
     |> assign_query_results()
   end
 

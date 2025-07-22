@@ -1,4 +1,4 @@
-defmodule PrintClientWeb.Forms do
+defmodule PrintClient.Label.Forms do
   defmodule OptionsForm do
     use Ecto.Schema
     import Ecto.Changeset
@@ -16,21 +16,21 @@ defmodule PrintClientWeb.Forms do
 
     def changeset(fields, attrs \\ %{}) do
       from_fields(fields)
-      |> cast(attrs, from_fields.data)
-      |> validate_required(from_fields.data)
+      |> cast(attrs, fields)
+      |> validate_required(fields)
       |> validate_number(:copies, greater_than: 0)
     end
 
     def from_fields(fields) do
-      Enum.reduce(fields, {%{}, %{}}, fn {field, type}, {data, types} ->
-        {Map.put(data, field, ""), Map.put(types, field, field_type(type))}
+      Enum.reduce(fields, {%{}, %{}}, fn field, {data, types} ->
+        {Map.put(data, field, ""), Map.put(types, field, field_type(field))}
       end)
       |> then(fn {data, types} ->
-        {Map.put(data, "copies", 1), Map.put(types, "copies", :number)}
+        {Map.put(data, :copies, 1), Map.put(types, :copies, field_type(:copies))}
       end)
     end
 
-    def field_type("number"), do: :number
+    def field_type(:copies), do: :number
     def field_type(_), do: :string
   end
 

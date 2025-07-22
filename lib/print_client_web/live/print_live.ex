@@ -2,7 +2,7 @@ defmodule PrintClientWeb.PrintLive do
   use PrintClientWeb, :live_view
 
   alias PrintClientWeb.PrintForm
-  alias PrintClientWeb.Forms.{OptionsForm}
+  alias PrintClient.Label.Forms.{OptionsForm}
   alias PrintClient.{Printer, Label}
   alias PrintClient.Printer.Discovery
   import PrintClientWeb.PrintComponents

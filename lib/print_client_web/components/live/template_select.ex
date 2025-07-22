@@ -24,7 +24,7 @@ defmodule PrintClientWeb.TemplateSelectComponent do
   def render(assigns) do
     ~H"""
     <div id={@id} class="contents">
-      <.dropdown results={@templates} class="rounded-l-md">
+      <.dropdown results={@templates} class="dropdown-end rounded-l-md">
         <:label class="join">
           <div class="btn btn-soft join-item" role="button" tabindex="0">Templates</div>
           <span phx-target={@myself} phx-click="refresh" class="btn btn-soft join-item">

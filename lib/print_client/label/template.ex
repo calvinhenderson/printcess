@@ -1,21 +1,21 @@
 defmodule PrintClient.Label.Template do
-  use Ecto.Schema
-
-  import Ecto.Changeset
-
   require Logger
 
-  embedded_schema do
-    field :name, :string
-    field :template, :string
-    field :required_fields, {:array, Ecto.Enum}, values: [:username, :asset, :serial]
-  end
+  @type template_field :: %{binary() => {atom(), binary() | nil}}
 
-  def changeset(template, attrs) do
-    template
-    |> cast(attrs, [:name, :template, :required_fields])
-    |> validate_required([:name, :template, :required_fields])
-  end
+  defstruct id: "",
+            name: "",
+            template: "",
+            fields: [],
+            form_fields: []
+
+  @type t :: [
+          id: binary(),
+          name: binary(),
+          template: binary(),
+          fields: [template_field],
+          form_fields: [atom()]
+        ]
 
   @doc """
   Loads the embedded label templates.
@@ -58,12 +58,21 @@ defmodule PrintClient.Label.Template do
           |> String.trim()
           |> then(&Regex.replace(~r/\.\w+$/, &1, ""))
 
+        template_fields = dynamic_fields(binary)
+
+        form_fields =
+          template_fields
+          |> Enum.reduce([], fn {_, {v, _}}, acc -> [v | acc] end)
+          |> Enum.uniq()
+          |> Enum.reverse()
+
         [
           %__MODULE__{
             id: Regex.replace(~r/[^A-z0-9_-]/, formatted_name, "_"),
             name: String.capitalize(formatted_name),
             template: binary,
-            required_fields: dynamic_fields(binary)
+            fields: template_fields,
+            form_fields: form_fields
           }
           | templates
         ]
@@ -78,22 +87,21 @@ defmodule PrintClient.Label.Template do
   end
 
   defp dynamic_fields(template) do
-    Regex.scan(~r/{{\s*(?<variable>[^}\s]+)(?<type> [^}\s]+)?\s*}}/, template)
-    |> Enum.map(
-      &case &1 do
-        [_match, variable, _type] ->
-          variable
+    # TODO: Figure out a way to limit which variables can be used.
+    Regex.scan(~r/{{\s*(?<variable>[^}\s]+)(?<type> \[[^}\s]+\])?\s*}}/, template)
+    |> Enum.reduce(%{}, fn match, acc ->
+      case match do
+        [match, variable, params] ->
+          var_atom = String.to_atom(variable)
+          Map.put(acc, match, {var_atom, params})
 
-        [_match, variable] ->
-          variable
+        [match, variable] ->
+          var_atom = String.to_atom(variable)
+          Map.put(acc, match, {var_atom, nil})
 
         _ ->
           nil
       end
-    )
-    |> Enum.reject(&is_nil/1)
-    |> Enum.uniq()
-    # TODO: Figure out a way to limit which variables can be used.
-    |> Enum.map(&String.to_atom/1)
+    end)
   end
 end

@@ -15,7 +15,7 @@ defmodule PrintClientWeb.ApiSearchComponent do
   def search(assigns) do
     ~H"""
     <div id={@field.id <> "-container"} class="contents">
-      <.dropdown results={@results}>
+      <.dropdown results={@results} results-id={@field.id <> "-results"}>
         <:label>
           <span>{normalized_field_name(@field)}</span>
           <.input
@@ -25,13 +25,21 @@ defmodule PrintClientWeb.ApiSearchComponent do
             autocomplete="off"
             phx-debounce={@debounce}
             placeholder={gettext("Lookup or enter a value")}
+            phx-hook="Dropdown"
+            data-dropdown-root={@field.id <> "-results"}
           />
         </:label>
         <!-- Query Results -->
         <:option :let={result}>
           <%= case result do %>
             <% %{:id => id, :asset => asset, :serial => serial} = result -> %>
-              <.result_item id={id} phx-value-id={id} phx-click="select" phx-target={@target}>
+              <.result_item
+                id={id}
+                tabindex="0"
+                phx-value-id={id}
+                phx-click="select"
+                phx-target={@target}
+              >
                 <:icon>
                   <svg
                     class="size-4"
@@ -73,7 +81,13 @@ defmodule PrintClientWeb.ApiSearchComponent do
                 </:info>
               </.result_item>
             <% %{:id => id, :username => username, :display_name => name} = result -> %>
-              <.result_item id={id} phx-click="select" phx-value-id={id} phx-target={@target}>
+              <.result_item
+                id={id}
+                tabindex="0"
+                phx-click="select"
+                phx-value-id={id}
+                phx-target={@target}
+              >
                 <:icon><.icon name="hero-user-circle-solid" class="size-4" /></:icon>
                 <:info class="grid grid-cols-[3fr_2fr]">
                   <div class="flex flex-col">

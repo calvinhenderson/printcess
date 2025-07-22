@@ -8,25 +8,28 @@ defmodule PrintClientWeb.PrintComponents do
 
   """
   attr :results, :any, default: AsyncResult.loading()
-  attr :side, :string, default: "start"
   attr :class, :string, default: ""
+  attr :results_id, :any, default: nil
   attr :rest, :global
 
   slot :label do
     attr :class, :string
   end
 
-  slot :option
+  slot :option do
+    attr :id, :any
+  end
 
   def dropdown(assigns) do
     ~H"""
-    <div class={["dropdown dropdown-#{@side}", @class]} {@rest}>
+    <div tabindex="0" class={["dropdown", @class]} {@rest}>
       <div class={@label |> Enum.at(0) |> Map.get(:class, "")}>
         {render_slot(@label)}
       </div>
       <ul
         :if={not is_nil(@results)}
-        class="menu menu-vertical flex-nowrap dropdown-content bg-base-200 rounded-box h-auto overflow-y-scroll max-h-40 z-1 w-full p-2 shadow-sm"
+        id={@results_id}
+        class="dropdown-content menu bg-base-200 rounded-box z-1 min-w-max w-full p-2 shadow-sm"
       >
         <%= case @results do %>
           <% %AsyncResult{} -> %>

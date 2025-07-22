@@ -16,28 +16,15 @@ defmodule PrintClient.Label do
   ### Returns
   The rendered SVG data.
   """
-  @spec render(Template.t(), Map.t()) :: binary()
-  def render(%Template{} = template, %{} = params) do
-    params =
-      Enum.reduce(template.required_fields, %{}, fn field, acc ->
-        val = get_param(params, field)
-
-        acc
-        |> Map.put("#{field}", val)
-        |> Map.put("#{field} qrcode", render_qr_code(val))
-      end)
-
-    render_template(template.template, params)
+  @spec render(Template.t(), map()) :: binary()
+  def render(%Template{} = template, params \\ nil) do
+    render_template(template.template, params, template.fields)
   end
-
-  def render(%Template{} = template, nil) do
-    render_template(template.template, %{})
-  end
-
-  defp get_param(params, key, default \\ nil)
 
   defp get_param(params, key, default) when is_map(params) and is_atom(key),
     do: Map.get(params, key, default) || Map.get(params, Atom.to_string(key), default)
+
+  defp render_qr_code(data) when is_nil(data) or data == "", do: ""
 
   defp render_qr_code(data) do
     with false <- is_nil(data),
@@ -121,12 +108,21 @@ defmodule PrintClient.Label do
         do: <<@random_chars |> String.to_charlist() |> Enum.random()>>
       )
 
-  def render_template(template, params) do
-    Regex.replace(~r/{{\s*(\w+)\s*(\[[^\]]+\])?\s*}}/, template, fn _match, var, opts ->
-      case Map.get(params, var, "") do
-        "" <> val -> val
-        _ -> ""
-      end
+  def render_template(template, nil, fields), do: render_template(template, %{}, fields)
+
+  def render_template(template, form_params, fields) do
+    Enum.reduce(fields, template, fn {raw, {field, field_params}}, template ->
+      param = get_param(form_params, field, "")
+
+      # TODO: add more supported params here
+      replacement =
+        cond do
+          is_nil(field_params) -> param
+          String.contains?(field_params, "qrcode") -> render_qr_code(param)
+          true -> param
+        end
+
+      String.replace(template, raw, replacement, global: true)
     end)
   end
 end
