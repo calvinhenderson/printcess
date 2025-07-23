@@ -46,7 +46,6 @@ all: build_elixir_app package_macos_app
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf $(BUILD_DIR)
-	rm -f $(APP_SOURCE_DIR)/mix.lock
 	@echo "Clean complete."
 
 info:
