@@ -35,7 +35,7 @@ defmodule PrintClient.Menu do
   def render(assigns) do
     ~H"""
     <menu>
-      <%= if Mix.env() in [:dev, :test] do %>
+      <%= if show_dev_tools() do %>
         <item>{gettext("Dev build")}</item>
         <hr />
       <% end %>
@@ -51,4 +51,10 @@ defmodule PrintClient.Menu do
     PrintClient.Window.Print.load_url(url)
     {:noreply, menu}
   end
+
+  defp show_dev_tools,
+    do:
+      Application.get_env(:print_client, PrintClient.Window, %{show_dev_tools: true})[
+        :show_dev_tools
+      ]
 end

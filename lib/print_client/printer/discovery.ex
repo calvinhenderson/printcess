@@ -204,7 +204,12 @@ defmodule PrintClient.Printer.Discovery do
   end
 
   defp maybe_load_mock_printer do
-    if Mix.env() in [:dev, :test] do
+    include_mocks =
+      Application.get_env(:print_client, PrintClient.Printer.Discovery, %{include_mocks: false})[
+        :include_mocks
+      ]
+
+    if include_mocks do
       [
         %Printer{
           printer_id: "mock_1",

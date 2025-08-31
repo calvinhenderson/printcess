@@ -13,7 +13,7 @@ defmodule PrintClientWeb.TemplateSelectComponent do
       |> assign(selected: nil)
       |> assign_templates()
 
-    # send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
+    send(self(), {:select_template, socket.assigns.templates |> Enum.at(0)})
 
     {:ok, socket}
   end

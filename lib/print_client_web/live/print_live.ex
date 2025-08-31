@@ -92,6 +92,10 @@ defmodule PrintClientWeb.PrintLive do
     {:noreply, socket}
   end
 
+  def handle_info({:kill, _pid}, socket) do
+    {:noreply, socket}
+  end
+
   def handle_info({:select_template, template}, socket),
     do: {:noreply, socket |> assign(:selected_template, template)}
 

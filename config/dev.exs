@@ -67,7 +67,10 @@ config :print_client, PrintClientWeb.Endpoint,
 config :print_client, dev_routes: true
 
 # Configure Mock API Backend Adapter
-config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Iiq
+config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Mock
+
+# Enable Mock Printers
+config :print_client, PrintClient.Printer.Discovery, include_mock_printers: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

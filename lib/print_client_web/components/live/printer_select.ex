@@ -14,8 +14,8 @@ defmodule PrintClientWeb.PrinterSelectComponent do
       |> assign_printers()
       |> notify_selected()
 
-    Enum.take(socket.assigns.printers, 2)
-    |> Enum.each(&send(self(), {:select_printer, &1}))
+    # Enum.take(socket.assigns.printers, 2)
+    # |> Enum.each(&send(self(), {:select_printer, &1}))
 
     Discovery.subscribe()
 

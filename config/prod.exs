@@ -8,6 +8,8 @@ import Config
 config :print_client, PrintClientWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json"
 
+config :print_client, PrintClient.Window, show_dev_tools: false
+
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PrintClient.Finch
 

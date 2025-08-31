@@ -50,7 +50,7 @@ defmodule PrintClient.MenuBar do
         </menu>
       <% end %>
 
-      <%= if Mix.env() in [:dev, :test] do %>
+      <%= if show_dev_tools() do %>
         <menu label={gettext("Extra")}>
           <item onclick="observer">{gettext("Show Observer")}</item>
           <item onclick="browser">{gettext("Open Browser")}</item>
@@ -59,4 +59,10 @@ defmodule PrintClient.MenuBar do
     </menubar>
     """
   end
+
+  defp show_dev_tools,
+    do:
+      Application.get_env(:print_client, PrintClient.Window, %{show_dev_tools: true})[
+        :show_dev_tools
+      ]
 end

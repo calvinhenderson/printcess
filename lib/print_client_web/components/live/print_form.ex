@@ -200,7 +200,7 @@ defmodule PrintClientWeb.PrintForm do
 
   defp assign_query_results(socket) do
     with %{} = changes <- Map.get(socket.assigns, :changeset, %{changes: %{}}).changes,
-         field when field != nil <- Map.get(socket.assigns, :field) do
+         field when not is_nil(field) <- Map.get(socket.assigns, :field) do
       socket
       |> assign(:query_field, field)
       |> assign_async([:results], fn -> query_api(field, changes[field]) end)
