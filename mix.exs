@@ -1,11 +1,9 @@
 defmodule PrintClient.MixProject do
   use Mix.Project
 
-  @app :print_client
-
   def project do
     [
-      app: @app,
+      app: :print_client,
       version: "2.0.1",
       elixir: "~> 1.16.3",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -65,7 +63,9 @@ defmodule PrintClient.MixProject do
       {:bandit, "~> 1.5"},
 
       # Desktop application dependencies
-      {:desktop, "~> 1.5.3"},
+      {:desktop,
+       git: "https://github.com/elixir-desktop/desktop.git",
+       ref: "7b19690d7621ee7d1a2935c627840677faffe50b"},
 
       # Serial printer connections
       {:circuits_uart, "~> 1.5"},
