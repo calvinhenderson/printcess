@@ -8,21 +8,21 @@ defmodule PrintClientWeb.SettingsLive do
       id: :preferences,
       href: "/settings",
       title: "User Preferences",
-      icon: "hero-cog-solid",
+      icon: "hero-paint-brush-solid",
       module: Settings.UserPreferencesComponent
     },
     %{
       id: :printers,
       href: "/settings/printers",
       title: "Printer Settings",
-      icon: "hero-cog-solid",
+      icon: "hero-printer-solid",
       module: Settings.PrinterComponent
     },
     %{
       id: :api,
       href: "/settings/api",
       title: "API Settings",
-      icon: "hero-cog-solid",
+      icon: "hero-paper-airplane",
       module: Settings.ApiComponent
     }
   ]

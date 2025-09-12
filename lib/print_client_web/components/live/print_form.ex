@@ -130,7 +130,9 @@ defmodule PrintClientWeb.PrintForm do
       ),
       do:
         {:noreply,
-         socket |> assign(:field, String.to_existing_atom(field)) |> assign_changes(params)}
+         socket
+         |> assign(:field, String.to_existing_atom(field))
+         |> assign_changes(params)}
 
   def handle_event("select", %{"id" => id}, socket) do
     case socket.assigns.results do
@@ -217,6 +219,10 @@ defmodule PrintClientWeb.PrintForm do
     with value when is_binary(value) <- value,
          len when len >= 3 <- String.length(value),
          {:ok, results} <- perform_query(field, value) do
+      Logger.info(
+        "PrintForm: Performed query for field: #{inspect(field)}. With results: #{length(results)}"
+      )
+
       {:ok, %{results: results}}
     else
       {:error, reason} ->
@@ -228,6 +234,6 @@ defmodule PrintClientWeb.PrintForm do
     end
   end
 
-  defp perform_query(_field, value), do: AssetsApi.search_assets(value)
   defp perform_query(field, value) when field in [:username], do: AssetsApi.search_users(value)
+  defp perform_query(_field, value), do: AssetsApi.search_assets(value)
 end

@@ -24,7 +24,7 @@ defmodule PrintClientWeb.PrintLive do
 
     with %{} = validated when map_size(validated) > 0 <- params,
          rendered <- Label.render(template, validated),
-         {:ok, data} <- Label.encode(:tspl, rendered, copies: validated.copies) do
+         {:ok, data} <- Label.encode(printer.encoding, rendered, copies: validated.copies) do
       Printer.add_job(printer.printer_id, data)
     else
       {:error, reason} ->
