@@ -77,9 +77,10 @@ defmodule PrintClient.Printer.Discovery do
   def discover_all_printers do
     [
       maybe_load_mock_printer(),
-      # discover_serial_printers(),
+      load_saved_printers(),
+      discover_serial_printers(),
       discover_usb_printers(),
-      discover_network_printers()
+      #discover_network_printers()
     ]
     |> Enum.concat()
   end
@@ -87,16 +88,23 @@ defmodule PrintClient.Printer.Discovery do
   @doc """
   Returns configured network printers.
   """
-  @spec discover_network_printers() :: [Printer.t()] | []
-  def discover_network_printers do
+  @spec load_saved_printers() :: [Printer.t()] | []
+  def load_saved_printers do
     Settings.all_printers()
-    |> Enum.map(fn network_printer ->
+    |> Enum.map(fn printer ->
+      {adapter, config} = case printer.type do
+        :network -> {NetworkPrinter, %{ip: printer.hostname, port: printer.port}}
+        :usb -> {UsbPrinter, %{vendor: printer.vendor_id, product: printer.product_id}}
+        :serial -> {SerialPrinter, %{path: printer.serial_port, speed: @default_baud_rate}}
+      end
+
       %Printer{
-        printer_id: id_of_network_printer(network_printer),
-        name: network_printer.name,
-        type: :network,
-        adapter_module: NetworkPrinter,
-        adapter_config: %{ip: network_printer.hostname, port: network_printer.port}
+        printer_id: format_id_string(printer.name |> String.downcase()),
+        encoding: printer.encoding,
+        name: printer.name,
+        type: printer.type,
+        adapter_module: adapter,
+        adapter_config: config
       }
     end)
   end
@@ -138,6 +146,7 @@ defmodule PrintClient.Printer.Discovery do
 
     %Printer{
       printer_id: id_of_port("usb_#{vendor}:#{product}"),
+      encoding: :tspl,
       name: "USB #{usb_vendors_map[vendor]} #{vendor}:#{product}",
       type: :usb,
       adapter_module: UsbPrinter,
@@ -148,6 +157,7 @@ defmodule PrintClient.Printer.Discovery do
   defp format_discovered_port(port),
     do: %Printer{
       printer_id: id_of_port(port),
+      encoding: :tspl,
       name: "#{port}",
       type: :serial,
       adapter_module: SerialPrinter,
@@ -213,6 +223,7 @@ defmodule PrintClient.Printer.Discovery do
       [
         %Printer{
           printer_id: "mock_1",
+          encoding: :tspl,
           name: "Mock 1",
           type: :mock,
           adapter_module: MockPrinter,
@@ -220,6 +231,7 @@ defmodule PrintClient.Printer.Discovery do
         },
         %Printer{
           printer_id: "mock_2",
+          encoding: :tspl,
           name: "Mock 2",
           type: :mock,
           adapter_module: MockPrinter,

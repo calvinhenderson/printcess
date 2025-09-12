@@ -10,6 +10,7 @@ defmodule PrintClient.Printer do
   alias PrintClient.Printer.{Adapter, PrintJob, Registry}
 
   defstruct printer_id: nil,
+            encoding: nil,
             name: nil,
             type: nil,
             adapter_module: nil,
@@ -27,6 +28,7 @@ defmodule PrintClient.Printer do
 
   @type t :: [
           printer_id: String.t(),
+          encoding: String.t() | nil,
           name: :string | nil,
           type: atom() | nil,
           adapter_module: Module.t() | nil,
@@ -101,6 +103,7 @@ defmodule PrintClient.Printer do
   @impl true
   def init(opts) do
     printer_id = Map.fetch!(opts, :printer_id)
+    encoding = Map.fetch!(opts, :encoding)
     name = Map.get(opts, :name, printer_id)
     adapter_module = Map.fetch!(opts, :adapter_module)
     adapter_config = Map.fetch!(opts, :adapter_config)
@@ -109,6 +112,7 @@ defmodule PrintClient.Printer do
     state = %__MODULE__{
       name: name,
       printer_id: printer_id,
+      encoding: encoding,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       adapter_state: adapter_state_instance,
