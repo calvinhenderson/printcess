@@ -17,7 +17,8 @@ defmodule PrintClient.Settings do
   @doc """
   Builds a printer changeset for making changes.
   """
-  def change_printer(printer, attrs \\ %{}), do: Printer.changeset(printer, attrs)
+  def change_printer(printer, attrs \\ %{}),
+    do: Printer.changeset(printer, attrs)
 
   @doc """
   Fetches all saved printers.
@@ -26,7 +27,7 @@ defmodule PrintClient.Settings do
     Repo.all(
       from(p in Printer,
         select: p,
-        order_by: p.id,
+        order_by: [desc: p.id],
         order_by: p.name
       )
     )
@@ -36,11 +37,13 @@ defmodule PrintClient.Settings do
   Saves a printer to the database.
   """
   def save_printer(printer, attrs \\ %{}) do
-    printer
-    |> Printer.changeset(attrs)
+    change_printer(printer, attrs)
     |> Repo.insert_or_update()
   end
 
+  @doc """
+  Deletes a printer from the database.
+  """
   def delete_printer(printer = %Printer{}) do
     printer
     |> Repo.delete()
