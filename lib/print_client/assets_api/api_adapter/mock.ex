@@ -23,6 +23,8 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Mock do
         serial: "SN001",
         manufacturer: "Mock",
         model: "Asset",
+        status: "In Service",
+        location: "Test Location",
         username: "user001"
       }
     ]
@@ -34,8 +36,10 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Mock do
     results = [
       %SearchResult.User{
         id: "user-id-001",
-        display_name: "User 001",
         username: "user001",
+        display_name: "User 001",
+        role: "Student",
+        location: "Test Location",
         grade: "1"
       }
     ]
