@@ -33,7 +33,7 @@ defmodule PrintClient.Window do
       @impl true
       def init(_opts) do
         window = Keyword.fetch!(unquote(module_opts), :window)
-        title = Keyword.fetch!(unquote(module_opts), :title) <> " - Print Client"
+        title = Keyword.fetch!(unquote(module_opts), :title)
         url = Keyword.fetch!(unquote(module_opts), :url)
         initial_size = Keyword.get(unquote(module_opts), :size, unquote(@default_window_size))
         min_size = Keyword.get(unquote(module_opts), :min_size)

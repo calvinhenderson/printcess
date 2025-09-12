@@ -3,7 +3,7 @@ defmodule PrintClient.Window.Print do
 
   use PrintClient.Window,
     window: PrintWindow,
-    title: "Print Client",
+    title: "Printcess",
     menubar: PrintClient.MenuBar,
     icon_menu: PrintClient.Menu,
     url: ~p"/"

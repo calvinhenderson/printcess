@@ -22,7 +22,7 @@ APP_SRC_DIR      := ..
 APP_RELEASE_NAME := app
 
 # --- Application Bundle Configuration ---
-APP_NAME          := Print-Client
+APP_NAME          := Printcess
 BUNDLE_IDENTIFIER := com.calvinhenderson.print-client
 APP_BUNDLE_DIR    := $(BUILD_DIR)/$(APP_NAME).app
 MACOS_DIR         := $(APP_BUNDLE_DIR)/Contents/MacOS
@@ -34,6 +34,7 @@ ICON_SOURCE_PNG   := $(APP_SRC_DIR)/priv/icon.png
 ICONSET_DIR       := $(BUILD_DIR)/$(APP_NAME).iconset
 ICON_ICNS         := $(RESOURCES_DIR)/AppIcon.icns
 APP_RELEASE_DIR   := $(RESOURCES_DIR)/app
+APP_INSTALLER     := $(BUILD_DIR)/$(APP_NAME).dmg
 SIGN_IDENTITY     ?= -
 
 # --- Source and Release Directories ---
@@ -66,11 +67,11 @@ ELIXIR_STAMP    := $(BUILD_DIR)/.elixir.done
 MAGICK_STAMP    := $(BUILD_DIR)/.magick.done
 
 # --- Main Targets ---
-all: $(ELIXIR_STAMP) app bundle info
+all: $(ELIXIR_STAMP) app bundle installer info
 
 $(OPENSSL_STAMP) $(WXWIDGETS_STAMP) $(ERLANG_STAMP) $(ELIXIR_STAMP) $(MAGICK_STAMP): | $(BUILD_DIR)
 $(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p "$@"
 
 # --- Dependency Build Recipes ---
 
@@ -79,10 +80,10 @@ $(OPENSSL_STAMP):
 	@if [ ! -d "$(OPENSSL_SRC_DIR)" ]; then \
 		git clone --branch "$(OPENSSL_BRANCH)" https://github.com/openssl/openssl.git "$(OPENSSL_SRC_DIR)"; \
 	fi
-	@cd $(OPENSSL_SRC_DIR) && \
+	@cd "$(OPENSSL_SRC_DIR)" && \
 		export CFLAGS="-mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)" && \
-		./Configure $(OPENSSL_CC) \
-			--prefix=$(OPENSSL_REL_DIR) && \
+		./Configure "$(OPENSSL_CC)" \
+			--prefix="$(OPENSSL_REL_DIR)" && \
 		make -j$(NCPU) && \
 		make install
 	@touch $@
@@ -92,12 +93,12 @@ $(WXWIDGETS_STAMP):
 	@if [ ! -d "$(WXWIDGETS_SRC_DIR)" ]; then \
 		git clone --branch "v$(WXWIDGETS_VERSION)" https://github.com/wxWidgets/wxWidgets.git "$(WXWIDGETS_SRC_DIR)"; \
 	fi
-	@cd $(WXWIDGETS_SRC_DIR) && git submodule update --init --recursive;
-	@rm -rf $(WXWIDGETS_REL_DIR)
-	@mkdir -p $(WXWIDGETS_SRC_DIR)/build
-	@cd $(WXWIDGETS_SRC_DIR)/build && \
+	@cd "$(WXWIDGETS_SRC_DIR)" && git submodule update --init --recursive;
+	@rm -rf "$(WXWIDGETS_REL_DIR)"
+	@mkdir -p "$(WXWIDGETS_SRC_DIR)/build"
+	@cd "$(WXWIDGETS_SRC_DIR)/build" && \
 		../configure \
-			--prefix=$(WXWIDGETS_REL_DIR) \
+			--prefix="$(WXWIDGETS_REL_DIR)" \
 			--with-macosx-version-min=$(MACOSX_DEPLOYMENT_TARGET) \
 			--with-osx_cocoa \
 			--with-opengl \
@@ -120,18 +121,18 @@ $(ERLANG_STAMP): $(WXWIDGETS_STAMP) $(OPENSSL_STAMP)
 	@if [ ! -d "$(ERLANG_SRC_DIR)" ]; then \
 		git clone https://github.com/erlang/otp.git "$(ERLANG_SRC_DIR)"; \
 	fi
-	@cd $(ERLANG_SRC_DIR) && \
+	@cd "$(ERLANG_SRC_DIR)" && \
 		git fetch --tags && \
-		git checkout $(ERLANG_TAG) && \
+		git checkout "$(ERLANG_TAG)" && \
 		git submodule update --init --recursive
-	@cd $(ERLANG_SRC_DIR) && \
+	@cd "$(ERLANG_SRC_DIR)" && \
 		export PATH="$(WXWIDGETS_REL_DIR)/bin:$(OPENSSL_REL_DIR)/bin:$$PATH" && \
 		export ERL_TOP="$(ERLANG_SRC_DIR)" && \
-		export MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) && \
+		export MACOSX_DEPLOYMENT_TARGET="$(MACOSX_DEPLOYMENT_TARGET)" && \
 		./configure \
-			--prefix=$(ERLANG_REL_DIR) \
-			--with-ssl=$(OPENSSL_REL_DIR) \
-			--with-wx-config=$(WXWIDGETS_REL_DIR)/bin/wx-config \
+			--prefix="$(ERLANG_REL_DIR)" \
+			--with-ssl="$(OPENSSL_REL_DIR)" \
+			--with-wx-config="$(WXWIDGETS_REL_DIR)/bin/wx-config" \
 			--without-javac \
 			--without-jinterface \
 			--without-odbc \
@@ -149,10 +150,10 @@ $(ELIXIR_STAMP): $(ERLANG_STAMP)
 	@if [ ! -d "$(ELIXIR_SRC_DIR)" ]; then \
 		git clone --branch "$(ELIXIR_TAG)" https://github.com/elixir-lang/elixir.git "$(ELIXIR_SRC_DIR)"; \
 	fi
-	@cd $(ELIXIR_SRC_DIR) && \
+	@cd "$(ELIXIR_SRC_DIR)" && \
 		export PATH="$(ERLANG_REL_DIR)/bin:$$PATH" && \
 		make clean && \
-		make PREFIX=$(ERLANG_REL_DIR) install
+		make PREFIX="$(ERLANG_REL_DIR)" install
 	@touch $@
 
 $(MAGICK_STAMP):
@@ -160,10 +161,10 @@ $(MAGICK_STAMP):
 	@if [ ! -d "$(MAGICK_SRC_DIR)" ]; then \
 		git clone --branch "$(MAGICK_VERSION)" https://github.com/ImageMagick/ImageMagick.git "$(MAGICK_SRC_DIR)"; \
 	fi
-	@mkdir -p $(MAGICK_SRC_DIR)/build
-	@cd $(MAGICK_SRC_DIR)/build && \
+	@mkdir -p "$(MAGICK_SRC_DIR)/build"
+	@cd "$(MAGICK_SRC_DIR)/build" && \
 		../configure \
-			--prefix=$(MAGICK_REL_DIR) \
+			--prefix="$(MAGICK_REL_DIR)" \
 			--with-osx_cocoa \
 			--with-macosx-version-min=$(MACOSX_DEPLOYMENT_TARGET) \
 			--enable-shared \
@@ -181,7 +182,7 @@ app: $(ELIXIR_STAMP) $(MAGICK_STAMP)
 		echo "🛑 Error: Elixir application source directory not found at '$(APP_SRC_DIR)'"; \
 		exit 1; \
 	fi
-	@cd $(APP_SRC_DIR) && \
+	@cd "$(APP_SRC_DIR)" && \
 		export PATH="$(ERLANG_REL_DIR)/bin:$$PATH" && \
 		export MIX_ENV=prod && \
 		mix local.hex --force && \
@@ -235,52 +236,70 @@ $(ICON_ICNS): $(ICON_SOURCE_PNG) | $(RESOURCES_DIR)
 		echo "⚠️ Warning: Icon source '$(ICON_SOURCE_PNG)' not found. Skipping icon creation."; \
 		exit 0; \
 	fi
-	@mkdir -p $(ICONSET_DIR)
-	@sips -z 16 16     $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_16x16.png > /dev/null
-	@sips -z 32 32     $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_16x16@2x.png > /dev/null
-	@sips -z 128 128   $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_128x128.png > /dev/null
-	@sips -z 256 256   $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_128x128@2x.png > /dev/null
-	@sips -z 256 256   $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_256x256.png > /dev/null
-	@sips -z 512 512   $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_256x256@2x.png > /dev/null
-	@sips -z 512 512   $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_512x512.png > /dev/null
-	@sips -z 1024 1024 $(ICON_SOURCE_PNG) --out $(ICONSET_DIR)/icon_512x512@2x.png > /dev/null
-	@iconutil -c icns $(ICONSET_DIR) -o $@
+	@mkdir -p "$(ICONSET_DIR)"
+	@sips -z 16 16     "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_16x16.png" > /dev/null
+	@sips -z 32 32     "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_16x16@2x.png" > /dev/null
+	@sips -z 128 128   "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_128x128.png" > /dev/null
+	@sips -z 256 256   "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_128x128@2x.png" > /dev/null
+	@sips -z 256 256   "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_256x256.png" > /dev/null
+	@sips -z 512 512   "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_256x256@2x.png" > /dev/null
+	@sips -z 512 512   "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_512x512.png" > /dev/null
+	@sips -z 1024 1024 "$(ICON_SOURCE_PNG)" --out "$(ICONSET_DIR)/icon_512x512@2x.png" > /dev/null
+	@iconutil -c icns "$(ICONSET_DIR)" -o $@
+
+$(APP_INSTALLER): $(APP_BUNDLE_DIR)
+	@echo "📦 Creating installer image..." && \
+		export TEMP_DMG="$(BUILD_DIR)/tmp_dmg" && \
+		mkdir -p "$$TEMP_DMG" && \
+		echo " -> Copying over files" && \
+		cp -R "$(APP_BUNDLE_DIR)" "$$TEMP_DMG/" && \
+	  ln -s /Applications "$$TEMP_DMG/Applications" && \
+	  echo " -> Finalizing image" && \
+		hdiutil create -srcfolder "$$TEMP_DMG" -format UDZO "$@" && \
+	  echo " -> Signing image" && \
+	  codesign --force --sign $(SIGN_IDENTITY) "$@" && \
+	  rm -rf "$$TEMP_DMG" && \
+	  echo "✅ Successfully created and signed $@"
 
 patch-linker-paths: $(APP_BUNDLE_DIR)
 	@echo "🔧 Patching linker paths..."
-	@APP_BUNDLE_DIR="$(APP_BUNDLE_DIR)" APP_REL_DIR="$(APP_RELEASE_DIR)" $(APP_SRC_DIR)/rel/patch-linker-paths.sh
+	@APP_BUNDLE_DIR="$(APP_BUNDLE_DIR)" APP_REL_DIR="$(APP_RELEASE_DIR)" "$(APP_SRC_DIR)/rel/patch-linker-paths.sh"
 
 $(APP_BUNDLE_DIR)/Contents $(MACOS_DIR) $(FRAMEWORKS_DIR) $(RESOURCES_DIR):
-	@mkdir -p $@
+	@mkdir -p "$@"
 
 # --- Utility Targets ---
 info:
 	@echo "\n--------------------------------------------------"
+	@echo "📦 Toolchains can be added to your shell path:"
+	@echo "export PATH=\"$(ERLANG_REL_DIR)/bin:$(MAGICK_REL_DIR)/bin:\$$PATH\""
 	@echo "🚀 Build Complete!"
 	@echo "Packaged application is at: $(APP_BUNDLE_DIR)"
 	@echo "--------------------------------------------------"
 
-bundle: sign patch-linker-paths $(INFO_PLIST) $(LAUNCHER_SCRIPT) $(ICON_ICNS) $(APP_BUNDLE_DIR)
+bundle: installer sign patch-linker-paths $(INFO_PLIST) $(LAUNCHER_SCRIPT) $(ICON_ICNS) $(APP_BUNDLE_DIR)
+
+installer: $(APP_INSTALLER)
 
 sign:
 	@echo "🔏 Code-signing application bundle..."
-	@find $(FRAMEWORKS_DIR) -type f -name "*.dylib" -exec codesign --force --sign $(SIGN_IDENTITY) {} \;
-	@find $(APP_RELEASE_DIR) -type f -name "*.so" -exec codesign --force --sign $(SIGN_IDENTITY) {} \;
-	@find $(APP_RELEASE_DIR)/bin -type f -perm +111 -exec codesign --force --sign $(SIGN_IDENTITY) {} \;
-	@codesign --force --sign $(SIGN_IDENTITY) --deep $(APP_BUNDLE_DIR)
+	@find "$(FRAMEWORKS_DIR)" -type f -name "*.dylib" -exec codesign --force --sign "$(SIGN_IDENTITY)" {} \;
+	@find "$(APP_RELEASE_DIR)" -type f -name "*.so" -exec codesign --force --sign "$(SIGN_IDENTITY)" {} \;
+	@find "$(APP_RELEASE_DIR)/bin" -type f -perm +111 -exec codesign --force --sign "$(SIGN_IDENTITY)" {} \;
+	@codesign --force --sign "$(SIGN_IDENTITY)" --deep "$(APP_BUNDLE_DIR)"
 	@echo "✅ Code-signing complete."
 
 clean:
 	@echo "🔥 Cleaning build directory..."
-	@rm -rf $(BUILD_DIR)
+	@rm -rf "$(BUILD_DIR)"
 	@echo "🔥 Cleaning Elixir application artifacts..."
-	@rm -rf $(APP_SRC_DIR)/_build $(APP_SRC_DIR)/deps
+	@rm -rf "$(APP_SRC_DIR)/_build" "$(APP_SRC_DIR)/deps"
 
 clean-bundle:
 	@echo "🔥 Cleaning old bundle directory..."
-	@rm -rf $(APP_BUNDLE_DIR)
+	@rm -rf "$(APP_BUNDLE_DIR)"
 
 run: $(LAUNCHER_SCRIPT)
 	@echo "⚙️ Running bundled application.."
-	@exec $(LAUNCHER_SCRIPT)
+	@exec "$(LAUNCHER_SCRIPT)"
 
