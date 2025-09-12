@@ -7,7 +7,7 @@
 #   make bundle         - Package the app after a successful build
 #   make OTP_VERSION=26.2.2 - Build with a specific version
 
-.PHONY: all clean clean-bundle patch-linker-paths info bundle sign app run
+.PHONY: all clean clean-bundle patch-linker-paths info installer bundle sign app run
 
 # --- General Configuration ---
 ELIXIR_VERSION ?= 1.16.3
@@ -67,7 +67,7 @@ ELIXIR_STAMP    := $(BUILD_DIR)/.elixir.done
 MAGICK_STAMP    := $(BUILD_DIR)/.magick.done
 
 # --- Main Targets ---
-all: $(ELIXIR_STAMP) app bundle installer info
+all: bundle installer info
 
 $(OPENSSL_STAMP) $(WXWIDGETS_STAMP) $(ERLANG_STAMP) $(ELIXIR_STAMP) $(MAGICK_STAMP): | $(BUILD_DIR)
 $(BUILD_DIR):
@@ -255,7 +255,7 @@ $(APP_INSTALLER): $(APP_BUNDLE_DIR)
 		cp -R "$(APP_BUNDLE_DIR)" "$$TEMP_DMG/" && \
 	  ln -s /Applications "$$TEMP_DMG/Applications" && \
 	  echo " -> Finalizing image" && \
-		hdiutil create -srcfolder "$$TEMP_DMG" -format UDZO "$@" && \
+		hdiutil create -volname "$(APP_NAME)" -srcfolder "$$TEMP_DMG" -format UDZO "$@" && \
 	  echo " -> Signing image" && \
 	  codesign --force --sign $(SIGN_IDENTITY) "$@" && \
 	  rm -rf "$$TEMP_DMG" && \
@@ -277,7 +277,7 @@ info:
 	@echo "Packaged application is at: $(APP_BUNDLE_DIR)"
 	@echo "--------------------------------------------------"
 
-bundle: installer sign patch-linker-paths $(INFO_PLIST) $(LAUNCHER_SCRIPT) $(ICON_ICNS) $(APP_BUNDLE_DIR)
+bundle: $(APP_BUNDLE_DIR) $(INFO_PLIST) $(LAUNCHER_SCRIPT) $(ICON_ICNS) patch-linker-paths sign installer
 
 installer: $(APP_INSTALLER)
 
@@ -291,13 +291,13 @@ sign:
 
 clean:
 	@echo "🔥 Cleaning build directory..."
-	@rm -rf "$(BUILD_DIR)"
+	@rm -rf "$(BUILD_DIR)/"
 	@echo "🔥 Cleaning Elixir application artifacts..."
 	@rm -rf "$(APP_SRC_DIR)/_build" "$(APP_SRC_DIR)/deps"
 
 clean-bundle:
 	@echo "🔥 Cleaning old bundle directory..."
-	@rm -rf "$(APP_BUNDLE_DIR)"
+	@rm -rf "$(APP_BUNDLE_DIR)/"
 
 run: $(LAUNCHER_SCRIPT)
 	@echo "⚙️ Running bundled application.."
