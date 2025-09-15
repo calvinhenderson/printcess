@@ -165,11 +165,15 @@ $(MAGICK_STAMP):
 	@cd "$(MAGICK_SRC_DIR)/build" && \
 		../configure \
 			--prefix="$(MAGICK_REL_DIR)" \
-			--with-osx_cocoa \
-			--with-macosx-version-min=$(MACOSX_DEPLOYMENT_TARGET) \
-			--enable-shared \
-			--disable-debug \
-			--without-lqr && \
+			--disable-shared --with-rsvg --without-modules --without-hdri \
+			--without-bzlib --without-autotrace --without-djvu --without-dps --without-fftw \
+			--without-flif --without-fpx --without-fontconfig --without-gslib --without-gvc \
+			--without-heic --without-jbig --without-jpeg --without-jxl --without-dmr \
+			--without-lcms --without-lqr --without-ltdl --without-lzma --without-magick-plus-plus \
+			--without-openexr --without-openjp2 --without-pango --without-perl --without-png \
+			--without-raqm --without-raw --without-tiff --without-uhdr --without-webp \
+			--without-wmf --without-x --without-xml --without-zip --without-zlib --without-zstd \
+			&& \
 		make -j$(NCPU) && \
 		make install
 	@touch $@
@@ -185,10 +189,10 @@ app: $(ELIXIR_STAMP) $(MAGICK_STAMP)
 	@cd "$(APP_SRC_DIR)" && \
 		export PATH="$(ERLANG_REL_DIR)/bin:$$PATH" && \
 		export MIX_ENV=prod && \
+		export EXQLITE_SYSTEM_CFLAGS="-mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)" && \
 		mix local.hex --force && \
 		mix local.rebar --force && \
 		mix deps.get --only prod && \
-		mix phx.digest && \
 		mix release
 
 # --- App Bundle Targets ---
@@ -200,7 +204,7 @@ $(APP_BUNDLE_DIR): app | $(MACOS_DIR) $(FRAMEWORKS_DIR) $(RESOURCES_DIR)
 	@echo " -> Copying over runtime dependencies"
 	@cp -R $(WXWIDGETS_REL_DIR)/lib/*.dylib $(FRAMEWORKS_DIR)/
 	@cp -R $(MAGICK_REL_DIR)/bin/magick $(MACOS_DIR)/magick
-	@cp -R $(MAGICK_REL_DIR)/lib/*.dylib $(FRAMEWORKS_DIR)/
+	# @cp -R $(MAGICK_REL_DIR)/lib/*.dylib $(FRAMEWORKS_DIR)/
 
 $(INFO_PLIST): | $(APP_BUNDLE_DIR)/Contents
 	@echo "  -> Generating Info.plist..."
@@ -223,6 +227,7 @@ $(LAUNCHER_SCRIPT): | $(MACOS_DIR)
 	@echo '# This script sets up the environment and starts the Elixir release.' >> $@
 	@echo 'set -e' >> $@
 	@echo 'DIR=$$(cd "$$(dirname "$$0")" && pwd)' >> $@
+	@echo 'export PATH="$$DIR:$$PATH' >> $@
 	@echo 'export ERL_LIBS="$$DIR/../Resources/app/lib"' >> $@
 	@echo 'export RELEASE_DIR="$$DIR/../Resources/$(APP_RELEASE_NAME)"' >> $@
 	@echo '# Starts the Elixir release in the foreground' >> $@
