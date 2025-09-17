@@ -67,7 +67,7 @@ ELIXIR_STAMP    := $(BUILD_DIR)/.elixir.done
 MAGICK_STAMP    := $(BUILD_DIR)/.magick.done
 
 # --- Main Targets ---
-all: bundle installer info
+all: bundle info
 
 $(OPENSSL_STAMP) $(WXWIDGETS_STAMP) $(ERLANG_STAMP) $(ELIXIR_STAMP) $(MAGICK_STAMP): | $(BUILD_DIR)
 $(BUILD_DIR):
@@ -197,16 +197,15 @@ app: $(ELIXIR_STAMP) $(MAGICK_STAMP)
 
 # --- App Bundle Targets ---
 
-$(APP_BUNDLE_DIR): app | $(MACOS_DIR) $(FRAMEWORKS_DIR) $(RESOURCES_DIR)
+$(APP_BUNDLE_DIR): app $(MACOS_DIR) $(FRAMEWORKS_DIR) $(RESOURCES_DIR)
 	@echo "📦 Packaging application bundle..."
 	@echo " -> Copying over app release"
 	@cp -R $(APP_SRC_DIR)/_build/prod/rel/$(APP_RELEASE_NAME) $(RESOURCES_DIR)/
 	@echo " -> Copying over runtime dependencies"
 	@cp -R $(WXWIDGETS_REL_DIR)/lib/*.dylib $(FRAMEWORKS_DIR)/
 	@cp -R $(MAGICK_REL_DIR)/bin/magick $(MACOS_DIR)/magick
-	# @cp -R $(MAGICK_REL_DIR)/lib/*.dylib $(FRAMEWORKS_DIR)/
 
-$(INFO_PLIST): | $(APP_BUNDLE_DIR)/Contents
+$(INFO_PLIST): $(APP_BUNDLE_DIR)/Contents
 	@echo "  -> Generating Info.plist..."
 	@echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	@echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $@
@@ -221,13 +220,13 @@ $(INFO_PLIST): | $(APP_BUNDLE_DIR)/Contents
 	@echo '    <key>LSMinimumSystemVersion</key><string>$(MACOSX_DEPLOYMENT_TARGET)</string>' >> $@
 	@echo '</dict></plist>' >> $@
 
-$(LAUNCHER_SCRIPT): | $(MACOS_DIR)
+$(LAUNCHER_SCRIPT): $(MACOS_DIR)
 	@echo "  -> Generating launcher script..."
 	@echo '#!/bin/bash' > $@
 	@echo '# This script sets up the environment and starts the Elixir release.' >> $@
 	@echo 'set -e' >> $@
 	@echo 'DIR=$$(cd "$$(dirname "$$0")" && pwd)' >> $@
-	@echo 'export PATH="$$DIR:$$PATH' >> $@
+	@echo 'export PATH="$$DIR:$$PATH"' >> $@
 	@echo 'export ERL_LIBS="$$DIR/../Resources/app/lib"' >> $@
 	@echo 'export RELEASE_DIR="$$DIR/../Resources/$(APP_RELEASE_NAME)"' >> $@
 	@echo '# Starts the Elixir release in the foreground' >> $@
@@ -235,7 +234,7 @@ $(LAUNCHER_SCRIPT): | $(MACOS_DIR)
 	@echo '"$$RELEASE_DIR/bin/$(APP_RELEASE_NAME)" start' >> $@
 	@chmod +x $@
 
-$(ICON_ICNS): $(ICON_SOURCE_PNG) | $(RESOURCES_DIR)
+$(ICON_ICNS): $(ICON_SOURCE_PNG) $(RESOURCES_DIR)
 	@echo "  -> Generating application icon..."
 	@if [ ! -f "$(ICON_SOURCE_PNG)" ]; then \
 		echo "⚠️ Warning: Icon source '$(ICON_SOURCE_PNG)' not found. Skipping icon creation."; \
@@ -253,18 +252,17 @@ $(ICON_ICNS): $(ICON_SOURCE_PNG) | $(RESOURCES_DIR)
 	@iconutil -c icns "$(ICONSET_DIR)" -o $@
 
 $(APP_INSTALLER): $(APP_BUNDLE_DIR)
-	@echo "📦 Creating installer image..." && \
-		export TEMP_DMG="$(BUILD_DIR)/tmp_dmg" && \
-		mkdir -p "$$TEMP_DMG" && \
-		echo " -> Copying over files" && \
-		cp -R "$(APP_BUNDLE_DIR)" "$$TEMP_DMG/" && \
-	  ln -s /Applications "$$TEMP_DMG/Applications" && \
-	  echo " -> Finalizing image" && \
-		hdiutil create -volname "$(APP_NAME)" -srcfolder "$$TEMP_DMG" -format UDZO "$@" && \
-	  echo " -> Signing image" && \
-	  codesign --force --sign $(SIGN_IDENTITY) "$@" && \
-	  rm -rf "$$TEMP_DMG" && \
-	  echo "✅ Successfully created and signed $@"
+	@echo "📦 Creating installer image..."
+	@rm -rf "$@.src"
+	@mkdir -p "$@.src"
+	@echo " -> Copying over files"
+	@cp -R "$(APP_BUNDLE_DIR)" "$@.src"
+	@ln -s /Applications "$@.src/Applications"
+	@echo " -> Finalizing image"
+	@hdiutil create -ov -volname "$(APP_NAME)" -srcfolder "$@.src" -format UDZO "$@"
+	@echo " -> Signing image"
+	@codesign --force --sign $(SIGN_IDENTITY) "$@"
+	@echo "✅ Successfully created and signed $@"
 
 patch-linker-paths: $(APP_BUNDLE_DIR)
 	@echo "🔧 Patching linker paths..."
@@ -282,9 +280,9 @@ info:
 	@echo "Packaged application is at: $(APP_BUNDLE_DIR)"
 	@echo "--------------------------------------------------"
 
-bundle: $(APP_BUNDLE_DIR) $(INFO_PLIST) $(LAUNCHER_SCRIPT) $(ICON_ICNS) patch-linker-paths sign installer
+bundle: clean-bundle $(APP_BUNDLE_DIR) $(INFO_PLIST) $(LAUNCHER_SCRIPT) $(ICON_ICNS) patch-linker-paths sign installer
 
-installer: $(APP_INSTALLER)
+installer: bundle $(APP_INSTALLER)
 
 sign:
 	@echo "🔏 Code-signing application bundle..."
@@ -301,8 +299,9 @@ clean:
 	@rm -rf "$(APP_SRC_DIR)/_build" "$(APP_SRC_DIR)/deps"
 
 clean-bundle:
-	@echo "🔥 Cleaning old bundle directory..."
+	@echo "🔥 Cleaning old bundle..."
 	@rm -rf "$(APP_BUNDLE_DIR)/"
+	@rm -rf "$(APP_INSTALLER)/"
 
 run: $(LAUNCHER_SCRIPT)
 	@echo "⚙️ Running bundled application.."
