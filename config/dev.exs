@@ -63,11 +63,14 @@ config :print_client, PrintClientWeb.Endpoint,
     ]
   ]
 
+# Enable debugging for libcluster
+config :libcluster, debug: true
+
 # Enable dev routes for dashboard and mailbox
 config :print_client, dev_routes: true
 
 # Configure Mock API Backend Adapter
-config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Mock
+config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Iiq
 
 # Enable Mock Printers
 config :print_client, PrintClient.Printer.Discovery, include_mock_printers: true

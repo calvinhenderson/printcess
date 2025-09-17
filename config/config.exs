@@ -31,6 +31,9 @@ config :print_client, PrintClientWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :print_client, PrintClient.Mailer, adapter: Swoosh.Adapters.Local
 
+# Configure Mock API Backend Adapter
+config :print_client, PrintClient.AssetsApi, adapter: PrintClient.AssetsApi.ApiAdapter.Iiq
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
@@ -64,6 +67,13 @@ config :mogrify,
   mogrify_command: [
     path: "magick",
     args: ["mogrify"]
+  ],
+  convert_command: [
+    path: "magick",
+  ],
+  identify_command: [
+    path: "magick",
+    args: ["identify"]
   ]
 
 # Import environment specific config. This must remain at the bottom
