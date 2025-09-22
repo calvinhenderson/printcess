@@ -17,10 +17,10 @@ defmodule PrintClientWeb.Layouts do
 
   ## Examples
 
-      <Layouts.app flash={@flash}>
-        <h1>Content</h1>
-      </Layout.app>
-      
+  <Layouts.app flash={@flash}>
+  <h1>Content</h1>
+  </Layout.app>
+
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
@@ -33,7 +33,7 @@ defmodule PrintClientWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <div class="grid [grid-template-areas:'aside_header''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen bg-base-100">
+    <div class="grid [grid-template-areas:'aside_header''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen bg-base-200">
       
     <!-- Header -->
       <header class="[grid-area:header] px-4 sm:px-6 lg:px-8 w-full flex flex-row flex-wrap justify-between items-center min-h-12 bg-base-300">
@@ -47,34 +47,43 @@ defmodule PrintClientWeb.Layouts do
       </header>
       
     <!-- Sidebar navigation -->
-      <nav class="[grid-area:aside] bg-primary text-primary-content flex flex-col gap-0 justify-start items-center p-1 md:px-2 w-16 md:w-32">
-        <div class="flex items-center gap-4">
-          <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-            v{Application.spec(:print_client, :vsn)}
-          </p>
-        </div>
-        <%= for item <- [
-              {"/", "Printing", "hero-printer-solid"},
-              :spacer,
-              {"/settings", "Settings", "hero-cog-solid"},
-            ] do %>
-          <%= case item do %>
-            <% {href, label, icon} -> %>
-              <a
-                href={href}
-                class="w-full px-1 md:px-4 py-2 flex flex-row justify-center items-center gap-2 btn btn-ghost"
-              >
-                <.icon name={icon} />
-                <span class="hidden md:inline">{label}</span>
-              </a>
-            <% :spacer -> %>
-              <span class="grow" />
+      <nav class="[grid-area:aside] h-full bg-primary text-primary-content w-16 md:w-36">
+        <div class="fixed w-16 md:w-36 p-1 h-screen flex flex-col gap-0 justify-start items-center overflow-x-hidden overflow-y-auto">
+          <a href="/">
+            <div class="w-full bg-gray-900/20 flex flex-col justify-center gap-1 px-4 py-2">
+              <h2 class="w-full text-lg font-bold flex items-center justify-center md:justify-between">
+                <.icon name="hero-printer-solid" /><span class="hidden md:inline">Printcess</span>
+              </h2>
+              <span class="badge badge-xs self-center md:self-end">
+                v{Application.spec(:print_client, :vsn)}
+              </span>
+            </div>
+          </a>
+          <%= for item <- [
+            {"/", "Printing", "hero-home-solid"},
+            {"/settings/printers", "Printers", "hero-printer-solid"},
+            {"/settings/templates", "Labels", "hero-photo-solid"},
+            :spacer,
+            {"/settings", "Settings", "hero-cog-solid"},
+          ] do %>
+            <%= case item do %>
+              <% {href, label, icon} -> %>
+                <a
+                  href={href}
+                  class="w-full px-1 md:px-4 py-2 flex flex-row justify-center items-center md:justify-start gap-2 btn btn-ghost"
+                >
+                  <.icon name={icon} />
+                  <span class="hidden md:inline">{label}</span>
+                </a>
+              <% :spacer -> %>
+                <span class="grow" />
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
       </nav>
       
     <!-- Main content -->
-      <main class="[grid-area:main] p-4">
+      <main class="[grid-area:main] p-4 sm:p-8">
         <div class="container mx-auto">
           {render_slot(@inner_block)}
         </div>
@@ -89,7 +98,7 @@ defmodule PrintClientWeb.Layouts do
 
   ## Examples
 
-      <.flash_group flash={@flash} />
+  <.flash_group flash={@flash} />
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :id, :string, default: "flash-group", doc: "the optional id of flash container"

@@ -50,9 +50,13 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
           class="flex flex-col-reverse sm:flex-row gap-4 sm:gap-8 justify-center items-center"
         >
           <h2 class="text-2xl font-bold text-content-100 opacity-50 sm:text-center">
-            <p>It's pretty empty here.</p><p>Try creating a new printer.</p>
+            <p>It's pretty empty here.</p>
+            <p>Try creating a new printer.</p>
           </h2>
-          <img src={~p"/images/undraw_barbecue.svg"} class="hidden sm:block w-full max-w-40 grayscale brightness-150" />
+          <img
+            src={~p"/images/undraw_barbecue.svg"}
+            class="hidden sm:block w-full max-w-40 grayscale brightness-150"
+          />
         </div>
         <div :for={printer <- @printers} class="card w-full bg-base-100 card-sm shadow-sm">
           <div class="card-body">
@@ -113,7 +117,12 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
             type="select"
             options={Enum.map(@tabs, &{&1.title, &1.id})}
           />
-          <.input label={gettext("Name")} field={f[:name]} type="text" placeholder="Enter a printer name" />
+          <.input
+            label={gettext("Name")}
+            field={f[:name]}
+            type="text"
+            placeholder="Enter a printer name"
+          />
           <div
             :if={f[:type].value == :network}
             class="grid gap-2 grid-cols-[70%_auto] grid-rows-[auto] grid-flow-row"

@@ -69,7 +69,7 @@ config :mogrify,
     args: ["mogrify"]
   ],
   convert_command: [
-    path: "magick",
+    path: "magick"
   ],
   identify_command: [
     path: "magick",

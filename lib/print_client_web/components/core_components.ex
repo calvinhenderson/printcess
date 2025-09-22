@@ -89,12 +89,16 @@ defmodule PrintClientWeb.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method)
-  attr :variant, :string, values: ~w(primary)
+
+  attr :variant, :string,
+    values:
+      ~w(neutral primary secondary accent info success warning error outline dash soft ghost link active disabled)
+
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-    assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
+    variant = Map.get(assigns, :variant, "neutral")
+    assigns = assign(assigns, :class, "btn-#{variant}")
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""

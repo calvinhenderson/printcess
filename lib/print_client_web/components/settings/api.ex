@@ -46,8 +46,7 @@ defmodule PrintClientWeb.Settings.ApiComponent do
             placeholder="Product ID (ticketing, facilities, etc.)"
           />
           <div class="flex flex-row gap-4">
-            <button class="btn btn-success grow" type="submit">{gettext("Save")}</button>
-            <button class="btn btn-error" type="reset">{gettext("Reset")}</button>
+            <button class="btn btn-primary grow" type="submit">{gettext("Save")}</button>
           </div>
         </.form>
       </li>

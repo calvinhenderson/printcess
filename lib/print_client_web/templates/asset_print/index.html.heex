@@ -1,37 +1,41 @@
 <form
-    method="post"
-    action="/asset-spam"
-    class="flex flex-col gap-4 p-8 w-screen h-screen justify-center items-center">
+  method="post"
+  action="/asset-spam"
+  class="flex flex-col gap-4 p-8 w-screen h-screen justify-center items-center"
+>
   <h2 class="text-xl font-bold mt-2">Asset Label Printing</h2>
   <p class="text-sm mb-4">Scanner-only optimized</p>
-  <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()}>
+  <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
   <input
-      class="input input-bordered w-full"
-      type="text"
-      name="asset"
-      placeholder={ gettext "Asset number.." }
-      aria-label="Asset number"
-      autofocus
-      required
-      value="" />
+    class="input input-bordered w-full"
+    type="text"
+    name="asset"
+    placeholder={gettext("Asset number..")}
+    aria-label="Asset number"
+    autofocus
+    required
+    value=""
+  />
   <input
-      class="input input-bordered w-full"
-      type="text"
-      name="serial"
-      placeholder={ gettext "Serial number.." }
-      aria-label="Serial number"
-      required
-      value="" />
+    class="input input-bordered w-full"
+    type="text"
+    name="serial"
+    placeholder={gettext("Serial number..")}
+    aria-label="Serial number"
+    required
+    value=""
+  />
 
   <input
-      class="input input-bordered w-full text-xs"
-      type="text"
-      name="strip_leading"
-      placeholder={ gettext "Optionally, enter leading characters to strip from SN" }
-      aria-label="Strip Leading"
-      value={@strip_leading} />
+    class="input input-bordered w-full text-xs"
+    type="text"
+    name="strip_leading"
+    placeholder={gettext("Optionally, enter leading characters to strip from SN")}
+    aria-label="Strip Leading"
+    value={@strip_leading}
+  />
 
   <button class="btn btn-bordered w-full" type="submit">
-    <%= gettext "Submit" %>
+    {gettext("Submit")}
   </button>
 </form>

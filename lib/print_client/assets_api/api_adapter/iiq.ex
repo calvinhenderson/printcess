@@ -47,14 +47,14 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
     req =
       %{
         "Query" => query,
-        "Facets" => 4,
         "Limit" => @max_results
       }
       |> Jason.encode!()
 
     with {:ok, %Finch.Response{} = resp} <-
-           post(config, "/api/v1.0/search", req),
+           post(config, "/api/v1.0/search?$s=#{@max_results}&$o=FirstName&$d=ASC", req),
          {:ok, results} <- parse_api_resp(resp) do
+      dbg(resp)
       {:ok, results}
     else
       {:error, reason} ->

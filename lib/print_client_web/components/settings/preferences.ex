@@ -32,7 +32,7 @@ defmodule PrintClientWeb.Settings.UserPreferencesComponent do
         >
           <.input label={gettext("Theme")} field={f[:theme]} type="select" options={@options} />
           <div class="flex flex-row justify-baseline gap-4">
-            <button class="btn btn-success grow" onclick="window.location.reload()">Save</button>
+            <button class="btn btn-primary grow" onclick="window.location.reload()">Save</button>
           </div>
         </.form>
       </li>

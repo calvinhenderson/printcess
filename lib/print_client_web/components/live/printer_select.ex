@@ -83,7 +83,7 @@ defmodule PrintClientWeb.PrinterSelectComponent do
   end
 
   defp assign_printers(socket) do
-    printers = Discovery.discover_all_printers()
+    printers = Discovery.load_saved_printers()
 
     printer_options =
       printers

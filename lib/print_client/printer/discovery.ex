@@ -79,8 +79,8 @@ defmodule PrintClient.Printer.Discovery do
       maybe_load_mock_printer(),
       load_saved_printers(),
       discover_serial_printers(),
-      discover_usb_printers(),
-      #discover_network_printers()
+      discover_usb_printers()
+      # discover_network_printers()
     ]
     |> Enum.concat()
   end
@@ -92,11 +92,12 @@ defmodule PrintClient.Printer.Discovery do
   def load_saved_printers do
     Settings.all_printers()
     |> Enum.map(fn printer ->
-      {adapter, config} = case printer.type do
-        :network -> {NetworkPrinter, %{ip: printer.hostname, port: printer.port}}
-        :usb -> {UsbPrinter, %{vendor: printer.vendor_id, product: printer.product_id}}
-        :serial -> {SerialPrinter, %{path: printer.serial_port, speed: @default_baud_rate}}
-      end
+      {adapter, config} =
+        case printer.type do
+          :network -> {NetworkPrinter, %{ip: printer.hostname, port: printer.port}}
+          :usb -> {UsbPrinter, %{vendor: printer.vendor_id, product: printer.product_id}}
+          :serial -> {SerialPrinter, %{path: printer.serial_port, speed: @default_baud_rate}}
+        end
 
       %Printer{
         printer_id: format_id_string(printer.name |> String.downcase()),

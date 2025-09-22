@@ -187,9 +187,11 @@ defmodule PrintClient.Printer do
     Logger.debug("Printer #{state.printer_id}: processing queue.. #{inspect(state)}")
     new_state = process_next_job(state)
 
-    if :queue.len(new_state.job_queue) == 0 and state.stop,
-      do: {:stop, :shutdown, new_state},
-      else: {:noreply, new_state}
+    cond do
+      :queue.len(new_state.job_queue) == 0 and state.stop -> {:stop, :shutdown, new_state}
+      :queue.len(new_state.job_queue) == 0 -> {:noreply, do_disconnect(new_state)}
+      true -> {:noreply, new_state}
+    end
   end
 
   # We monitor the adapter's GenServer. Here we handle if it goes down.
@@ -297,7 +299,7 @@ defmodule PrintClient.Printer do
         "Printer #{state.printer_id}: Max connection retries reached. Will not retry automatically for now."
       )
 
-      GenServer.stop(state.printer_id, :connection_failed)
+      # GenServer.stop(state.printer_id, :connection_failed)
 
       state
     end

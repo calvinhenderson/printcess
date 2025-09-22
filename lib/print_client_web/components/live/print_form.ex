@@ -28,6 +28,7 @@ defmodule PrintClientWeb.PrintForm do
      |> Map.merge(assigns)
      |> Map.merge(socket.assigns)
      |> then(&Map.put(socket, :assigns, &1))
+     |> assign(fields: assigns.template.form_fields)
      |> assign_changes()}
   end
 

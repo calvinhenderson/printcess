@@ -18,10 +18,15 @@ defmodule PrintClient.Label.Template do
         ]
 
   @doc """
+  Returns the internal template directory.
+  """
+  def internal_templates_path, do: Application.app_dir(:print_client, "priv/static/templates/")
+
+  @doc """
   Loads the embedded label templates.
   """
   def load_templates,
-    do: load_templates(Application.app_dir(:print_client, "priv/static/templates/"))
+    do: internal_templates_path() |> load_templates
 
   @doc """
   Loads label templates from the specified directory.
@@ -88,20 +93,25 @@ defmodule PrintClient.Label.Template do
 
   defp dynamic_fields(template) do
     # TODO: Figure out a way to limit which variables can be used.
-    Regex.scan(~r/{{\s*(?<variable>[^}\s]+)(?<type> \[[^}\s]+\])?\s*}}/, template)
-    |> Enum.reduce(%{}, fn match, acc ->
-      case match do
-        [match, variable, params] ->
-          var_atom = String.to_atom(variable)
-          Map.put(acc, match, {var_atom, params})
+    fields =
+      Regex.scan(~r/{{\s*(?<variable>[^}\s]+)(?<type> \[[^}\s]+\])?\s*}}/, template)
+      |> Enum.reduce(%{}, fn match, acc ->
+        case match do
+          [match, variable, params] ->
+            var_atom = String.to_atom(variable)
+            Map.put(acc, match, {var_atom, params})
 
-        [match, variable] ->
-          var_atom = String.to_atom(variable)
-          Map.put(acc, match, {var_atom, nil})
+          [match, variable] ->
+            var_atom = String.to_atom(variable)
+            Map.put(acc, match, {var_atom, nil})
 
-        _ ->
-          nil
-      end
-    end)
+          _ ->
+            nil
+        end
+      end)
+
+    Logger.info(inspect(fields))
+
+    fields
   end
 end
