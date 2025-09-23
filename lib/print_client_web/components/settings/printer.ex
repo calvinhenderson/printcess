@@ -35,6 +35,7 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
       |> assign_printers(nil)
       |> assign(encodings: Label.list_encodings())
       |> assign_serial_ports()
+      |> assign_usb_devices()
 
     {:ok, socket}
   end
@@ -153,12 +154,31 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
               </label>
             </fieldset>
           </div>
-          <div
-            :if={f[:type].value == :usb}
-            class="grid gap-2 grid-cols-[1fr_1fr] grid-rows-[auto] grid-flow-row"
-          >
-            <.input label={gettext("Vendor ID")} field={f[:vendor_id]} type="text" />
-            <.input label={gettext("Product ID")} field={f[:product_id]} type="text" />
+          <div :if={f[:type].value == :usb}>
+            <div class="grid gap-2 grid-cols-[1fr_auto] grid-rows-[auto] grid-flow-row items-end">
+              <fieldset class="fieldset mb-2">
+                <label>
+                  <span class="label mb-1">Select a device</span>
+                  <select name="usb_device" id="usb-device-list" class="w-full select">
+                    <option></option>
+                    <option :for={dev <- @usb_devices} value={dev.name}>
+                      {dev.name}
+                    </option>
+                  </select>
+                </label>
+              </fieldset>
+              <fieldset class="fieldset mb-2 w-min">
+                <label>
+                  <.button type="button" phx-click="refresh-usb" phx-target={@myself}>
+                    <.icon name="hero-arrow-path" />
+                  </.button>
+                </label>
+              </fieldset>
+            </div>
+            <div class="grid gap-2 grid-cols-[1fr_1fr] grid-rows-[auto] grid-flow-row">
+              <.input label={gettext("Vendor ID")} field={f[:vendor_id]} type="text" />
+              <.input label={gettext("Product ID")} field={f[:product_id]} type="text" />
+            </div>
           </div>
           <.input label={gettext("Encoding")} field={f[:encoding]} type="select" options={@encodings} />
           <div class="flex flex-row justify-baseline gap-4">
@@ -173,6 +193,38 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   # --- FORM EVENTS ---
 
   @impl true
+  def handle_event(
+        "validate",
+        %{"_target" => ["usb_device"], "printer" => params, "usb_device" => usb_device} = form_state,
+        socket
+  ) do
+    dev = Enum.find(socket.assigns.usb_devices, &(&1.name == usb_device))
+
+    if is_nil(dev) do
+      handle_event("validate", %{"printer" => params}, socket)
+    else
+      changeset =
+        socket.assigns.printer
+        |> Settings.change_printer(params)
+        |> Ecto.Changeset.put_change(:name, dev.name)
+        |> Ecto.Changeset.put_change(:vendor_id, dev.adapter_config.vendor)
+        |> Ecto.Changeset.put_change(:product_id, dev.adapter_config.product)
+
+      changeset
+      |> Ecto.Changeset.apply_action(:validate)
+      |> case do
+        {:ok, _printer} ->
+          socket
+          |> assign_printers(socket.assigns.printer, changeset)
+
+        {:error, changeset} ->
+          socket
+          |> assign_printers(socket.assigns.printer, changeset)
+      end
+      |> then(&{:noreply, &1})
+    end
+  end
+
   def handle_event("validate", %{"printer" => params}, socket) do
     socket.assigns.printer
     |> Settings.change_printer(params)
@@ -231,6 +283,12 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   end
 
   def handle_event("refresh-serial", _params, socket), do: {:noreply, assign_serial_ports(socket)}
+  def handle_event("refresh-usb", _params, socket), do: {:noreply, assign_usb_devices(socket)}
+
+  defp assign_usb_devices(socket) do
+    socket
+    |> assign(usb_devices: Discovery.discover_usb_printers())
+  end
 
   defp assign_serial_ports(socket) do
     serial_ports =

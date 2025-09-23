@@ -97,7 +97,7 @@ defmodule PrintClientWeb.TemplatesLive do
       %{path: Label.Template.internal_templates_path()},
       %{path: "./Templates"},
       %{path: "~/Templates"},
-      %{path: "~/Documents/Templates"},
+      %{path: "~/Documents/Templates"}
     ]
 
     socket
