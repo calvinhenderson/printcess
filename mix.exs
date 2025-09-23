@@ -78,9 +78,6 @@ defmodule PrintClient.MixProject do
       {:mogrify, "~> 0.9.3"},
       # {:image, "~> 0.37"},
       {:qr_code, "~> 3.2.0"},
-
-      # Clustering
-      {:libcluster, "~> 3.5"}
     ]
   end
 

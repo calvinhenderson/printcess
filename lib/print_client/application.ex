@@ -24,12 +24,6 @@ defmodule PrintClient.Application do
       database: Path.join(config_dir(), "/settings.db")
     )
 
-    if node() != :nonode@nohost do
-      app_id()
-      |> String.to_atom()
-      |> Node.set_cookie()
-    end
-
     children = [
       # Start the Telemetry supervisor
       PrintClientWeb.Telemetry,
@@ -39,9 +33,6 @@ defmodule PrintClient.Application do
 
       # Start the printer registry
       {Registry, name: PrintClient.Printer.Registry, keys: :unique},
-
-      # Start the automatic clustering supervisor
-      {Cluster.Supervisor, [topologies(), [name: PrintClient.ClusterSupervisor]]},
 
       # Start the Unix Socket API
       # {PrintClient.UnixSocketApi, name: UnixSocket},
@@ -78,21 +69,4 @@ defmodule PrintClient.Application do
     PrintClientWeb.Endpoint.config_change(changed, removed)
     :ok
   end
-
-  defp topologies,
-    do: [
-      background_job: [
-        strategy: Cluster.Strategy.Gossip,
-        config: [
-          if_addr: "0.0.0.0",
-          port: 45892,
-          multicast_ttl: 3,
-          secret: :crypto.hash(:sha, to_charlist(app_id()))
-        ]
-      ]
-    ]
-
-  defp app_id,
-    do:
-      "print_client_#{String.replace(to_string(Application.spec(:print_client, :vsn)), ".", "_")}"
 end

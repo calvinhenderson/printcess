@@ -63,9 +63,6 @@ config :print_client, PrintClientWeb.Endpoint,
     ]
   ]
 
-# Enable debugging for libcluster
-config :libcluster, debug: true
-
 # Enable dev routes for dashboard and mailbox
 config :print_client, dev_routes: true
 
