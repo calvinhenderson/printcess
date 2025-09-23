@@ -125,7 +125,7 @@ defmodule PrintClient.Printer do
     }
 
     Logger.info("Printer #{printer_id} initialized with adapter: #{inspect(adapter_module)}.")
-    Process.send_after(self(), :connect_retry, 0)
+    # Process.send_after(self(), :connect_retry, 0)
 
     {:ok, state}
   end
@@ -307,7 +307,7 @@ defmodule PrintClient.Printer do
 
   defp process_next_job(%{connected?: false} = state) do
     # Cannot process if not connected
-    state
+    attempt_connection(state)
   end
 
   defp process_next_job(state) do

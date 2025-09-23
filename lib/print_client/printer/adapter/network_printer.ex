@@ -76,6 +76,21 @@ defmodule PrintClient.Printer.Adapter.NetworkPrinter do
     :connected
   end
 
+  @impl Printer.Adapter
+  def online?(%__MODULE__{socket: socket}) when not is_nil(socket), do: true
+
+  def online?(adapter_state) do
+    connect(adapter_state)
+    |> case do
+      {:ok, %{socket: socket} = connected_state} when not is_nil(socket) ->
+        disconnect(connected_state)
+        true
+
+      _ ->
+        false
+    end
+  end
+
   defmodule Schema do
     use Ecto.Schema
 

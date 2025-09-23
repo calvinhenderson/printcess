@@ -7,11 +7,13 @@ defmodule PrintClient.Printer.Adapter.MockPrinter do
 
   # Default settings, can be overridden
   defstruct name: nil,
-            connected?: false
+            connected?: false,
+            online?: false
 
   @type t :: %__MODULE__{
           name: String.t() | nil,
-          connected?: boolean()
+          connected?: boolean(),
+          online?: boolean()
         }
 
   @impl Printer.Adapter
@@ -50,4 +52,7 @@ defmodule PrintClient.Printer.Adapter.MockPrinter do
   end
 
   def status(%__MODULE__{connected?: _}), do: :connected
+
+  @impl Printer.Adapter
+  def online?(%__MODULE__{online?: state}), do: state
 end

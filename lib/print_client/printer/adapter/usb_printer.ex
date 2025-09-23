@@ -112,6 +112,25 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
     end
   end
 
+  def online?(adapter_state) do
+    status(adapter_state)
+    |> case do
+      :connected ->
+        true
+
+      :disconnected ->
+        connect(adapter_state)
+        |> case do
+          {:ok, connected_state} ->
+            disconnect(connected_state)
+            true
+
+          _ ->
+            false
+        end
+    end
+  end
+
   defp merge_device_descriptors(devices) do
     Enum.reduce(devices, %{}, fn dev, acc ->
       case :usb.get_device_descriptor(dev) do

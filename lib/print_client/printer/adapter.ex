@@ -14,4 +14,8 @@ defprotocol PrintClient.Printer.Adapter do
   @doc "Checks the printer status."
   @spec status(struct()) :: :connected | :disconnected
   def status(config)
+
+  @doc "Returns whether the printer is online."
+  @spec online?(struct()) :: boolean()
+  def online?(config)
 end

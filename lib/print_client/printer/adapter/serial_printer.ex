@@ -115,4 +115,24 @@ defmodule PrintClient.Printer.Adapter.SerialPrinter do
       :disconnected
     end
   end
+
+  @impl Printer.Adapter
+  def online?(adapter_state) do
+    status(adapter_state)
+    |> case do
+      :connected ->
+        true
+
+      :disconnected ->
+        connect(adapter_state)
+        |> case do
+          {:ok, connected_state} ->
+            disconnect(connected_state)
+            true
+
+          _ ->
+            false
+        end
+    end
+  end
 end
