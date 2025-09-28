@@ -1,4 +1,4 @@
-<Layouts.app flash={@flash}>
+<Layouts.app flash={@flash} current_scope={@current_scope}>
   <:actions>
     <.live_component id="printers" module={PrintClientWeb.PrinterSelectComponent} />
     <.live_component id="templates" module={PrintClientWeb.TemplateSelectComponent} />

@@ -33,36 +33,24 @@ defmodule PrintClientWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <div class="grid [grid-template-areas:'aside_header''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen bg-base-200">
-      
-    <!-- Header -->
-      <header class="[grid-area:header] px-4 sm:px-6 lg:px-8 w-full flex flex-row flex-wrap justify-between items-center min-h-12 bg-base-300">
-        <a onclick="maybeNavigateBack()" href="#" class="btn btn-ghost">
-          <.icon name="hero-arrow-left-solid" class="w-3 h-3" /> Back
-        </a>
-        <span class="grow" />
-        <div>
-          {render_slot(@actions)}
-        </div>
-      </header>
+    <div class="grid [grid-template-areas:'aside_main''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen max-w-screen overflow-x-hidden bg-base-200">
       
     <!-- Sidebar navigation -->
-      <nav class="[grid-area:aside] h-full bg-primary text-primary-content w-16 md:w-36">
-        <div class="fixed w-16 md:w-36 p-1 h-screen flex flex-col gap-0 justify-start items-center overflow-x-hidden overflow-y-auto">
-          <a href="/">
-            <div class="w-full bg-gray-900/20 flex flex-col justify-center gap-1 px-4 py-2">
-              <h2 class="w-full text-lg font-bold flex items-center justify-center md:justify-between">
-                <.icon name="hero-printer-solid" /><span class="hidden md:inline">Printcess</span>
-              </h2>
-              <span class="badge badge-xs self-center md:self-end">
-                v{Application.spec(:print_client, :vsn)}
-              </span>
-            </div>
-          </a>
+<nav class="[grid-area:aside] h-full bg-base-300 text-base-content w-16 md:w-36">
+        <div class="fixed w-16 md:w-36 h-screen flex flex-col gap-0 justify-start items-center overflow-x-hidden overflow-y-auto">
+          <div class="w-full bg-gray-900/20 flex flex-col justify-center gap-1 px-4 py-2">
+            <h2 class="w-full text-lg font-bold flex items-center justify-center md:justify-between">
+              <.icon name="hero-printer-solid" /><span class="hidden md:inline">Printcess</span>
+            </h2>
+            <span class="badge badge-xs self-center md:self-end">
+              v{Application.spec(:print_client, :vsn)}
+            </span>
+          </div>
           <%= for item <- [
-            {"/", "Printing", "hero-home-solid"},
-            {"/settings/printers", "Printers", "hero-printer-solid"},
-            {"/settings/templates", "Labels", "hero-photo-solid"},
+            {"/", "Dashboard", "hero-home-solid"},
+            {"/views", "Views", "hero-rectangle-stack-solid"},
+            {"/printers", "Printers", "hero-printer-solid"},
+            {"/templates", "Labels", "hero-photo-solid"},
             :spacer,
             {"/settings", "Settings", "hero-cog-solid"},
           ] do %>
@@ -70,8 +58,12 @@ defmodule PrintClientWeb.Layouts do
               <% {href, label, icon} -> %>
                 <a
                   href={href}
-                  class="w-full px-1 md:px-4 py-2 flex flex-row justify-center items-center md:justify-start gap-2 btn btn-ghost"
-                >
+                  class={[
+                    "w-full px-1 md:px-4 py-2 btn btn-ghost rounded-none transition duration-150",
+                    "flex flex-row justify-center items-center md:justify-start gap-2",
+                    "hover:bg-primary hover:text-primary-content",
+                    link_active?(@current_scope, href) && "bg-primary text-primary-content"
+                  ]} disabled={link_active?(@current_scope, href)}>
                   <.icon name={icon} />
                   <span class="hidden md:inline">{label}</span>
                 </a>
@@ -84,13 +76,21 @@ defmodule PrintClientWeb.Layouts do
       
     <!-- Main content -->
       <main class="[grid-area:main] p-4 sm:p-8">
-        <div class="container mx-auto">
+        <div class="container mx-auto max-w-4xl">
           {render_slot(@inner_block)}
         </div>
       </main>
     </div>
     <.flash_group flash={@flash} />
     """
+  end
+
+  defp link_active?(%{path: path}, href) do
+    cond do
+      href == "/" and path == "/" -> true
+      href != "/" and String.starts_with?(path, href) -> true
+      true -> false
+    end
   end
 
   @doc """

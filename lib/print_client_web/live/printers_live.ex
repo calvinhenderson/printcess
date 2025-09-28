@@ -8,10 +8,15 @@ defmodule PrintClientWeb.PrintersLive do
     {:ok, socket}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.live_component id="printer-settings" module={PrintClientWeb.Settings.PrinterComponent} />
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <.live_component
+        id="printer-settings"
+        module={PrintClientWeb.Settings.PrinterComponent}
+        printer={@printer}
+      />
     </Layouts.app>
     """
   end

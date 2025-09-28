@@ -1,6 +1,8 @@
 defmodule PrintClientWeb.Router do
   use PrintClientWeb, :router
 
+  import PrintClientWeb.Plugs
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -9,6 +11,7 @@ defmodule PrintClientWeb.Router do
     # plug Desktop.Auth
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :assign_current_scope
   end
 
   pipeline :api do
@@ -18,15 +21,28 @@ defmodule PrintClientWeb.Router do
   scope "/", PrintClientWeb do
     pipe_through :browser
 
-    live_session :live do
-      live "/settings/printers", PrintersLive, :show
-      live "/settings/printers/:id", PrintersLive, :edit
-      live "/settings/templates", TemplatesLive, :show
-      live "/settings/templates/new", TemplatesLive, :new
-      live "/settings/templates/:id", TemplatesLive, :edit
+    live_session :live, on_mount: [{PrintClientWeb.LiveHooks, :current_scope}] do
+      # Printing Views
+      live "/views", ViewLive.Index, :index
+      live "/views/new", ViewLive.Form, :new
+      live "/views/:id", ViewLive.Show, :show
+      live "/views/:id/edit", ViewLive.Form, :edit
+
+      # Print Queues
+      live "/queues", JobQueuesLive.Index, :index
+      live "/queues/:printer", JobQueuesLive.Show, :show
+
+      # Settings
+      live "/printers", PrintersLive, :show
+      live "/printers/:id", PrintersLive, :edit
+      live "/templates", TemplatesLive, :show
+      live "/templates/new", TemplatesLive, :new
+      live "/templates/:id", TemplatesLive, :edit
       live "/settings/api", SettingsLive, :api
       live "/settings", SettingsLive, :preferences
-      live "/", PrintLive
+
+      # Dashboard
+      live "/", DashboardLive
     end
   end
 

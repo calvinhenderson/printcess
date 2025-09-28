@@ -26,7 +26,7 @@ defmodule PrintClientWeb.SettingsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="space-y-4">
         <%= for %{id: id, title: title, icon: icon, module: mod} <- @sections do %>
           <div class="border-2 rounded-lg border-base-300 p-6">
