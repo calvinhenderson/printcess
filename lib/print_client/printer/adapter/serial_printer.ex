@@ -117,7 +117,7 @@ defmodule PrintClient.Printer.Adapter.SerialPrinter do
   end
 
   @impl Printer.Adapter
-  def online?(adapter_state) do
+  def online?(%__MODULE__{} = adapter_state) do
     status(adapter_state)
     |> case do
       :connected ->

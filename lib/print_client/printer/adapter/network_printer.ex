@@ -79,7 +79,7 @@ defmodule PrintClient.Printer.Adapter.NetworkPrinter do
   @impl Printer.Adapter
   def online?(%__MODULE__{socket: socket}) when not is_nil(socket), do: true
 
-  def online?(adapter_state) do
+  def online?(%__MODULE__{} = adapter_state) do
     connect(adapter_state)
     |> case do
       {:ok, %{socket: socket} = connected_state} when not is_nil(socket) ->

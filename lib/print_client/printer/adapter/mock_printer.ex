@@ -54,5 +54,5 @@ defmodule PrintClient.Printer.Adapter.MockPrinter do
   def status(%__MODULE__{connected?: _}), do: :connected
 
   @impl Printer.Adapter
-  def online?(%__MODULE__{online?: state}), do: state
+  def online?(%__MODULE__{online?: state}), do: state.online?
 end

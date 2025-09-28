@@ -67,7 +67,7 @@ defmodule PrintClient.Printer.Discovery do
   """
   @spec subscribe :: :ok
   def subscribe do
-    Phoenix.PubSub.subscribe(@pubsub, @topic)
+    PrintClient.PubSub.subscribe(@pubsub, @topic)
   end
 
   @doc """
@@ -91,23 +91,35 @@ defmodule PrintClient.Printer.Discovery do
   @spec load_saved_printers() :: [Printer.t()] | []
   def load_saved_printers do
     Settings.all_printers()
-    |> Enum.map(fn printer ->
-      {adapter, config} =
-        case printer.type do
-          :network -> {NetworkPrinter, %{ip: printer.hostname, port: printer.port}}
-          :usb -> {UsbPrinter, %{vendor: printer.vendor_id, product: printer.product_id}}
-          :serial -> {SerialPrinter, %{path: printer.serial_port, speed: @default_baud_rate}}
-        end
+    |> Enum.map(&load_saved_printer/1)
+  end
 
-      %Printer{
-        printer_id: format_id_string(printer.name |> String.downcase()),
-        encoding: printer.encoding,
-        name: printer.name,
-        type: printer.type,
-        adapter_module: adapter,
-        adapter_config: config
-      }
-    end)
+  @doc """
+  Loads a single printer.
+  """
+  alias PrintClient.Settings
+  @spec load_saved_printer(Settings.Printer.t()) :: Printer.t()
+  def load_saved_printer(printer) do
+    {adapter, config} =
+      case printer.type do
+        :network ->
+          {NetworkPrinter, %NetworkPrinter{ip: printer.hostname, port: printer.port}}
+
+        :usb ->
+          {UsbPrinter, %UsbPrinter{vendor: printer.vendor_id, product: printer.product_id}}
+
+        :serial ->
+          {SerialPrinter, %SerialPrinter{port: printer.serial_port, speed: @default_baud_rate}}
+      end
+
+    %Printer{
+      printer_id: id_of_printer(printer),
+      encoding: printer.encoding,
+      name: printer.name,
+      type: printer.type,
+      adapter_module: adapter,
+      adapter_config: Map.from_struct(config)
+    }
   end
 
   @doc """
@@ -138,6 +150,12 @@ defmodule PrintClient.Printer.Discovery do
     end)
   end
 
+  @spec id_of_printer(Printer.t()) :: binary()
+  def id_of_printer(printer) do
+    "#{printer.type}:#{printer.name}"
+    |> format_id_string()
+  end
+
   # --- Internal API ---
 
   defp format_discovered_usb(device) do
@@ -162,7 +180,7 @@ defmodule PrintClient.Printer.Discovery do
       name: "#{port}",
       type: :serial,
       adapter_module: SerialPrinter,
-      adapter_config: %{path: port, speed: @default_baud_rate}
+      adapter_config: %{port: port, speed: @default_baud_rate}
     }
 
   defp id_of_port(port_name) do
@@ -185,7 +203,12 @@ defmodule PrintClient.Printer.Discovery do
   end
 
   defp format_id_string(id) when not is_binary(id), do: id |> to_string |> format_id_string
-  defp format_id_string(id_string), do: String.replace(id_string, ~r"[^A-z0-9-_]", "_")
+
+  defp format_id_string(id_string) do
+    id_string
+    |> String.downcase()
+    |> String.replace(~r"[^A-z0-9-_]", "_")
+  end
 
   # Hacky way to load in USB vendor IDs
   defp load_usb_vendor_ids do
@@ -247,5 +270,5 @@ defmodule PrintClient.Printer.Discovery do
   defp difference(list_a, list_b), do: MapSet.difference(MapSet.new(list_a), MapSet.new(list_b))
 
   defp notify(state, printer),
-    do: Phoenix.PubSub.broadcast_from(@pubsub, self(), @topic, {state, printer})
+    do: PrintClient.PubSub.broadcast_from(@pubsub, self(), @topic, {state, printer})
 end

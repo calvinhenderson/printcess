@@ -2,10 +2,10 @@ defmodule PrintClient.Printer.Queue do
   use GenServer
 
   alias PrintClient.Printer
-  alias Phoenix.PubSub
 
   require Logger
 
+  @pubsub PrintClient.PubSub
   @topic "job-queue"
 
   def start_link(opts) do
@@ -23,7 +23,7 @@ defmodule PrintClient.Printer.Queue do
   @doc """
   Subscribes to the queue messages.
   """
-  def subscribe(), do: Phoenix.PubSub.subscribe(PrintClient.PubSub, @topic)
+  def subscribe(), do: PrintClient.PubSub.subscribe(@pubsub, @topic)
 
   @doc """
   Adds a job to the job queue.
@@ -172,7 +172,7 @@ defmodule PrintClient.Printer.Queue do
   end
 
   defp broadcast_job(action, job),
-    do: PubSub.broadcast(PrintClient.PubSub, "job-queue", {action, job})
+    do: PrintClient.PubSub.broadcast(@pubsub, "job-queue", {action, job})
 
   defp schedule_work do
     Process.send_after(self(), :work, :timer.seconds(1))
