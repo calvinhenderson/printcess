@@ -4,6 +4,7 @@ defmodule PrintClient.Label.Template do
   @type template_field :: %{binary() => {atom(), binary() | nil}}
 
   defstruct id: "",
+            path: "",
             name: "",
             template: "",
             fields: [],
@@ -11,6 +12,7 @@ defmodule PrintClient.Label.Template do
 
   @type t :: [
           id: binary(),
+          path: binary(),
           name: binary(),
           template: binary(),
           fields: [template_field],
@@ -23,45 +25,66 @@ defmodule PrintClient.Label.Template do
   def internal_templates_path, do: Application.app_dir(:print_client, "priv/static/templates/")
 
   @doc """
+  Lists template paths.
+  """
+  def list_templates, do: [internal_templates_path()] |> list_templates
+
+  def list_templates(templates_dirs) do
+    Enum.flat_map(templates_dirs, fn dir ->
+      File.ls(dir)
+      |> case do
+        {:ok, files} ->
+          files
+
+        {:error, reason} ->
+          Logger.error(
+            "Label.Template: Failed to read templates from directory #{dir} with reason #{inspect(reason)}"
+          )
+
+          []
+      end
+      |> Enum.filter(&String.ends_with?(&1, ".svg"))
+      |> Enum.map(fn path ->
+        name =
+          path
+          |> Path.basename(".svg")
+          |> String.trim()
+          |> String.capitalize()
+
+        full_path = Path.join(dir, path)
+
+        {full_path, name}
+      end)
+    end)
+  end
+
+  @doc """
   Loads the embedded label templates.
   """
   def load_templates,
-    do: internal_templates_path() |> load_templates
+    do: list_templates() |> load_templates
 
   @doc """
   Loads label templates from the specified directory.
   """
-  def load_templates(template_dir) do
-    File.ls(template_dir)
-    |> case do
-      {:ok, files} ->
-        files
-
-      {:error, reason} ->
-        Logger.error(
-          "Label.Template: Failed to read templates from directory #{template_dir} with reason #{inspect(reason)}"
-        )
-
-        []
-    end
-    |> Enum.filter(&String.ends_with?(&1, ".svg"))
-    |> Enum.reduce([], fn path, acc ->
-      maybe_load_template(acc, template_dir, path)
+  def load_templates(templates) do
+    templates
+    |> Enum.reduce([], fn template, acc ->
+      maybe_load_template(acc, template)
     end)
   end
 
-  defp maybe_load_template(templates, template_dir, template) do
-    template_dir
-    |> Path.join(template)
+  defp maybe_load_template(templates, {template_path, template_name}) do
+    template_path
     |> File.read()
     |> case do
       {:ok, binary} ->
-        Logger.debug("Label.Template: Loaded template #{template} in #{template_dir}")
+        Logger.debug("Label.Template: Loaded template #{template_path}")
 
         formatted_name =
-          template
+          template_path
+          |> Path.basename(".svg")
           |> String.trim()
-          |> then(&Regex.replace(~r/\.\w+$/, &1, ""))
 
         template_fields = dynamic_fields(binary)
 
@@ -73,8 +96,9 @@ defmodule PrintClient.Label.Template do
 
         [
           %__MODULE__{
-            id: Regex.replace(~r/[^A-z0-9_-]/, formatted_name, "_"),
-            name: String.capitalize(formatted_name),
+            id: Regex.replace(~r/[^A-z0-9_-]/, String.downcase(template_name), "_"),
+            path: template_path,
+            name: template_name,
             template: binary,
             fields: template_fields,
             form_fields: form_fields
@@ -84,7 +108,7 @@ defmodule PrintClient.Label.Template do
 
       {:error, reason} ->
         Logger.error(
-          "Label.Template: Failed to load template #{template} with reason: #{inspect(reason)}."
+          "Label.Template: Failed to load #{template_path} with reason: #{inspect(reason)}."
         )
 
         templates
