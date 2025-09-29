@@ -13,6 +13,7 @@ defmodule PrintClient.Settings do
   Retreives a single printer from the database.
   """
   def get_printer(printer_id), do: Repo.get(Printer, printer_id)
+  def get_printer!(printer_id), do: Repo.get!(Printer, printer_id)
 
   @doc """
   Builds a printer changeset for making changes.
