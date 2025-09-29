@@ -4,8 +4,8 @@ defmodule PrintClientWeb.PrintersLive do
   alias PrintClient.Settings
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket}
+  def mount(params, _session, socket) do
+    {:ok, socket |> assign_printer(get_in(params, ["id"]))}
   end
 
   @impl true
@@ -21,13 +21,11 @@ defmodule PrintClientWeb.PrintersLive do
     """
   end
 
-  def assign_printer(socket, :edit, printer_id \\ nil) do
-    printer =
-      case printer_id do
-        nil -> %Settings.Printer{}
-      end
+  defp assign_printer(socket, printer_id)
 
-    socket
-    |> assign(printer: printer)
-  end
+  defp assign_printer(socket, nil),
+    do: assign(socket, printer: %Settings.Printer{})
+
+  defp assign_printer(socket, printer_id),
+    do: assign(socket, printer: Settings.get_printer!(printer_id))
 end
