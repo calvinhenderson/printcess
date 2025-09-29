@@ -78,11 +78,11 @@ defmodule PrintClientWeb.PrintLive do
     {:noreply, socket}
   end
 
-  def handle_info({:added, %Printer{} = _printer}, socket) do
+  def handle_info({_printer_id, :added, %Printer{} = _printer}, socket) do
     {:noreply, socket}
   end
 
-  def handle_info({:removed, %Printer{} = printer}, socket) do
+  def handle_info({_printer_id, :removed, %Printer{} = printer}, socket) do
     socket =
       socket
       |> assign(
