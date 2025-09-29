@@ -6,6 +6,7 @@ defmodule PrintClientWeb.PrintForm do
   alias PrintClient.Label.Forms.LabelForm
   alias PrintClient.AssetsApi
   alias PrintClientWeb.ApiSearchComponent
+  alias PrintClient.Printer
 
   require Logger
 
@@ -28,7 +29,7 @@ defmodule PrintClientWeb.PrintForm do
      |> Map.merge(assigns)
      |> Map.merge(socket.assigns)
      |> then(&Map.put(socket, :assigns, &1))
-     |> assign(fields: assigns.template.form_fields)
+     |> assign_template()
      |> assign_changes()}
   end
 
@@ -47,27 +48,28 @@ defmodule PrintClientWeb.PrintForm do
         phx-submit="print"
         phx-change="validate"
         phx-reset="reset"
-        class="flex flex-col gap-3"
         target="_blank"
         phx-hook="AutoFocus"
       >
-        <ApiSearchComponent.search
-          :for={field <- @fields}
-          id={f[field].id}
-          field={f[field]}
-          debounce="300"
-          target={@myself}
-          results={if @query_field == field, do: @results, else: nil}
-        />
+        <div class="grid sm:grid-cols-2 gap-x-4 lg:gap-x-8">
+          <ApiSearchComponent.search
+            :for={field <- @fields}
+            id={f[field].id}
+            field={f[field]}
+            debounce="300"
+            target={@myself}
+            results={if @query_field == field, do: @results, else: nil}
+          />
 
-        <.input field={f[:copies]} phx-debounce="300" type="number" label="Copies" placeholder="1" />
+          <.input field={f[:copies]} phx-debounce="300" type="number" label="Copies" placeholder="1" />
+        </div>
 
-        <div class="flex flex-row gap-2">
-          <.button type="reset" class="h-12">
+        <div class="grid grid-cols-[auto_1fr] gap-4">
+          <.button type="reset" variant="error" class="h-12">
             <.icon name="hero-arrow-path-rounded-square" />
           </.button>
-          <.button type="submit" class="flex-grow h-12" phx-disable-with="Submitting..">
-            Submit
+          <.button type="submit" variant="primary" class="h-12" phx-disable-with="Printing..">
+            Print
           </.button>
         </div>
       </.form>
@@ -83,7 +85,7 @@ defmodule PrintClientWeb.PrintForm do
 
     with changeset <- LabelForm.changeset(fields, params),
          {:ok, validated} <- Ecto.Changeset.apply_action(changeset, :validate) do
-      send(self(), {:print, validated})
+      print(socket.assigns.printers, socket.assigns.template, validated)
 
       persisted =
         params
@@ -177,6 +179,18 @@ defmodule PrintClientWeb.PrintForm do
 
   # --- Internal API ---
 
+  defp print(printers, template, params) do
+    printers
+    |> Enum.map(fn printer ->
+      Printer.add_job(printer, template, params)
+    end)
+  end
+
+  defp assign_template(%{assigns: %{template: template}} = socket) do
+    socket
+    |> assign(fields: template.form_fields)
+  end
+
   defp assign_changes(socket, changes \\ %{})
 
   defp assign_changes(%{assigns: %{fields: nil}} = socket, _changes),
@@ -192,10 +206,13 @@ defmodule PrintClientWeb.PrintForm do
     |> case do
       {:ok, applied} ->
         send(self(), {:changed, applied})
-
         assign(socket, :changeset, changeset)
 
       {:error, changeset} ->
+        applied =
+          Enum.reduce(changes, %{}, fn {k, v}, acc -> Map.put(acc, String.to_atom(k), v) end)
+
+        send(self(), {:changed, applied})
         assign(socket, :changeset, %{changeset | action: :validate})
     end
     |> assign_query_results()

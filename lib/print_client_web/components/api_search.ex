@@ -15,9 +15,9 @@ defmodule PrintClientWeb.ApiSearchComponent do
   def search(assigns) do
     ~H"""
     <div id={@field.id <> "-container"} class="contents">
-      <.dropdown results={@results} results-id={@field.id <> "-results"}>
+      <.dropdown results={@results} results-id={@field.id <> "-results"} class="fieldset mb-2">
         <:label>
-          <span>{normalized_field_name(@field)}</span>
+          <span class="label">{normalized_field_name(@field)}</span>
           <.input
             field={@field}
             type="text"

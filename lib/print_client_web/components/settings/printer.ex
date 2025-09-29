@@ -41,63 +41,14 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   end
 
   @impl true
+  def update(params, socket) do
+    {:ok, socket |> assign_printers(params[:printer])}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <ul class="list space-y-8">
-      <li class="list-col space-y-4">
-        <.header>Printers</.header>
-        <div
-          :if={@printers == []}
-          class="flex flex-col-reverse sm:flex-row gap-4 sm:gap-8 justify-center items-center"
-        >
-          <h2 class="text-2xl font-bold text-content-100 opacity-50 sm:text-center">
-            <p>It's pretty empty here.</p>
-            <p>Try creating a new printer.</p>
-          </h2>
-          <img
-            src={~p"/images/undraw_barbecue.svg"}
-            class="hidden sm:block w-full max-w-40 grayscale brightness-150"
-          />
-        </div>
-        <div :for={printer <- @printers} class="card w-full bg-base-100 card-sm shadow-sm">
-          <div class="card-body">
-            <div class="card-title">
-              <h2>{printer.name}</h2>
-              <span :if={printer.type == :network} class="ml-auto badge badge-primary">
-                {gettext("Network")}
-              </span>
-              <span :if={printer.type == :serial} class="ml-auto badge badge-secondary">
-                {gettext("Serial")}
-              </span>
-              <span :if={printer.type == :usb} class="ml-auto badge badge-accent">
-                {gettext("USB")}
-              </span>
-            </div>
-            <div :if={printer.type == :network}>
-              <p>{printer.hostname}:{printer.port}</p>
-            </div>
-            <div :if={printer.type == :serial}>
-              <p>Port: {printer.serial_port}</p>
-            </div>
-            <div :if={printer.type == :usb}>
-              <p>Device: {printer.vendor_id}:{printer.product_id}</p>
-            </div>
-            <div class="card-actions ml-auto">
-              <.button phx-click="select" phx-value-id={printer.id} phx-target={@myself}>
-                <.icon name="hero-pencil-square" />{gettext("Edit")}
-              </.button>
-              <.button
-                phx-click="delete"
-                phx-value-id={printer.id}
-                phx-target={@myself}
-                data-confirm={gettext("Are you sure you want to delete this printer?")}
-              >
-                <.icon name="hero-trash" />{gettext("Delete")}
-              </.button>
-            </div>
-          </div>
-        </div>
-      </li>
       <li class="list-col">
         <.header :if={is_nil(@printer.id)}>{gettext("Create Printer")}</.header>
         <.header :if={not is_nil(@printer.id)}>{gettext("Edit Printer")}</.header>
@@ -182,9 +133,64 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
           </div>
           <.input label={gettext("Encoding")} field={f[:encoding]} type="select" options={@encodings} />
           <div class="flex flex-row justify-baseline gap-4">
+            <.link navigate={~p"/printers"} class="btn btn-neutral">Cancel</.link>
             <button type="submit" class="btn btn-success grow">Save</button>
           </div>
         </.form>
+      </li>
+      <li class="list-col space-y-4">
+        <.header>Printers</.header>
+        <div
+          :if={@printers == []}
+          class="flex flex-col-reverse sm:flex-row gap-4 sm:gap-8 justify-center items-center"
+        >
+          <h2 class="text-2xl font-bold text-content-100 opacity-50 sm:text-center">
+            <p>It's pretty empty here.</p>
+            <p>Try creating a new printer.</p>
+          </h2>
+          <img
+            src={~p"/images/undraw_barbecue.svg"}
+            class="hidden sm:block w-full max-w-40 grayscale brightness-150"
+          />
+        </div>
+        <div :for={printer <- @printers} class="card w-full bg-base-100 card-sm shadow-sm">
+          <div class="card-body">
+            <div class="card-title">
+              <h2>{printer.name}</h2>
+              <span :if={printer.type == :network} class="ml-auto badge badge-primary">
+                {gettext("Network")}
+              </span>
+              <span :if={printer.type == :serial} class="ml-auto badge badge-secondary">
+                {gettext("Serial")}
+              </span>
+              <span :if={printer.type == :usb} class="ml-auto badge badge-accent">
+                {gettext("USB")}
+              </span>
+            </div>
+            <div :if={printer.type == :network}>
+              <p>{printer.hostname}:{printer.port}</p>
+            </div>
+            <div :if={printer.type == :serial}>
+              <p>Port: {printer.serial_port}</p>
+            </div>
+            <div :if={printer.type == :usb}>
+              <p>Device: {printer.vendor_id}:{printer.product_id}</p>
+            </div>
+            <div class="card-actions ml-auto">
+              <.link navigate={~p"/printers/#{printer.id}"} class="btn btn-accent">
+                <.icon name="hero-pencil-square" />{gettext("Edit")}
+              </.link>
+              <.button
+                phx-click="delete"
+                phx-value-id={printer.id}
+                phx-target={@myself}
+                data-confirm={gettext("Are you sure you want to delete this printer?")}
+              >
+                <.icon name="hero-trash" />{gettext("Delete")}
+              </.button>
+            </div>
+          </div>
+        </div>
       </li>
     </ul>
     """
@@ -195,9 +201,9 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   @impl true
   def handle_event(
         "validate",
-        %{"_target" => ["usb_device"], "printer" => params, "usb_device" => usb_device} = form_state,
+        %{"_target" => ["usb_device"], "printer" => params, "usb_device" => usb_device},
         socket
-  ) do
+      ) do
     dev = Enum.find(socket.assigns.usb_devices, &(&1.name == usb_device))
 
     if is_nil(dev) do
@@ -254,15 +260,6 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
     |> then(&{:noreply, &1})
   end
 
-  def handle_event("select", %{"id" => printer_id}, socket) do
-    printer = Settings.get_printer(printer_id)
-    {:noreply, socket |> assign_printers(printer)}
-  end
-
-  def handle_event("select", _params, socket) do
-    {:noreply, socket |> assign_printers(nil)}
-  end
-
   def handle_event("delete", %{"id" => printer_id}, socket) do
     printer = Settings.get_printer(printer_id)
 
@@ -293,7 +290,7 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   defp assign_serial_ports(socket) do
     serial_ports =
       Discovery.discover_serial_printers()
-      |> Enum.map(& &1.adapter_config.path)
+      |> Enum.map(& &1.adapter_config.port)
       |> Enum.reject(&is_nil/1)
 
     socket
@@ -311,7 +308,6 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
     changeset =
       case changeset do
         nil ->
-          dbg(printer)
           Settings.change_printer(printer)
 
         changeset ->
