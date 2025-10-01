@@ -3,11 +3,11 @@ defmodule PrintClientWeb.Plugs do
   import Phoenix.Controller
 
   def assign_current_scope(conn, _) do
-    path = 
+    path =
       conn
       |> Plug.Conn.request_url()
       |> URI.parse()
-      |> then(&(&1.path))
+      |> then(& &1.path)
 
     assign(conn, :current_scope, %{
       path: path

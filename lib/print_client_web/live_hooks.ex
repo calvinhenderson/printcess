@@ -12,8 +12,9 @@ defmodule PrintClientWeb.LiveHooks do
   defp assign_current_scope(_params, uri, socket) do
     uri = URI.parse(uri)
 
-    {:cont, assign(socket, :current_scope, %{
-      path: uri.path
-    })}
+    {:cont,
+     assign(socket, :current_scope, %{
+       path: uri.path
+     })}
   end
 end
