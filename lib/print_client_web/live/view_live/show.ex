@@ -108,7 +108,7 @@ defmodule PrintClientWeb.ViewLive.Show do
     template_id = socket.assigns.template.id
 
     with %{template: %{id: ^template_id}} <- job,
-         {:ok, printer_status} = Printer.status(printer_id) do
+         {:ok, printer_status} <- Printer.status(printer_id) do
       socket
       |> stream_insert(
         :jobs,

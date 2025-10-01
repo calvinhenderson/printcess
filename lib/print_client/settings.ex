@@ -45,7 +45,7 @@ defmodule PrintClient.Settings do
   @doc """
   Deletes a printer from the database.
   """
-  def delete_printer(printer = %Printer{}) do
+  def delete_printer(%Printer{} = printer) do
     printer
     |> Repo.delete()
   end

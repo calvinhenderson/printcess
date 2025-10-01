@@ -163,7 +163,7 @@ defmodule PrintClientWeb.PrintComponents do
             class="peer sr-only"
             value={t.id}
             type={if @multiple, do: "checkbox", else: "radio"}
-            checked={is_checked?(t.id, @value)}
+            checked={checked?(t.id, @value)}
           />
           <div class="card bg-base-100 transition-all duration-200 ease-in-out border-0 hover:ring-2 hover:ring-offset-0 hover:ring-primary peer-checked:ring-2 peer-checked:ring-primary peer-checked:ring-offset-2">
             <div class="card-body items-center text-center">
@@ -275,7 +275,7 @@ defmodule PrintClientWeb.PrintComponents do
         Map.put(acc, f, "[ #{Atom.to_string(f)} ]")
       end)
 
-  defp is_checked?(id, values) when is_list(values), do: Enum.find(values, &(&1.id == id)) && true
-  defp is_checked?(id, %{id: value_id}), do: id == value_id
-  defp is_checked?(id, value), do: id == value
+  defp checked?(id, values) when is_list(values), do: Enum.find(values, &(&1.id == id)) && true
+  defp checked?(id, %{id: value_id}), do: id == value_id
+  defp checked?(id, value), do: id == value
 end

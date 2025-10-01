@@ -302,7 +302,7 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   defp assign_printers(socket, nil, changeset),
     do: assign_printers(socket, %Settings.Printer{}, changeset)
 
-  defp assign_printers(socket, printer = %Settings.Printer{}, changeset) do
+  defp assign_printers(socket, %Settings.Printer{} = printer, changeset) do
     printers = Settings.all_printers()
 
     changeset =

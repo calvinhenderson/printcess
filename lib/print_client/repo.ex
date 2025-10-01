@@ -12,14 +12,12 @@ defmodule PrintClient.Repo do
       __MODULE__.ViewsTable
     ]
 
-    migrations
-    |> Enum.map(fn mod ->
+    for mod <- migrations do
       Code.ensure_loaded(mod)
 
       cond do
         Kernel.function_exported?(mod, :queries, 0) ->
-          queries = mod.queries()
-          Enum.map(queries, &Ecto.Adapters.SQL.query!(__MODULE__, &1))
+          for q <- mod.queries(), do: Ecto.Adapters.SQL.query!(__MODULE__, q)
           Logger.info("Executing query for #{inspect(mod)}")
 
         Kernel.function_exported?(mod, :query, 0) ->
@@ -32,7 +30,7 @@ defmodule PrintClient.Repo do
             "[Repo] Ignoring module #{inspect(mod)} because it does not provide a query"
           )
       end
-    end)
+    end
 
     Logger.info("Initialize settings repository")
   end
