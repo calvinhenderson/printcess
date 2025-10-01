@@ -3,62 +3,47 @@
 ## Usage:
 
 ```sh
-pushd rel
-
-# Build standalone elixir and OTP
-./build_macos.sh -e [elixir-version] -o [otp-version]
-
-# Set path to use new build environment
-export PATH="$(pwd)/_build/elixir-rel-otp-${otp-version}/bin:$(pwd)/_build/erlang-otp-[otp_version]-[arch]/bin:$PATH"
-
-popd
+git clone https://github.com/calvinhenderson/phx-label-printing.git phx-label-printing
+cd phx-label-printing/rel
+make
 ```
 
-Next build the application release:
+## Roadmap
 
-```sh
-export MIX_ENV=prod
+### V1 - MVP
+- [x] Text labels
+- [x] Asset/Serial labels
+- [x] TSPL2 support
+- [x] IP-based printing
+- [x] Add/remove IP printers
+- [x] Job queues
+- [x] Packaged macOS application bundle
 
-mix assets.deploy
-mix release
-```
+### V2 - Implementing User Feedback
+- [x] `Printer` Generic api supporting any adapter.
+    - [x] `Printer.Adapter` API for adding print drivers
+    - [x] `Printer.Adapter.Mock` Mock driver for testing
+    - [x] `Printer.Adapter.Network` Network driver
+    - [x] `Printer.Adapter.Usb` USB driver
+    - [x] `Printer.Adapter.Serial` Serial driver
+    - [x] `Printer.PrintJob` Structured job type
+    - [x] `Printer.Discovery` Discovery methods for dynamic printer discovery
+    - [x] `Printer.Registry` A named registry for printer process discovery
+    - [x] `Printer.Supervisor` A printer process supervisor for supervising printers and adapters
+    - [x] Health monitoring to provide real-time printer status
+- [x] `Label` Label API for managing and rendering labels and templates
+    - [x] `Label.Template` Template API for parsing and rendering dynamic label templates
+    - [x] `Label.Encoder` Label encoder API supporting any encoding adapter
+    - [x] `Label.Encoder.TSPL` Adds support for the TSPL2 protocol
+    - [x] `Label.Forms` Handle Ecto.Changesets for dynamic label template form fields
+- [x] One-shot application build, packages, and installers
+- [x] `AssetsApi` Provides a search API for form auto-completions
+- [x] `Assets` and `Users` Provide generic search API for configured search backend.
+- [x] `Views` API for attaching printers to templates
+- [ ] Job queue window for displaying all active/completed jobs
+- [ ] Label template API mappings for search fields
+- [ ] Template search paths for external template discovery
+- [ ] Multi-template printing
 
-You now have a bundled desktop app at `_build/prod/rel/bundle/[app name].app`.
-
-## Todo
-
-- Refactor Printing API:
-  - [ ] Add `Printer.Adapter` API:
-  - [ ] Support IP/networked printers
-  - [ ] Support USB Serial printers
-
-- Consolidate application views
-  - There's too many windows. Consolidate to one larger window with better UX.
-
-- Add autocomplete
-  - Show a list of search results similar to iiQ.
-    - If only one result, auto select
-  - Owner username, asset and serial number from iiQ
-  - Add simplified asset search? Lookup asset and then
-    have separate buttons (print owner / asset / both?)
-  - Add support for label templates
-
-- Printer - Main API for printing. Specifies base protocol that can be overridden for printer adapters
-  - Adapter - Behaviour for specifying printer adapters (ie: network, serial, etc.)
-    - Network - Communicates with printers over a binary tcp socket.
-    - USB Serial - Communicates with a printer via a local usb serial adapter.
-  - Command - API for creating commands. Specifies behaviour for each supported language.
-    - TSPL2 - Generates commands for printers supporting the TSPL2 spec.
-    - IPP (example) - Generates commands for printers supporting the IPP protocol.
-
-Storing printer configs:
-- Add Network Printer:
-  - Host IP
-  - Port
-  - Language (TSPL2, IPP, etc.)
-- USB Serial Printer:
-  - Auto-discovery
-  - Manufacturer Name (optional, to bind config to manufacturer)
-  - Model Name (optional, to bind config to model of printers)
-  - Serial Number (optional, to bind config to specific printer)
-  - Language (TSPL2, IPP, etc.)
+### Planned - Not Yet Scheduled
+- [ ] Integrated label editor for creating label templates
