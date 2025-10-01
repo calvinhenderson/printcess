@@ -193,6 +193,8 @@ app: $(ELIXIR_STAMP) $(MAGICK_STAMP)
 		mix local.hex --force && \
 		mix local.rebar --force && \
 		mix deps.get --only prod && \
+		mix assets.setup && \
+		mix assets.deploy && \
 		mix release
 
 # --- App Bundle Targets ---

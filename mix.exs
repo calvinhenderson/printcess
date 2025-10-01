@@ -104,8 +104,8 @@ defmodule PrintClient.MixProject do
       ],
       "assets.deploy": [
         "esbuild print_client --minify",
-        "tailwind print_client --minify"
-        # "phx.digest"
+        "tailwind print_client --minify",
+        "phx.digest priv/static/assets"
       ]
     ]
   end
