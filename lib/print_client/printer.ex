@@ -127,16 +127,20 @@ defmodule PrintClient.Printer do
     do: GenServer.call(Registry.get(printer_id), {:add_job, template, params})
 
   @doc "Gets a single job's information from the queue."
-  @spec get_job(Settings.Printer.t() | __MODULE__.t() | term(), term()) :: {:ok, PrintJob.t()} | {:error, :not_found}
+  @spec get_job(Settings.Printer.t() | __MODULE__.t() | term(), term()) ::
+          {:ok, PrintJob.t()} | {:error, :not_found}
   def get_job(%Settings.Printer{} = printer, job_id),
     do: get_job(Discovery.id_of_printer(printer), job_id)
+
   def get_job(%__MODULE__{printer_id: printer_id}, job_id),
     do: get_job(printer_id, job_id)
-  def get_job(printer_id, job_id), do: GenServer.call(Registry.via_tuple(printer_id), {:get_job, job_id})
 
+  def get_job(printer_id, job_id),
+    do: GenServer.call(Registry.via_tuple(printer_id), {:get_job, job_id})
 
   @doc "Cancels a single job currently in the printer's queue."
-  @spec cancel_job(Settings.Printer.t() | __MODULE__.t() | term(), term()) :: :ok | {:error, term()}
+  @spec cancel_job(Settings.Printer.t() | __MODULE__.t() | term(), term()) ::
+          :ok | {:error, term()}
   def cancel_job(%Settings.Printer{} = printer, job_id),
     do: cancel_job(Discovery.id_of_printer(printer), job_id)
 
@@ -148,7 +152,8 @@ defmodule PrintClient.Printer do
 
   @doc "Cancels all jobs currently in the printer's queue."
   @spec cancel_all_jobs(term()) :: :ok
-  def cancel_all_jobs(printer_id), do: GenServer.call(Registry.via_tuple(printer_id), :cancel_all_jobs)
+  def cancel_all_jobs(printer_id),
+    do: GenServer.call(Registry.via_tuple(printer_id), :cancel_all_jobs)
 
   # --- GenServer Callbacks ---
 
@@ -266,9 +271,12 @@ defmodule PrintClient.Printer do
     new_state =
       case job do
         %PrintJob{} = job ->
-          %{state
+          %{
+            state
             | job_queue: :queue.delete(job, state.job_queue),
-              processed_jobs: [%{job | status: :cancelled} | state.processed_jobs]}
+              processed_jobs: [%{job | status: :cancelled} | state.processed_jobs]
+          }
+
         nil ->
           state
       end
@@ -282,7 +290,7 @@ defmodule PrintClient.Printer do
 
   @impl true
   def handle_info(:process_queue, state) do
-    Logger.debug("Printer #{state.printer_id}: processing queue.. #{inspect(state)}")
+    Logger.debug("Printer #{state.printer_id}: processing queue..")
     new_state = process_next_job(state)
 
     cond do
@@ -405,7 +413,7 @@ defmodule PrintClient.Printer do
     broadcast(state.printer_id, "Printer #{state.name} disconnected. Reconnecting..", :error)
 
     delay =
-      if (state.connect_retries / state.connect_max_retries) == 0,
+      if state.connect_retries / state.connect_max_retries == 0,
         do: state.connect_retry_delay_ms,
         else: state.connect_retry_delay_ms * 10
 
@@ -429,7 +437,7 @@ defmodule PrintClient.Printer do
 
   defp process_next_job(state) do
     with {{:value, %PrintJob{id: job_id} = job}, new_queue} <- :queue.out(state.job_queue),
-      _ <- broadcast_job(state.printer_id, job_id, :processing),
+         _ <- broadcast_job(state.printer_id, job_id, :processing),
          {:ok, data} <- get_job_data(state, job) do
       Logger.debug("Printer #{state.printer_id}: Sending job #{inspect(job_id)}.")
 
@@ -437,9 +445,13 @@ defmodule PrintClient.Printer do
       |> state.adapter_module.print(data)
       |> handle_print_result(state, job, new_queue)
     else
-      {:error, reason} ->
+      {:empty, new_queue} ->
+        state
+
+      error ->
         Logger.error("Printer #{state.printer_id}: Failed to get job from queue.")
-        Logger.debug(inspect({:error, reason}))
+        Logger.debug(inspect(error))
+        state
     end
   end
 
@@ -466,7 +478,12 @@ defmodule PrintClient.Printer do
     end
   end
 
-  defp handle_print_result({:error, reason, errored_adapter_state}, state, %PrintJob{} = job, remaining_queue) do
+  defp handle_print_result(
+         {:error, reason, errored_adapter_state},
+         state,
+         %PrintJob{} = job,
+         remaining_queue
+       ) do
     Logger.error(
       "Printer #{state.printer_id}: Print failed. Reason: #{inspect(reason)}. Re-queuing job and attempting to reconnect."
     )
