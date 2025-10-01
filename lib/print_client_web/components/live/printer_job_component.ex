@@ -129,7 +129,6 @@ defmodule PrintClientWeb.PrinterJobComponent do
           status
 
         error ->
-          dbg(error)
           :failed
       end
 

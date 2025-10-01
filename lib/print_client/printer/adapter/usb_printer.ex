@@ -57,8 +57,6 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
     # Ensure the uart_pid is alive before writing.
     case :usb.write_bulk(ref, 1, data, usb_timeout) do
       {:ok, written} ->
-        dbg(data)
-
         if written != byte_size(data) do
           Logger.error(
             "UsbPrinter: Message truncated during transit. Wrote #{written}/#{byte_size(data)} bytes."

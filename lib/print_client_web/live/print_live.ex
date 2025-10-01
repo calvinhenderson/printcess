@@ -32,7 +32,8 @@ defmodule PrintClientWeb.PrintLive do
     end
   end
 
-  def print(printer, template, params), do: dbg([printer, template, params])
+  def print(printer, template, params),
+    do: Logger.warning("[PrintLive]: unhandled print command received.")
 
   @impl true
   def mount(_params, _session, socket) do

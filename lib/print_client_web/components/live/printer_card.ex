@@ -111,13 +111,8 @@ defmodule PrintClientWeb.PrinterCardLive do
     """
   end
 
-  def handle_event({_printer_id, :status, status}, socket) do
-    dbg(status)
-    {:noreply, socket |> assign(:online, status)}
-  end
+  def handle_event({_printer_id, :status, status}, socket),
+    do: {:noreply, socket |> assign(:online, status)}
 
-  def handle_event(msg, socket) do
-    dbg(msg)
-    {:noreply, socket}
-  end
+  def handle_event(_msg, socket), do: {:noreply, socket}
 end

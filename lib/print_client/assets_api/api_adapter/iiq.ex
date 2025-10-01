@@ -54,7 +54,6 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
     with {:ok, %Finch.Response{} = resp} <-
            post(config, "/api/v1.0/search?$s=#{@max_results}&$o=FirstName&$d=ASC", req),
          {:ok, results} <- parse_api_resp(resp) do
-      dbg(resp)
       {:ok, results}
     else
       {:error, reason} ->

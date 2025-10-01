@@ -62,12 +62,10 @@ defmodule PrintClientWeb.Settings.ApiComponent do
   def handle_event("validate", %{"config" => params}, socket) do
     changeset =
       Settings.change_api(params)
-      |> dbg()
 
     socket =
       socket
       |> assign(form: to_form(changeset))
-      |> dbg()
 
     {:noreply, socket}
   end

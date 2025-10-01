@@ -42,6 +42,5 @@ defmodule PrintClient.Views.View do
     |> cast(attrs, [:template, :printer_ids])
     |> validate_required([:template])
     |> put_assoc(:printers, printers)
-    |> dbg()
   end
 end
