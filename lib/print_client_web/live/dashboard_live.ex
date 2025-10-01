@@ -2,32 +2,29 @@ defmodule PrintClientWeb.DashboardLive do
   use PrintClientWeb, :live_view
 
   @links [
-    {"#", "Dashboard", "hero-home",
-    """
-      You are here.
-    """},
     {"/views", "Views", "hero-rectangle-stack",
-    """
-    Views combine label templates with printers for saved printing experiences.
-    """},
+     """
+     Views combine label templates with printers for saved printing experiences.
+     """},
     {"/printers", "Printers", "hero-printer",
-    """
-    Update saved printers or delete existing printers.
-    """},
+     """
+     Update saved printers or delete existing printers.
+     """},
     {"/templates", "Templates", "hero-photo",
-    """
-    View current templates, or update template search paths.
-    """},
+     """
+     View current templates, or update template search paths.
+     """},
     {"/settings", "Settings", "hero-cog",
-    """
-    Application preferences and API integrations.
-    """},
+     """
+     Application preferences and API integrations.
+     """}
   ]
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket
-      |> assign(links: @links)}
+    {:ok,
+     socket
+     |> assign(links: @links)}
   end
 
   @impl true

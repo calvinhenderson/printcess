@@ -4,6 +4,7 @@ defmodule PrintClientWeb.ViewLive.Show do
   alias PrintClientWeb.PrinterJobComponent
   alias PrintClient.Views
   alias PrintClient.Printer
+  alias PrintClient.Printer.PrintJob
   alias PrintClient.Label.Template
   alias PrintClientWeb.PrintForm
   alias PrintClientWeb.PrinterCardLive
@@ -68,16 +69,13 @@ defmodule PrintClientWeb.ViewLive.Show do
         <div>
           <.header class="mt-8">Job History</.header>
 
-          <div
-            id={"#{@id}-job-list"}
-            class="bg-base-100 rounded-box shadow-md"
-            phx-update="stream"
-          >
+          <div id={"#{@id}-job-list"} class="bg-base-100 rounded-box shadow-md" phx-update="stream">
             <.live_component
-              :for={{id, job} <- @streams.jobs}
+              :for={{id, %{job: job, printer: printer}} <- @streams.jobs}
               module={PrinterJobComponent}
               id={id}
               job={job}
+              printer={printer}
             />
             <p id={"#{@id}-job-list-end"} class="p-4">End of job history</p>
           </div>
@@ -107,14 +105,29 @@ defmodule PrintClientWeb.ViewLive.Show do
 
   @impl true
   def handle_info({printer_id, :job_added, job}, socket) do
-    {:ok, printer_status} = Printer.status(printer_id)
+    template_id = socket.assigns.template.id
 
-    {:noreply, 
+    with %{template: %{id: ^template_id}} <- job,
+         {:ok, printer_status} = Printer.status(printer_id) do
       socket
-      |> stream_insert(:jobs,
-        Map.put(job, :printer, printer_status),
-        dom_id: "#{printer_id}-#{job.id}"
-      )}
+      |> stream_insert(
+        :jobs,
+        %{
+          id: "#{printer_id}:#{job.id}",
+          job: job,
+          printer: printer_status
+        },
+        at: 0
+      )
+    else
+      %PrintJob{} ->
+        socket
+
+      error ->
+        Logger.debug("[ViewLive.Show]: Error adding job to queue #{inspect(error)}")
+        socket
+    end
+    |> then(&{:noreply, &1})
   end
 
   @impl true
@@ -135,6 +148,7 @@ defmodule PrintClientWeb.ViewLive.Show do
       printer_topic = Printer.topic(printer)
       PrintClient.PubSub.subscribe(socket, PrintClient.PubSub, printer_topic)
     end
+
     socket |> assign(:printers, view.printers)
   end
 end

@@ -33,12 +33,12 @@ defmodule PrintClientWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <div class="grid [grid-template-areas:'aside_main''aside_main'] grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen max-w-screen overflow-x-hidden bg-base-200">
+    <div class="[grid-template-areas:'aside_main'] grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen max-w-screen overflow-x-hidden bg-base-200">
       
     <!-- Sidebar navigation -->
-<nav class="[grid-area:aside] h-full bg-base-300 text-base-content w-16 md:w-36">
-        <div class="fixed w-16 md:w-36 h-screen flex flex-col gap-0 justify-start items-center overflow-x-hidden overflow-y-auto">
-          <div class="w-full bg-gray-900/20 flex flex-col justify-center gap-1 px-4 py-2">
+      <nav class="[grid-area:'aside'] h-full text-base-content w-16 md:w-36">
+        <div class="fixed w-16 md:w-36 h-screen flex flex-col gap-0 justify-start items-center overflow-x-hidden overflow-y-auto bg-base-100 rounded-r-3xl shadow-md overflow-clip">
+          <div class="w-full bg-primary text-primary-content flex flex-col justify-center gap-1 px-4 py-2 mb-4">
             <h2 class="w-full text-lg font-bold flex items-center justify-center md:justify-between">
               <.icon name="hero-printer-solid" /><span class="hidden md:inline">Printcess</span>
             </h2>
@@ -50,7 +50,7 @@ defmodule PrintClientWeb.Layouts do
             {"/", "Dashboard", "hero-home-solid"},
             {"/views", "Views", "hero-rectangle-stack-solid"},
             {"/printers", "Printers", "hero-printer-solid"},
-            {"/templates", "Labels", "hero-photo-solid"},
+            {"/templates", "Templates", "hero-photo-solid"},
             :spacer,
             {"/settings", "Settings", "hero-cog-solid"},
           ] do %>
@@ -61,9 +61,10 @@ defmodule PrintClientWeb.Layouts do
                   class={[
                     "w-full px-1 md:px-4 py-2 btn btn-ghost rounded-none transition duration-150",
                     "flex flex-row justify-center items-center md:justify-start gap-2",
-                    "hover:bg-primary hover:text-primary-content",
+                    "hover:bg-primary hover:text-primary-content hover:border-primary active:border-primary",
                     link_active?(@current_scope, href) && "bg-primary text-primary-content"
-                  ]} disabled={link_active?(@current_scope, href)}>
+                  ]}
+                >
                   <.icon name={icon} />
                   <span class="hidden md:inline">{label}</span>
                 </a>
@@ -75,7 +76,7 @@ defmodule PrintClientWeb.Layouts do
       </nav>
       
     <!-- Main content -->
-      <main class="[grid-area:main] p-4 sm:p-8">
+      <main class="[grid-area:'main'] p-4 sm:p-8">
         <div class="container mx-auto max-w-4xl">
           {render_slot(@inner_block)}
         </div>
