@@ -15,7 +15,10 @@ defmodule PrintClient.Label.Forms do
     import Ecto.Changeset
 
     def changeset(fields, attrs \\ %{}) do
-      from_fields(fields)
+      {data, types} = from_fields(fields)
+      fields = Map.keys(types)
+
+      {data, types}
       |> cast(attrs, fields)
       |> validate_required(fields)
       |> validate_number(:copies, greater_than: 0)
@@ -30,7 +33,7 @@ defmodule PrintClient.Label.Forms do
       end)
     end
 
-    def field_type(:copies), do: :number
+    def field_type(:copies), do: :integer
     def field_type(_), do: :string
   end
 

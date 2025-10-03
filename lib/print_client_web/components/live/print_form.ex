@@ -1,11 +1,11 @@
 defmodule PrintClientWeb.PrintForm do
-  alias PrintClient.AssetsApi.SearchResult
   use PrintClientWeb, :live_component
 
   alias Phoenix.LiveView.AsyncResult
   alias PrintClient.Label.Forms.LabelForm
   alias PrintClient.AssetsApi
   alias PrintClientWeb.ApiSearchComponent
+  alias PrintClient.AssetsApi.SearchResult
   alias PrintClient.Printer
 
   require Logger
@@ -112,11 +112,7 @@ defmodule PrintClientWeb.PrintForm do
 
   def handle_event("print", _params, socket), do: {:noreply, socket}
 
-  def handle_event(
-        "validate",
-        %{"_target" => ["undefined"], "form" => params},
-        socket
-      ) do
+  def handle_event("validate", %{"_target" => ["undefined"], "form" => params}, socket) do
     persisted =
       Enum.filter(params, fn {param, _value} ->
         param in @persisted_form_fields
@@ -126,16 +122,12 @@ defmodule PrintClientWeb.PrintForm do
     {:noreply, assign_changes(socket, persisted)}
   end
 
-  def handle_event(
-        "validate",
-        %{"_target" => ["form", field], "form" => params},
-        socket
-      ),
-      do:
-        {:noreply,
-         socket
-         |> assign(:field, String.to_existing_atom(field))
-         |> assign_changes(params)}
+  def handle_event("validate", %{"_target" => ["form", field], "form" => params}, socket) do
+    {:noreply,
+     socket
+     |> assign(:field, String.to_existing_atom(field))
+     |> assign_changes(params)}
+  end
 
   def handle_event("select", %{"id" => id}, socket) do
     case socket.assigns.results do
