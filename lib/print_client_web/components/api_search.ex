@@ -25,7 +25,7 @@ defmodule PrintClientWeb.ApiSearchComponent do
             autocomplete="off"
             phx-debounce={@debounce}
             placeholder={gettext("Lookup or enter a value")}
-            phx-hook="Dropdown"
+            phx-hook="Scanner"
             data-dropdown-root={@field.id <> "-results"}
           />
         </:label>

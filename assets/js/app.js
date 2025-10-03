@@ -24,10 +24,12 @@ import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import {AutoCompleteHook} from "./hooks/autocomplete";
 import {AutoFocusHook} from "./hooks/autofocus";
+import {ScannerHook} from "./hooks/scanner.js"
 
 let Hooks = {
   AutoComplete: AutoCompleteHook,
   AutoFocus: AutoFocusHook,
+  Scanner: ScannerHook,
 };
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")

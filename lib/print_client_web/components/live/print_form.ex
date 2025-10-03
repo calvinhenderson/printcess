@@ -103,7 +103,6 @@ defmodule PrintClientWeb.PrintForm do
 
       {:error, reason} ->
         socket
-        |> assign(:field, nil)
         |> assign_changes(params)
         |> put_flash(:error, "Error printing: #{inspect(reason)}")
     end
@@ -201,13 +200,22 @@ defmodule PrintClientWeb.PrintForm do
         assign(socket, :changeset, changeset)
 
       {:error, changeset} ->
-        applied =
-          Enum.reduce(changes, %{}, fn {k, v}, acc -> Map.put(acc, String.to_atom(k), v) end)
+        applied = map_changes_keys(changeset.changes)
 
         send(self(), {:changed, applied})
         assign(socket, :changeset, %{changeset | action: :validate})
     end
     |> assign_query_results()
+  end
+
+  defp map_changes_keys(changes) do
+    Enum.reduce(changes, %{}, fn {k, v}, acc ->
+      cond do
+        is_atom(k) -> Map.put(acc, k, v)
+        is_binary(k) -> Map.put(acc, String.to_atom(k), v)
+        true -> acc
+      end
+    end)
   end
 
   defp assign_query_results(socket) do
