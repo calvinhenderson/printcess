@@ -78,7 +78,8 @@ defmodule PrintClient.MixProject do
       {:mustache, "~> 0.5.0"},
       {:mogrify, "~> 0.9.3"},
       # {:image, "~> 0.37"},
-      {:qr_code, "~> 3.2.0"}
+      {:qr_code, "~> 3.2.0"},
+      {:barlix, "~> 0.6"}
     ]
   end
 

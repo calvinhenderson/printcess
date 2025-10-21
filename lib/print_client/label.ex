@@ -34,19 +34,29 @@ defmodule PrintClient.Label do
   defp render_qr_code(data) when is_nil(data) or data == "", do: ""
 
   defp render_qr_code(data) do
-    with false <- is_nil(data),
-         {:ok, qrcode} <-
+    with {:ok, qrcode} <-
            data
            |> QRCode.create(:high)
            |> QRCode.render(:svg, %QRCode.Render.SvgSettings{scale: 50, quiet_zone: 1}),
          encoded <- Base.encode64(qrcode, padding: true) do
       "data:image/svg+xml;base64," <> encoded
     else
-      true ->
-        ""
-
       error ->
         Logger.warning("Label: error while rendering qr code for template #{inspect(error)}.")
+        ""
+    end
+  end
+
+  defp render_barcode(data) when is_nil(data) or data == "", do: ""
+
+  defp render_barcode(data) do
+    with {:ok, barcode} <- Barlix.Code128.encode(data),
+         {:ok, svg} <- Barlix.SVG.print(barcode),
+         encoded <- Base.encode64(svg, padding: true) do
+      "data:image/svg+xml;base64," <> encoded
+    else
+      error ->
+        Logger.warning("Label: error while rendering barcode 128 for template #{inspect(error)}.")
         ""
     end
   end
@@ -77,6 +87,7 @@ defmodule PrintClient.Label do
         cond do
           is_nil(field_params) -> param
           String.contains?(field_params, "qrcode") -> render_qr_code(param)
+          String.contains?(field_params, "code128") -> render_barcode(param)
           true -> param
         end
 
