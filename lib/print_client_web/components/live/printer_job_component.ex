@@ -41,49 +41,85 @@ defmodule PrintClientWeb.PrinterJobComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div id={@id} class="collapse collapse-arrow rounded-none bg-base-100 border-base-300 border">
+    <div
+      id={@id}
+      class="collapse collapse-arrow bg-base-100 border border-base-200 shadow-sm rounded-box mb-2 group"
+    >
       <input type="checkbox" />
-      <div class="collapse-title font-semibold flex justify-between items-center">
-        <span class="inline-block">{@printer.name}</span>
-        <progress
-          class={[
-            "progress w-56",
-            @status == :complete && "progress-success",
-            @status == :failed && "progress-error",
-            @status == :cancelled && "progress-warning"
-          ]}
-          value={(@status == :processing && "50") || (@complete && "100")}
-          max={(@status == :processing && "50") || (@complete && "100")}
-        >
-        </progress>
 
-        <span>{@status |> to_string() |> String.capitalize()}</span>
+      <div class="collapse-title flex items-center justify-between gap-4 py-4 pr-12">
+        <div class="flex items-center gap-3">
+          <div class={[
+            "w-8 h-8 rounded-lg flex items-center justify-center",
+            @status == :complete && "bg-success/10 text-success",
+            @status == :failed && "bg-error/10 text-error",
+            @status == :processing && "bg-primary/10 text-primary",
+            @status == :cancelled && "bg-base-200 text-base-content/50"
+          ]}>
+            <.icon name="hero-printer-solid" class="w-5 h-5" />
+          </div>
+
+          <div class="flex flex-col">
+            <span class="font-bold text-base-content">{@printer.name}</span>
+            <span class="text-xs text-base-content/50 font-mono">
+              Job #{to_string(@id)}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div :if={@status == :processing} class="hidden sm:flex flex-col w-32 gap-1">
+            <progress class="progress progress-primary w-full" value="50" max="100"></progress>
+            <span class="text-[10px] text-right opacity-60">Printing...</span>
+          </div>
+
+          <div class={[
+            "badge gap-2 font-medium",
+            @status == :complete && "badge-success badge-soft",
+            @status == :failed && "badge-error badge-soft",
+            @status == :processing && "badge-primary badge-soft",
+            @status == :cancelled && "badge-ghost"
+          ]}>
+            <span :if={@status == :processing} class="loading loading-spinner loading-xs"></span>
+            {@status |> to_string() |> String.capitalize()}
+          </div>
+        </div>
       </div>
 
-      <div class="collapse-content space-y-4 text-right">
-        <.button
-          phx-target={@myself}
-          phx-click="resend"
-          phx-disable-with="Resending.."
-          disabled={not @complete}
-        >
-          <.icon name="hero-arrow-path" /> Resend
-        </.button>
-        <.button
-          phx-target={@myself}
-          phx-click="cancel"
-          phx-disable-with="Cancelling.."
-          disabled={@complete}
-        >
-          <.icon name="hero-x-circle" /> Cancel
-        </.button>
+      <div class="collapse-content text-sm border-t border-base-100">
+        <div class="pt-4 flex flex-col gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
+            <%= for {k, v} <- @job.params do %>
+              <div class="flex flex-col gap-0.5">
+                <span class="text-xs uppercase tracking-wider font-semibold text-base-content/40">
+                  {k}
+                </span>
+                <span class="font-mono text-base-content/90 truncate select-all bg-base-200/50 px-2 py-1 rounded">
+                  {v}
+                </span>
+              </div>
+            <% end %>
+          </div>
 
-        <div class="gap-4 grid grid-cols-[1fr_auto_1fr] grid-flow-rows">
-          <%= for {k, v} <- @job.params do %>
-            <span class="kbd truncate">{k}</span>
-            <.icon name="hero-arrow-long-right self-center" />
-            <span class="kbd truncate">{v}</span>
-          <% end %>
+          <div class="flex justify-end gap-2 pt-2">
+            <.button
+              phx-target={@myself}
+              phx-click="cancel"
+              disabled={@complete}
+              class="btn btn-sm btn-ghost text-error hover:bg-error/10"
+            >
+              Cancel
+            </.button>
+
+            <.button
+              phx-target={@myself}
+              phx-click="resend"
+              disabled={not @complete}
+              class="btn btn-sm btn-outline border-base-300 hover:border-base-content hover:bg-base-content hover:text-base-100"
+            >
+              <.icon name="hero-arrow-path" class="w-4 h-4" /> Resend Job
+            </.button>
+          </div>
         </div>
       </div>
     </div>

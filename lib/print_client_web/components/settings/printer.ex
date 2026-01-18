@@ -48,151 +48,254 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <ul class="list space-y-8">
-      <li class="list-col">
-        <.header :if={is_nil(@printer.id)}>{gettext("Create Printer")}</.header>
-        <.header :if={not is_nil(@printer.id)}>{gettext("Edit Printer")}</.header>
+    <div class="max-w-[1600px] mx-auto pb-20">
+      <div class="mb-8 border-b border-base-200 pb-6">
+        <h1 class="text-3xl font-bold text-base-content">Printers</h1>
+        <p class="text-base-content/60 mt-2">Manage physical and network printing devices.</p>
+      </div>
 
-        <.form
-          :let={f}
-          for={@printer_form}
-          id="printer-form"
-          phx-submit="update"
-          phx-change="validate"
-          phx-debounce="200"
-          phx-target={@myself}
-          class="space-y-8"
-        >
-          <.input
-            label={gettext("Type")}
-            field={f[:type]}
-            type="select"
-            options={Enum.map(@tabs, &{&1.title, &1.id})}
-          />
-          <.input
-            label={gettext("Name")}
-            field={f[:name]}
-            type="text"
-            placeholder="Enter a printer name"
-          />
-          <div
-            :if={f[:type].value == :network}
-            class="grid gap-2 grid-cols-[70%_auto] grid-rows-[auto] grid-flow-row"
-          >
-            <.input
-              label={gettext("Hostname")}
-              field={f[:hostname]}
-              type="text"
-              placeholder="Enter an ip or hostname"
-            />
-            <.input label={gettext("Port")} field={f[:port]} type="number" placeholder="9100" />
-          </div>
-          <div
-            :if={f[:type].value == :serial}
-            class="grid gap-2 grid-cols-[1fr_auto] grid-rows-[auto] grid-flow-row items-end"
-          >
-            <.input
-              label={gettext("Serial Port")}
-              field={f[:serial_port]}
-              type="select"
-              options={@serial_ports}
-            />
-            <fieldset class="fieldset mb-2 w-min">
-              <label>
-                <.button type="button" phx-click="refresh-serial" phx-target={@myself}>
-                  <.icon name="hero-arrow-path" />
-                </.button>
-              </label>
-            </fieldset>
-          </div>
-          <div :if={f[:type].value == :usb}>
-            <div class="grid gap-2 grid-cols-[1fr_auto] grid-rows-[auto] grid-flow-row items-end">
-              <fieldset class="fieldset mb-2">
-                <label>
-                  <span class="label mb-1">Select a device</span>
-                  <select name="usb_device" id="usb-device-list" class="w-full select">
-                    <option></option>
-                    <option :for={dev <- @usb_devices} value={dev.name}>
-                      {dev.name}
-                    </option>
-                  </select>
-                </label>
-              </fieldset>
-              <fieldset class="fieldset mb-2 w-min">
-                <label>
-                  <.button type="button" phx-click="refresh-usb" phx-target={@myself}>
-                    <.icon name="hero-arrow-path" />
-                  </.button>
-                </label>
-              </fieldset>
-            </div>
-            <div class="grid gap-2 grid-cols-[1fr_1fr] grid-rows-[auto] grid-flow-row">
-              <.input label={gettext("Vendor ID")} field={f[:vendor_id]} type="text" />
-              <.input label={gettext("Product ID")} field={f[:product_id]} type="text" />
-            </div>
-          </div>
-          <.input label={gettext("Encoding")} field={f[:encoding]} type="select" options={@encodings} />
-          <div class="flex flex-row justify-baseline gap-4">
-            <.link navigate={~p"/printers"} class="btn btn-neutral">Cancel</.link>
-            <button type="submit" class="btn btn-success grow">Save</button>
-          </div>
-        </.form>
-      </li>
-      <li class="list-col space-y-4">
-        <.header>Printers</.header>
-        <div
-          :if={@printers == []}
-          class="flex flex-col-reverse sm:flex-row gap-4 sm:gap-8 justify-center items-center"
-        >
-          <h2 class="text-2xl font-bold text-content-100 opacity-50 sm:text-center">
-            <p>It's pretty empty here.</p>
-            <p>Try creating a new printer.</p>
-          </h2>
-          <img
-            src={~p"/images/undraw_barbecue.svg"}
-            class="hidden sm:block w-full max-w-40 grayscale brightness-150"
-          />
-        </div>
-        <div :for={printer <- @printers} class="card w-full bg-base-100 card-sm shadow-sm">
-          <div class="card-body">
-            <div class="card-title">
-              <h2>{printer.name}</h2>
-              <span :if={printer.type == :network} class="ml-auto badge badge-primary">
-                {gettext("Network")}
-              </span>
-              <span :if={printer.type == :serial} class="ml-auto badge badge-secondary">
-                {gettext("Serial")}
-              </span>
-              <span :if={printer.type == :usb} class="ml-auto badge badge-accent">
-                {gettext("USB")}
-              </span>
-            </div>
-            <div :if={printer.type == :network}>
-              <p>{printer.hostname}:{printer.port}</p>
-            </div>
-            <div :if={printer.type == :serial}>
-              <p>Port: {printer.serial_port}</p>
-            </div>
-            <div :if={printer.type == :usb}>
-              <p>Device: {printer.vendor_id}:{printer.product_id}</p>
-            </div>
-            <div class="card-actions ml-auto">
-              <.link navigate={~p"/printers/#{printer.id}"} class="btn btn-accent">
-                <.icon name="hero-pencil-square" />{gettext("Edit")}
-              </.link>
-              <.button
-                phx-click="delete"
-                phx-value-id={printer.id}
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        <div class="xl:col-span-5 xl:sticky xl:top-6">
+          <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body">
+              <div class="flex items-center gap-2 mb-4 pb-4 border-b border-base-100">
+                <div class="p-2 bg-primary/10 text-primary rounded-lg">
+                  <.icon name="hero-printer" class="w-5 h-5" />
+                </div>
+                <h2 class="font-bold text-lg">
+                  {if is_nil(@printer.id),
+                    do: gettext("Add New Printer"),
+                    else: gettext("Edit Configuration")}
+                </h2>
+              </div>
+
+              <.form
+                :let={f}
+                for={@printer_form}
+                id="printer-form"
+                phx-submit="update"
+                phx-change="validate"
+                phx-debounce="200"
                 phx-target={@myself}
-                data-confirm={gettext("Are you sure you want to delete this printer?")}
+                class="flex flex-col gap-5"
               >
-                <.icon name="hero-trash" />{gettext("Delete")}
-              </.button>
+                <.input
+                  field={f[:name]}
+                  label="Printer Name"
+                  type="text"
+                  placeholder="e.g. Front Desk Label Printer"
+                />
+
+                <.input
+                  field={f[:type]}
+                  label="Connection Type"
+                  type="select"
+                  options={Enum.map(@tabs, &{&1.title, &1.id})}
+                  class="select select-bordered w-full font-medium"
+                />
+
+                <div
+                  :if={f[:type].value == :network}
+                  class="grid grid-cols-5 bg-base-200/30 gap-4 p-4 rounded-xl border border-base-200"
+                >
+                  <div class="col-span-3 w-full">
+                    <.input
+                      label={gettext("Hostname / IP")}
+                      field={f[:hostname]}
+                      type="text"
+                      placeholder="192.168.1.x"
+                      class="input font-mono text-sm"
+                    />
+                  </div>
+                  <div class="col-span-2">
+                    <.input
+                      label={gettext("Port")}
+                      field={f[:port]}
+                      type="number"
+                      placeholder="9100"
+                      class="input font-mono text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  :if={f[:type].value == :serial}
+                  class="bg-base-200/30 p-4 rounded-xl border border-base-200"
+                >
+                  <label class="label">
+                    <span class="label-text">{gettext("Serial Port")}</span>
+                  </label>
+                  <div class="join w-full">
+                    <select
+                      id={f[:serial_port].id}
+                      name={f[:serial_port].name}
+                      class="select select-bordered join-item w-full"
+                    >
+                      <option value="">-- Choose Device --</option>
+                      <option :for={port <- @serial_ports} value={port}>{port}</option>
+                    </select>
+                    <button
+                      type="button"
+                      phx-click="refresh-serial"
+                      phx-target={@myself}
+                      class="btn join-item btn-square border-base-300"
+                    >
+                      <.icon name="hero-arrow-path" class="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  :if={f[:type].value == :usb}
+                  class="flex flex-col gap-4 bg-base-200/30 p-4 rounded-xl border border-base-200"
+                >
+                  <div>
+                    <label class="label">
+                      <span class="label-text">{gettext("Select Device")}</span>
+                    </label>
+                    <div class="join w-full">
+                      <select
+                        name="usb_device"
+                        id="usb-device-list"
+                        class="select select-bordered join-item w-full"
+                      >
+                        <option value="">-- Choose Device --</option>
+                        <option :for={dev <- @usb_devices} value={dev.name}>{dev.name}</option>
+                      </select>
+                      <button
+                        type="button"
+                        phx-click="refresh-usb"
+                        phx-target={@myself}
+                        class="btn join-item btn-square border-base-300"
+                      >
+                        <.icon name="hero-arrow-path" class="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <.input
+                      label={gettext("Vendor ID")}
+                      field={f[:vendor_id]}
+                      type="text"
+                      class="input font-mono text-sm"
+                    />
+                    <.input
+                      label={gettext("Product ID")}
+                      field={f[:product_id]}
+                      type="text"
+                      class="input font-mono text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div class="pt-2 border-t border-base-100 mt-2">
+                  <.input
+                    label={gettext("Driver / Encoding")}
+                    field={f[:encoding]}
+                    type="select"
+                    options={@encodings}
+                  />
+                </div>
+
+                <div class="flex items-center gap-3 pt-4">
+                  <.link navigate={~p"/printers"} class="btn btn-ghost flex-1">
+                    Cancel
+                  </.link>
+                  <button type="submit" class="btn btn-primary flex-1 shadow-lg shadow-primary/20">
+                    {if is_nil(@printer.id), do: "Create Printer", else: "Save Changes"}
+                  </button>
+                </div>
+              </.form>
             </div>
           </div>
         </div>
-      </li>
-    </ul>
+
+        <div class="xl:col-span-7 flex flex-col gap-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <.icon name="hero-server-stack" class="w-6 h-6 text-base-content/70" /> Active Printers
+              <span class="badge badge-sm badge-ghost font-normal text-xs">
+                {length(@printers)} Devices
+              </span>
+            </h2>
+          </div>
+
+          <div
+            :if={@printers == []}
+            class="flex flex-col items-center justify-center py-16 bg-base-100 rounded-box border border-dashed border-base-300 text-center"
+          >
+            <div class="bg-base-200 rounded-full p-6 mb-4 opacity-50">
+              <.icon name="hero-printer" class="w-12 h-12" />
+            </div>
+            <h3 class="font-bold text-lg">No printers found</h3>
+            <p class="text-base-content/60 max-w-xs mx-auto">
+              Use the form on the left to add your first network or local printer.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4">
+            <div
+              :for={printer <- @printers}
+              class="card bg-base-100 shadow-sm border border-base-200 group transition-all hover:shadow-md hover:border-primary/40"
+            >
+              <div class="card-body p-6 flex-row gap-6 items-center w-full">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-3 mb-1">
+                    <h3 class="font-bold text-lg truncate" title={printer.name}>{printer.name}</h3>
+                    <span class={[
+                      "badge badge-sm border-0 font-medium",
+                      printer.type == :network && "bg-blue-100 text-blue-700",
+                      printer.type == :serial && "bg-purple-100 text-purple-700",
+                      printer.type == :usb && "bg-orange-100 text-orange-700"
+                    ]}>
+                      {printer.type |> to_string() |> String.upcase()}
+                    </span>
+                  </div>
+
+                  <div class="text-xs font-mono text-base-content/60 flex flex-wrap gap-x-4 gap-y-1">
+                    <span :if={printer.type == :network} class="flex items-center gap-1">
+                      <.icon name="hero-globe-alt" class="w-3 h-3" />
+                      {printer.hostname}:{printer.port}
+                    </span>
+                    <span :if={printer.type == :serial} class="flex items-center gap-1">
+                      <.icon name="hero-cpu-chip" class="w-3 h-3" />
+                      {printer.serial_port}
+                    </span>
+                    <span :if={printer.type == :usb} class="flex items-center gap-1">
+                      <.icon name="hero-bolt" class="w-3 h-3" /> PID: {printer.product_id}
+                    </span>
+                    <span class="flex items-center gap-1 opacity-50">
+                      &bull; {printer.encoding}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <.link
+                    navigate={~p"/printers/#{printer.id}"}
+                    class="btn btn-sm btn-square btn-ghost tooltip"
+                    data-tip="Edit"
+                  >
+                    <.icon name="hero-pencil-square" class="w-5 h-5" />
+                  </.link>
+                  <.button
+                    phx-click="delete"
+                    phx-value-id={printer.id}
+                    phx-target={@myself}
+                    data-confirm={gettext("Are you sure you want to delete this printer?")}
+                    class="btn btn-sm btn-square btn-ghost text-error hover:bg-error/10 tooltip"
+                    data-tip="Delete"
+                  >
+                    <.icon name="hero-trash" class="w-5 h-5" />
+                  </.button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     """
   end
 

@@ -33,55 +33,67 @@ defmodule PrintClientWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <div class="[grid-template-areas:'aside_main'] grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen max-w-screen overflow-x-hidden bg-base-200">
-      
-    <!-- Sidebar navigation -->
-      <nav class="[grid-area:'aside'] h-full text-base-content w-16 md:w-36">
-        <div class="fixed w-16 md:w-36 h-screen flex flex-col gap-0 justify-start items-center overflow-x-hidden overflow-y-auto bg-base-100 rounded-r-3xl shadow-md overflow-clip">
-          <div class="w-full bg-primary text-primary-content flex flex-col justify-center gap-1 px-4 py-2 mb-4">
-            <h2 class="w-full text-lg font-bold flex items-center justify-center md:justify-between">
-              <.icon name="hero-printer-solid" /><span class="hidden md:inline">Printcess</span>
-            </h2>
-            <span class="badge badge-xs self-center md:self-end">
+    <div class="[grid-template-areas:'aside_main'] grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] min-h-screen bg-base-200">
+      <nav class="[grid-area:'aside'] h-screen sticky top-0 z-20 flex-col justify-between items-center md:items-start overflow-y-auto bg-base-100 shadow-xl w-20 md:w-50 flex">
+        <div class="py-6 md:p-6 flex items-center gap-3">
+          <div class="bg-primary/10 p-2 rounded-lg text-primary">
+            <.icon name="hero-printer-solid" class="w-8 h-8" />
+          </div>
+          <div class="hidden md:block">
+            <h2 class="font-bold text-xl leading-tight">Printcess</h2>
+            <span class="text-xs font-medium text-base-content/50">
               v{Application.spec(:print_client, :vsn)}
             </span>
           </div>
-          <%= for item <- [
-            {"/", "Dashboard", "hero-home-solid"},
-            {"/views", "Views", "hero-rectangle-stack-solid"},
-            {"/printers", "Printers", "hero-printer-solid"},
-            {"/templates", "Templates", "hero-photo-solid"},
-            :spacer,
-            {"/settings", "Settings", "hero-cog-solid"},
+        </div>
+
+        <ul class="menu menu-lg px-4 gap-2 w-full">
+          <%= for {href, label, icon} <- [
+            {"/", "Dashboard", "hero-home"},
+            {"/views", "Views", "hero-rectangle-stack"},
+            {"/printers", "Printers", "hero-printer"},
+            {"/templates", "Templates", "hero-photo"}
           ] do %>
-            <%= case item do %>
-              <% {href, label, icon} -> %>
-                <a
-                  href={href}
-                  class={[
-                    "w-full px-1 md:px-4 py-2 btn btn-ghost rounded-none transition duration-150",
-                    "flex flex-row justify-center items-center md:justify-start gap-2",
-                    "hover:bg-primary hover:text-primary-content hover:border-primary active:border-primary",
-                    link_active?(@current_scope, href) && "bg-primary text-primary-content"
-                  ]}
-                >
-                  <.icon name={icon} />
-                  <span class="hidden md:inline">{label}</span>
-                </a>
-              <% :spacer -> %>
-                <span class="grow" />
-            <% end %>
+            <li>
+              <.link
+                navigate={href}
+                class={[
+                  link_active?(@current_scope, href) &&
+                    "active bg-primary text-primary-content font-semibold"
+                ]}
+              >
+                <.icon name={icon} class="w-5 h-5" />
+                <span class="hidden md:inline">{label}</span>
+              </.link>
+            </li>
           <% end %>
+        </ul>
+
+        <div class="mt-auto p-2 border-t border-base-200 w-full">
+          <ul class="menu menu-lg w-full">
+            <li>
+              <.link
+                navigate="/settings"
+                class={[
+                  link_active?(@current_scope, "/settings") &&
+                    "active bg-primary text-primary-content font-semibold"
+                ]}
+              >
+                <.icon name="hero-cog-6-tooth" class="w-5 h-5" />
+                <span class="hidden md:inline">Settings</span>
+              </.link>
+            </li>
+          </ul>
         </div>
       </nav>
-      
-    <!-- Main content -->
-      <main class="[grid-area:'main'] p-4 sm:p-8">
-        <div class="container mx-auto max-w-4xl">
+
+      <main class="[grid-area:'main'] h-full overflow-y-auto p-4 md:p-8">
+        <div class="container mx-auto max-w-5xl">
           {render_slot(@inner_block)}
         </div>
       </main>
     </div>
+
     <.flash_group flash={@flash} />
     """
   end

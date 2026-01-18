@@ -1,6 +1,18 @@
 defmodule PrintClientWeb.ViewLive.Form do
   use PrintClientWeb, :live_view
 
+  use Ecto.Schema
+
+  embedded_schema do
+    field :iiq_assign_assets, :boolean
+  end
+
+  def changeset(api_settings, attrs) do
+    api_settings
+    |> Ecto.Changeset.cast(attrs, [:iiq_assign_assets])
+    |> Ecto.Changeset.validate_required([:iiq_assign_assets])
+  end
+
   alias PrintClient.Label.Template
   alias PrintClient.Views
   alias PrintClient.Views.View
@@ -12,30 +24,77 @@ defmodule PrintClientWeb.ViewLive.Form do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <.header>
-        {@page_title}
-        <:subtitle>Use this form to manage view records in your database.</:subtitle>
-      </.header>
+      <div class="max-w-7xl mx-auto pb-20">
+        <div class="mb-8 border-b border-base-200 pb-6">
+          <h1 class="text-3xl font-bold text-base-content">{@page_title}</h1>
+          <p class="text-base-content/60 mt-2">
+            Configure the visual layout and print destinations for this view.
+          </p>
+        </div>
 
-      <.form for={@form} id="view-form" phx-change="validate" phx-submit="save">
-        <PrintComponents.template_select
-          field={@form[:template]}
-          label="Template"
-          options={@templates}
-        />
-        <PrintComponents.printer_select
-          field={@form[:printer_ids]}
-          id="view-form-printers"
-          multiple={true}
-          label="Printers"
-          value={changeset_value_ids(@form[:printers].value)}
-          options={@printers}
-        />
-        <footer>
-          <.button phx-disable-with="Saving..." variant="primary">Save View</.button>
-          <.button navigate={return_path(@return_to, @view)}>Cancel</.button>
-        </footer>
-      </.form>
+        <.form for={@form} id="view-form" phx-change="validate" phx-submit="save" class="relative">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div class="lg:col-span-5 flex flex-col gap-4 sticky top-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="bg-primary/10 text-primary p-2 rounded-lg">
+                  <.icon name="hero-photo" class="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 class="font-bold text-lg leading-tight">Label Template</h3>
+                  <p class="text-xs text-base-content/50">Select the visual design</p>
+                </div>
+              </div>
+
+              <PrintComponents.template_select field={@form[:template]} options={@templates} />
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col gap-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="bg-primary/10 text-primary p-2 rounded-lg">
+                  <.icon name="hero-printer" class="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 class="font-bold text-lg leading-tight">Destinations</h3>
+                  <p class="text-xs text-base-content/50">Select target devices</p>
+                </div>
+              </div>
+
+              <PrintComponents.printer_select
+                field={@form[:printer_ids]}
+                id="view-form-printers"
+                multiple={true}
+                value={changeset_value_ids(@form[:printers].value)}
+                options={@printers}
+              />
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col gap-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="bg-primary/10 text-primary p-2 rounded-lg">
+                  <.icon name="hero-cog" class="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 class="font-bold text-lg leading-tight">API Settings</h3>
+                  <p class="text-xs text-base-content/50">
+                    Configure API integrations
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fixed bottom-0 left-0 right-0 bg-base-100 border-t border-base-200 p-4 z-50 shadow-lg shadow-base-300">
+            <div class="max-w-7xl mx-auto flex justify-end gap-3">
+              <.button navigate={return_path(@return_to, @view)} class="btn-ghost">
+                Cancel
+              </.button>
+              <.button phx-disable-with="Saving..." class="btn-primary min-w-[140px]">
+                Save View
+              </.button>
+            </div>
+          </div>
+        </.form>
+      </div>
     </Layouts.app>
     """
   end
@@ -60,6 +119,7 @@ defmodule PrintClientWeb.ViewLive.Form do
     |> assign(:page_title, "Edit View")
     |> assign(:view, view)
     |> assign(:form, to_form(Views.change_view(view)))
+    |> assign(:api_settings, to_form(changeset(%__MODULE__{}, view.api_settings)))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -69,6 +129,7 @@ defmodule PrintClientWeb.ViewLive.Form do
     |> assign(:page_title, "New View")
     |> assign(:view, view)
     |> assign(:form, to_form(Views.change_view(view)))
+    |> assign(:api_settings, to_form(changeset(%__MODULE__{}, view.api_settings)))
   end
 
   @impl true

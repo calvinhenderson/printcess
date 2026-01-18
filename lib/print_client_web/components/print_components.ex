@@ -124,20 +124,16 @@ defmodule PrintClientWeb.PrintComponents do
   end
 
   @doc """
-  Renders a label template selection as a form field.
+  Renders a label template selection as a stylized vertical list.
   """
-
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
-
-  attr :field, Phoenix.HTML.FormField,
-    doc: "a form field struct retrieved from the form, for example: @form[:email]"
-
-  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :field, Phoenix.HTML.FormField
+  attr :multiple, :boolean, default: false
   attr :errors, :list, default: []
-  attr :options, :list, required: true, doc: "the options for the select input"
+  attr :options, :list, required: true
 
   def template_select(assigns) do
     field = assigns.field
@@ -153,10 +149,9 @@ defmodule PrintClientWeb.PrintComponents do
       |> assign_new(:value, fn -> field.value end)
 
     ~H"""
-    <fieldset class="fieldset mb-2 w-full">
-      <span :if={@label} class="label mb-1">{@label}</span>
-      <div class="flex flex-wrap gap-4 lg:gap-8">
-        <label :for={t <- @options} class="cursor-pointer">
+    <fieldset class="fieldset w-full">
+      <div class="flex flex-col gap-4">
+        <label :for={t <- @options} class="relative cursor-pointer group">
           <input
             id={@id}
             name={@name}
@@ -165,14 +160,31 @@ defmodule PrintClientWeb.PrintComponents do
             type={if @multiple, do: "checkbox", else: "radio"}
             checked={checked?(t.id, @value)}
           />
-          <div class="card bg-base-100 transition-all duration-200 ease-in-out border-0 hover:ring-2 hover:ring-offset-0 hover:ring-primary peer-checked:ring-2 peer-checked:ring-primary peer-checked:ring-offset-2">
-            <div class="card-body items-center text-center">
-              <.label_template
-                class="cursor-pointer"
-                template={t}
-                params={placeholder_for_template_fields(t.form_fields)}
-              />
-              <h2 class="card-title">{t.name}</h2>
+          <div class="
+            card bg-base-100 border-2 border-base-200 overflow-hidden transition-all duration-200
+            hover:border-primary/50 hover:shadow-md
+            peer-checked:border-primary peer-checked:ring-1 peer-checked:ring-primary peer-checked:shadow-lg
+          ">
+            <div class="bg-base-200/50 p-6 flex justify-center items-center">
+              <div class="w-full shadow-sm bg-white rounded transform transition-transform duration-300 group-hover:scale-[1.02]">
+                <.label_template
+                  class="w-full h-auto pointer-events-none select-none"
+                  template={t}
+                  params={placeholder_for_template_fields(t.form_fields)}
+                />
+              </div>
+            </div>
+
+            <div class="p-4 bg-base-100 flex items-center justify-between">
+              <div>
+                <h2 class="font-bold text-base-content group-hover:text-primary transition-colors">
+                  {t.name}
+                </h2>
+                <p class="text-xs text-base-content/50 font-mono mt-1">ID: {t.id}</p>
+              </div>
+              <div class="opacity-0 peer-checked:opacity-100 text-primary transition-opacity duration-200">
+                <.icon name="hero-check-circle-solid" class="w-6 h-6" />
+              </div>
             </div>
           </div>
         </label>
@@ -183,20 +195,16 @@ defmodule PrintClientWeb.PrintComponents do
   end
 
   @doc """
-  Renders a printer selection as a form field.
+  Renders a printer selection as a list of toggleable cards.
   """
-
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
-
-  attr :field, Phoenix.HTML.FormField,
-    doc: "a form field struct retrieved from the form, for example: @form[:email]"
-
-  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :field, Phoenix.HTML.FormField
+  attr :multiple, :boolean, default: false
   attr :errors, :list, default: []
-  attr :options, :list, required: true, doc: "the options for the select input"
+  attr :options, :list, required: true
 
   def printer_select(assigns) do
     field = assigns.field
@@ -212,10 +220,9 @@ defmodule PrintClientWeb.PrintComponents do
       |> assign(:field, nil)
 
     ~H"""
-    <fieldset class="fieldset mb-2">
-      <span :if={@label} class="label mb-1">{@label}</span>
-      <div class="grid grid-flow-rows grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full gap-4 lg:gap-8 justify-center">
-        <label :for={p <- @options} class="cursor-pointer">
+    <fieldset class="fieldset w-full">
+      <div class="flex flex-col gap-3">
+        <label :for={p <- @options} class="cursor-pointer group">
           <input
             id={@id}
             name={@name}
@@ -225,19 +232,30 @@ defmodule PrintClientWeb.PrintComponents do
             checked={
               cond do
                 @multiple and is_list(@value) and to_string(p.id) in @value -> true
-                to_string(p.id) == @value -> true
+                to_string(p.id) == to_string(@value) -> true
                 true -> false
               end
             }
           />
-          <div class="card transition-all duration-200 ease-in-out border-0 hover:ring-2 hover:ring-offset-0 hover:ring-primary peer-checked:ring-2 peer-checked:ring-primary peer-checked:ring-offset-2 w-full h-full">
-            <.live_component
-              module={PrinterCardLive}
-              id={"#{@id}-#{p.id}-card"}
-              printer={p}
-              class="card bg-base-100"
-              nolink
-            />
+          <div class="
+            relative flex items-center gap-4 p-4 rounded-xl border border-base-200 bg-base-100 transition-all duration-200
+            hover:bg-base-50 hover:border-base-300
+            peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:shadow-md
+          ">
+            <div class="flex-1 min-w-0 pointer-events-none">
+              <.live_component
+                module={PrinterCardLive}
+                id={"#{@id}-#{p.id}-card"}
+                printer={p}
+                class="bg-transparent shadow-none border-none p-0"
+                nolink
+                compact
+              />
+            </div>
+
+            <div class="hidden peer-checked:block text-primary animate-in fade-in zoom-in duration-200">
+              <.icon name="hero-printer-solid" class="w-5 h-5" />
+            </div>
           </div>
         </label>
       </div>
