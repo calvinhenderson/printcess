@@ -31,22 +31,34 @@ defmodule PrintClientWeb.DashboardLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <.header>
-        Dashboard
-        <:subtitle>Browse the application</:subtitle>
-      </.header>
-      <div class="grid grid-cols-1 grid-rows-[1fr] lg:grid-cols-2 gap-4 lg:gap-8">
-        <a :for={{href, label, icon, desc} <- @links} href={href} class="group">
-          <div class="group-hover:bg-base-300 transition duration-150 card card-side w-full h-full bg-base-100 shadow-sm items-center justify-center">
-            <figure class="p-4 sm:p-8">
-              <.icon name={icon <> "-solid"} />
-            </figure>
-            <div class="card-body mb-auto">
-              <h2 class="card-title">{label}</h2>
-              <p>{desc}</p>
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-base-content">Dashboard</h1>
+        <p class="text-base-content/60">Browse the application modules</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <.link
+          :for={{href, label, icon, desc} <- @links}
+          navigate={href}
+          class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md hover:border-primary/50 transition-all duration-200 group"
+        >
+          <div class="card-body flex-row items-center gap-4 p-6">
+            <div class="rounded-2xl bg-primary/10 p-4 text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-content transition-all duration-300">
+              <.icon name={icon <> "-solid"} class="w-8 h-8" />
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h2 class="card-title text-lg mb-1">{label}</h2>
+              <p class="text-sm text-base-content/70 leading-snug">
+                {desc}
+              </p>
+            </div>
+
+            <div class="text-base-300 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200">
+              <.icon name="hero-chevron-right-solid" class="w-6 h-6" />
             </div>
           </div>
-        </a>
+        </.link>
       </div>
     </Layouts.app>
     """
