@@ -17,26 +17,37 @@ defmodule PrintClientWeb.Settings.UserPreferencesComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <ul class="list space-y-16">
-      <li class="list-col">
-        <.header>Preferences</.header>
-        <.form
-          :let={f}
-          for={@form}
-          id="preferences-form"
-          phx-submit="update"
-          phx-change="validate"
-          phx-debounce="200"
-          phx-target={@myself}
-          class="space-y-8"
-        >
-          <.input label={gettext("Theme")} field={f[:theme]} type="select" options={@options} />
-          <div class="flex flex-row justify-baseline gap-4">
-            <button class="btn btn-primary grow" onclick="window.location.reload()">Save</button>
-          </div>
-        </.form>
-      </li>
-    </ul>
+    <div>
+      <.form
+        :let={f}
+        for={@form}
+        id="preferences-form"
+        phx-submit="update"
+        phx-change="validate"
+        phx-debounce="200"
+        phx-target={@myself}
+        class="flex flex-col gap-6"
+      >
+        <div>
+          <.input
+            label={gettext("Interface Theme")}
+            field={f[:theme]}
+            type="select"
+            options={@options}
+            class="select select-bordered w-full"
+          />
+          <p class="text-xs text-base-content/50 mt-2">
+            Choose a theme that matches your system or preference.
+          </p>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-base-100">
+          <button class="btn btn-primary min-w-[120px]" onclick="window.location.reload()">
+            Save Preferences
+          </button>
+        </div>
+      </.form>
+    </div>
     """
   end
 

@@ -17,40 +17,56 @@ defmodule PrintClientWeb.Settings.ApiComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <ul class="list space-y-16">
-      <li class="list-col">
-        <.header>API Settings</.header>
-        <.form
-          :let={f}
-          for={@form}
-          id="api-form"
-          phx-submit="update"
-          phx-change="validate"
-          phx-debounce="200"
-          phx-target={@myself}
-          class="space-y-8"
-        >
-          <.input
-            label={gettext("Instance Name")}
-            field={f[:instance]}
-            placeholder="[INSTANCE].incidentiq.com"
-          />
-          <.input
-            label={gettext("API Token")}
-            field={f[:token]}
-            placeholder="User Token from Admin > Developer Tools"
-          />
-          <.input
-            label={gettext("Product ID")}
-            field={f[:product_id]}
-            placeholder="Product ID (ticketing, facilities, etc.)"
-          />
-          <div class="flex flex-row gap-4">
-            <button class="btn btn-primary grow" type="submit">{gettext("Save")}</button>
+    <div>
+      <.form
+        :let={f}
+        for={@form}
+        id="api-form"
+        phx-submit="update"
+        phx-change="validate"
+        phx-debounce="200"
+        phx-target={@myself}
+        class="flex flex-col gap-6"
+      >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="w-full">
+            <.input
+              label={gettext("Instance Name")}
+              field={f[:instance]}
+              placeholder="example.incidentiq.com"
+            />
+            <p class="text-xs text-base-content/50 mt-1">Your dedicated instance URL.</p>
           </div>
-        </.form>
-      </li>
-    </ul>
+
+          <div class="w-full">
+            <.input
+              label={gettext("Product ID")}
+              field={f[:product_id]}
+              placeholder="e.g. ticketing, assets"
+            />
+          </div>
+        </div>
+
+        <div>
+          <.input
+            label={gettext("API Access Token")}
+            field={f[:token]}
+            type="password"
+            value={if f[:token].value, do: "****************", else: ""}
+            placeholder="Paste your User Token here"
+          />
+          <p class="text-xs text-base-content/50 mt-1">
+            Generated via Admin > Developer Tools. Kept secure.
+          </p>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-base-100 mt-2">
+          <button class="btn btn-primary min-w-[120px]" type="submit">
+            {gettext("Save Configuration")}
+          </button>
+        </div>
+      </.form>
+    </div>
     """
   end
 
