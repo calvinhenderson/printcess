@@ -13,7 +13,7 @@ defmodule PrintClient.Printer.Registry do
   """
   @spec get(printer_id: term()) :: pid() | {:error, :not_found}
   def get(printer_id) do
-    Registry.lookup(__MODULE__, printer_id)
+    Registry.lookup(Printer.Registry, printer_id)
     |> case do
       [{printer_pid, _}] ->
         printer_pid
@@ -21,5 +21,13 @@ defmodule PrintClient.Printer.Registry do
       [] ->
         {:error, :not_found}
     end
+  end
+
+  @doc """
+  Lists all printer instances known to the registry. Returns a list of printer_ids.
+  """
+  @spec list() :: [pid()] | []
+  def list do
+    Registry.select(Printer.Registry, [{{:"$1", :_, :_}, [], [:"$1"]}])
   end
 end

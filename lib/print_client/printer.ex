@@ -212,7 +212,7 @@ defmodule PrintClient.Printer do
       printer_id: state.printer_id,
       name: state.name,
       connected?: state.connected?,
-      jobs: :queue.to_list(state.job_queue),
+      jobs: :queue.to_list(state.job_queue) ++ state.processed_jobs,
       # Delegate to the adapter to get the status
       adapter_status: state.adapter_module.status(state.adapter_state)
     }

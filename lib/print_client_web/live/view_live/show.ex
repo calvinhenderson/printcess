@@ -119,11 +119,14 @@ defmodule PrintClientWeb.ViewLive.Show do
             </div>
 
             <div class="card bg-base-100 shadow-sm border border-base-200 flex flex-col max-h-[calc(100vh-300px)]">
-              <div class="p-5 border-b border-base-200 bg-base-100 z-10 rounded-t-xl flex justify-between items-center">
-                <h3 class="text-xs font-bold uppercase text-base-content/40 tracking-wider">
+              <div class="p-5 border-b border-base-200 bg-base-100 z-10 rounded-t-xl flex justify-end gap-4 items-center">
+                <h3 class="text-xs font-bold uppercase text-base-content/40 tracking-wider mr-auto">
                   Activity Log
                 </h3>
-                <span class="badge badge-sm badge-ghost">{length(@streams.jobs.inserts)} Events</span>
+                <span class="badge badge-sm badge-ghost">
+                  {length(@streams.jobs.inserts)} Events
+                </span>
+                <.link navigate={~p"/jobs"} class="btn btn-sm btn-primary">All Jobs</.link>
               </div>
 
               <div

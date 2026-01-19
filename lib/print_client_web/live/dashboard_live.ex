@@ -2,19 +2,23 @@ defmodule PrintClientWeb.DashboardLive do
   use PrintClientWeb, :live_view
 
   @links [
-    {"/views", "Views", "hero-rectangle-stack",
+    {"/views", "Views", "hero-rectangle-stack-solid",
      """
      Views combine label templates with printers for saved printing experiences.
      """},
-    {"/printers", "Printers", "hero-printer",
+    {"/jobs", "Jobs", "hero-queue-list-solid",
+     """
+     View the list of pending and completed print jobs.
+     """},
+    {"/printers", "Printers", "hero-printer-solid",
      """
      Update saved printers or delete existing printers.
      """},
-    {"/templates", "Templates", "hero-photo",
+    {"/templates", "Templates", "hero-photo-solid",
      """
      View current templates, or update template search paths.
      """},
-    {"/settings", "Settings", "hero-cog",
+    {"/settings", "Settings", "hero-cog-solid",
      """
      Application preferences and API integrations.
      """}
@@ -44,7 +48,7 @@ defmodule PrintClientWeb.DashboardLive do
         >
           <div class="card-body flex-row items-center gap-4 p-6">
             <div class="rounded-2xl bg-primary/10 p-4 text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-content transition-all duration-300">
-              <.icon name={icon <> "-solid"} class="w-8 h-8" />
+              <.icon name={icon} class="w-8 h-8" />
             </div>
 
             <div class="flex-1 min-w-0">

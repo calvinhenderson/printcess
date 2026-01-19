@@ -62,7 +62,16 @@ defmodule PrintClientWeb.PrinterJobComponent do
           <div class="flex flex-col">
             <span class="font-bold text-base-content">{@printer.name}</span>
             <span class="text-xs text-base-content/50 font-mono">
-              Job #{to_string(@id)}
+              Job: #{to_string(@id)}
+            </span>
+            <span class="text-xs text-base-content/50 font-mono">
+              Template:
+              <%= case @job.template do %>
+                <% %{name: name} -> %>
+                  {name}
+                <% {path, name} -> %>
+                  {name}
+              <% end %>
             </span>
           </div>
         </div>
