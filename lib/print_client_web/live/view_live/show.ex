@@ -118,7 +118,7 @@ defmodule PrintClientWeb.ViewLive.Show do
               </div>
             </div>
 
-            <div class="card bg-base-100 shadow-sm border border-base-200 flex flex-col max-h-[calc(100vh-300px)]">
+            <div class="card bg-base-100 shadow-sm border border-base-200 flex flex-col max-h-full">
               <div class="p-5 border-b border-base-200 bg-base-100 z-10 rounded-t-xl flex justify-end gap-4 items-center">
                 <h3 class="text-xs font-bold uppercase text-base-content/40 tracking-wider mr-auto">
                   Activity Log
@@ -169,6 +169,24 @@ defmodule PrintClientWeb.ViewLive.Show do
   def mount(%{"id" => id}, _session, socket) do
     view = Views.get_view!(id)
 
+    jobs =
+      view.printers
+      |> Enum.reduce([], fn printer, jobs ->
+        %{printer_id: printer_id} = Printer.Discovery.load_saved_printer(printer)
+        {:ok, printer_status} = Printer.status(printer_id)
+
+        printer_jobs =
+          printer_status.jobs
+          |> Enum.map(fn job ->
+            %{id: "#{printer_id}:#{job.id}", job: job, printer: printer_status}
+          end)
+
+        jobs ++ printer_jobs
+      end)
+      |> Enum.filter(fn %{job: %{template: %{id: template_id}}} ->
+        template_id == view.template
+      end)
+
     {:ok,
      socket
      |> assign(:id, "view-" <> id)
@@ -176,7 +194,7 @@ defmodule PrintClientWeb.ViewLive.Show do
      |> assign(:view, view)
      |> assign_template()
      |> assign_printers()
-     |> stream(:jobs, [], at: 0)}
+     |> stream(:jobs, jobs, at: 0)}
   end
 
   @impl true

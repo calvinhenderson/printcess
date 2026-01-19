@@ -95,7 +95,7 @@ defmodule PrintClientWeb.PrinterJobComponent do
         </div>
       </div>
 
-      <div class="collapse-content text-sm border-t border-base-100">
+      <div class="collapse-content text-sm border-t border-base-100 min-h-max">
         <div class="pt-4 flex flex-col gap-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
             <%= for {k, v} <- @job.params do %>
@@ -173,7 +173,7 @@ defmodule PrintClientWeb.PrinterJobComponent do
         {:ok, %{status: status}} ->
           status
 
-        error ->
+        _error ->
           :failed
       end
 

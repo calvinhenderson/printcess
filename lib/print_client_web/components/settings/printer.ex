@@ -96,9 +96,9 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
 
                 <div
                   :if={f[:type].value == :network}
-                  class="grid grid-cols-5 bg-base-200/30 gap-4 p-4 rounded-xl border border-base-200"
+                  class="grid grid-cols-1 sm:grid-cols-5 bg-base-200/30 gap-4 p-4 rounded-xl border border-base-200"
                 >
-                  <div class="col-span-3 w-full">
+                  <div class="sm:col-span-3 max-w-sm">
                     <.input
                       label={gettext("Hostname / IP")}
                       field={f[:hostname]}
@@ -107,7 +107,7 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
                       class="input font-mono text-sm"
                     />
                   </div>
-                  <div class="col-span-2">
+                  <div class="sm:col-span-2 max-w-xs">
                     <.input
                       label={gettext("Port")}
                       field={f[:port]}

@@ -1,10 +1,12 @@
 defmodule PrintClient.MixProject do
   use Mix.Project
 
+  @app :print_client
+
   def project do
     [
-      app: :print_client,
-      version: "2.0.1",
+      app: @app,
+      version: "2.1.0",
       elixir: "~> 1.16.3",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
