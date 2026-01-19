@@ -93,7 +93,7 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
 
   @impl Printer.Adapter
   def status(%__MODULE__{usb_ref: nil}) do
-    {:ok, :disconnected}
+    :disconnected
   end
 
   def status(%__MODULE__{usb_ref: ref, usb_timeout: usb_timeout} = adapter_state) do

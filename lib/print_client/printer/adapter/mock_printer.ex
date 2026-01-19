@@ -35,7 +35,7 @@ defmodule PrintClient.Printer.Adapter.MockPrinter do
     {:error, :not_connected}
   end
 
-  def print(%__MODULE__{connected?: _} = _adapter_state, data), do: :ok
+  def print(%__MODULE__{connected?: _} = _adapter_state, _data), do: :ok
 
   @impl Printer.Adapter
   def disconnect(%__MODULE__{connected?: false} = adapter_state), do: {:ok, adapter_state}
@@ -48,7 +48,7 @@ defmodule PrintClient.Printer.Adapter.MockPrinter do
 
   @impl Printer.Adapter
   def status(%__MODULE__{connected?: false}) do
-    {:ok, :disconnected}
+    :disconnected
   end
 
   def status(%__MODULE__{connected?: _}), do: :connected

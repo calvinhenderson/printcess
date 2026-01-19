@@ -102,7 +102,7 @@ defmodule PrintClient.Printer.Adapter.SerialPrinter do
 
   @impl Printer.Adapter
   def status(%__MODULE__{uart_ref: nil}) do
-    {:ok, :disconnected}
+    :disconnected
   end
 
   def status(%__MODULE__{uart_ref: uart_pid, port: port}) do
