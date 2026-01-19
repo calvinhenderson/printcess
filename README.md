@@ -40,7 +40,7 @@ make
 - [x] `AssetsApi` Provides a search API for form auto-completions
 - [x] `Assets` and `Users` Provide generic search API for configured search backend.
 - [x] `Views` API for attaching printers to templates
-- [ ] Job queue window for displaying all active/completed jobs
+- [x] Job queue window for displaying all active/completed jobs
 - [ ] Label template API mappings for search fields
 - [ ] Template search paths for external template discovery
 - [ ] Multi-template printing
