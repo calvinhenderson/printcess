@@ -22,75 +22,87 @@ defmodule PrintClientWeb.ViewLive.Index do
       </div>
 
       <div id="views" phx-update="stream" class="flex flex-col gap-4">
-        <a :for={{id, view} <- @streams.views} id={id} href={~p"/views/#{view.id}"}>
-          <div class="w-full card card-side bg-base-100 shadow-sm border border-base-200 transition-all hover:shadow-md group">
-            <figure class="w-48 bg-base-200/50 p-4 border-r border-base-200 flex items-center justify-center">
-              <div class="w-full shadow-sm bg-white rounded overflow-hidden">
-                <PrintComponents.label_template
-                  class="w-full h-auto pointer-events-none select-none"
-                  template={Enum.find(@templates, &(&1.id == view.template))}
-                />
-              </div>
-            </figure>
+        <div
+          :for={{id, view} <- @streams.views}
+          id={id}
+          class={[
+            "relative w-full card card-side bg-base-100 shadow-sm border transition-all hover:shadow-md group",
+            is_nil(Enum.find(@templates, &(&1.id == view.template))) || "border-base-200",
+            is_nil(Enum.find(@templates, &(&1.id == view.template))) && "border-error"
+          ]}
+        >
+          <.link
+            class="absolute top-0 left-0 right-12 bottom-0 z-[99]"
+            href={~p"/views/#{view.id}" <> if is_nil(Enum.find(@templates, &(&1.id == view.template))), do: "/edit", else: "/"}
+          >
+          </.link>
+          <figure class="w-48 bg-base-200/50 p-4 border-r border-base-200 flex items-center justify-center">
+            <div class="w-full shadow-sm bg-white rounded overflow-hidden">
+              <PrintComponents.label_template
+                class="w-full h-auto pointer-events-none select-none"
+                template={Enum.find(@templates, &(&1.id == view.template))}
+              />
+            </div>
+          </figure>
 
-            <div class="card-body p-6 flex-row gap-6 items-center">
-              <div class="flex-1 min-w-0 flex flex-col gap-3">
-                <div>
-                  <h3 class="font-bold text-lg leading-tight">
-                    {Enum.find(@templates, &(&1.id == view.template)).name || "Untitled Template"}
-                  </h3>
-                  <span class="text-xs font-mono text-base-content/50 uppercase tracking-wider">
-                    View ID: {String.slice(to_string(view.id), 0..7)}
-                  </span>
-                </div>
-
-                <div class="flex flex-col gap-1.5">
-                  <span class="text-xs font-semibold text-base-content/40 flex items-center gap-1">
-                    <.icon name="hero-printer" class="w-3 h-3" /> DESTINATIONS
-                  </span>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <.live_component
-                      :for={p <- view.printers |> Enum.take(3)}
-                      module={PrinterCardLive}
-                      id={"#{id}-printer-#{p.id}"}
-                      class="scale-90 origin-left"
-                      printer={p}
-                      nolink
-                      compact
-                    />
-                    <span :if={length(view.printers) > 3} class="badge badge-ghost text-xs">
-                      + {length(view.printers) - 3} others
-                    </span>
-                    <span :if={Enum.empty?(view.printers)} class="text-sm text-base-content/50 italic">
-                      No printers assigned
-                    </span>
-                  </div>
-                </div>
+          <div class="card-body p-6 flex-row gap-6 items-center">
+            <div class="flex-1 min-w-0 flex flex-col gap-3">
+              <div>
+                <h3 class="font-bold text-lg leading-tight">
+                  {Enum.find(@templates, %{name: "Template missing"}, &(&1.id == view.template)).name ||
+                    "Untitled Template"}
+                </h3>
+                <span class="text-xs font-mono text-base-content/50 uppercase tracking-wider">
+                  View ID: {String.slice(to_string(view.id), 0..7)}
+                </span>
               </div>
 
-              <div class="flex flex-col ml-auto justify-self-end items-center gap-2 border-l border-base-200 pl-4">
-                <div class="tooltip" data-tip="Edit View">
-                  <.link
-                    navigate={~p"/views/#{view.id}/edit"}
-                    class="btn btn-square btn-ghost hover:bg-primary hover:text-primary-content"
-                  >
-                    <.icon name="hero-pencil-square" class="w-5 h-5" />
-                  </.link>
-                </div>
-
-                <div class="tooltip" data-tip="Delete View">
-                  <.link
-                    phx-click={JS.push("delete", value: %{id: view.id}) |> hide("##{id}")}
-                    data-confirm="Are you sure you want to delete this view?"
-                    class="btn btn-square btn-ghost hover:bg-error hover:text-error-content"
-                  >
-                    <.icon name="hero-trash" class="w-5 h-5" />
-                  </.link>
+              <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold text-base-content/40 flex items-center gap-1">
+                  <.icon name="hero-printer" class="w-3 h-3" /> DESTINATIONS
+                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                  <.live_component
+                    :for={p <- view.printers |> Enum.take(3)}
+                    module={PrinterCardLive}
+                    id={"#{id}-printer-#{p.id}"}
+                    class="scale-90 origin-left"
+                    printer={p}
+                    nolink
+                    compact
+                  />
+                  <span :if={length(view.printers) > 3} class="badge badge-ghost text-xs">
+                    + {length(view.printers) - 3} others
+                  </span>
+                  <span :if={Enum.empty?(view.printers)} class="text-sm text-base-content/50 italic">
+                    No printers assigned
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </a>
+
+          <div class="flex flex-col justify-self-end justify-center items-center gap-2 border-l border-base-200 px-2">
+            <div class="tooltip" data-tip="Edit View">
+              <.link
+                navigate={~p"/views/#{view.id}/edit"}
+                class="btn btn-square btn-ghost hover:bg-primary hover:text-primary-content"
+              >
+                <.icon name="hero-pencil-square" class="w-5 h-5" />
+              </.link>
+            </div>
+
+            <div class="tooltip" data-tip="Delete View">
+              <.link
+                phx-click={JS.push("delete", value: %{id: view.id}) |> hide("##{id}")}
+                data-confirm="Are you sure you want to delete this view?"
+                class="btn btn-square btn-ghost hover:bg-error hover:text-error-content"
+              >
+                <.icon name="hero-trash" class="w-5 h-5" />
+              </.link>
+            </div>
+          </div>
+        </div>
 
         <div
           id="views-empty-state"

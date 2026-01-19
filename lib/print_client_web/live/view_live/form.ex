@@ -119,7 +119,6 @@ defmodule PrintClientWeb.ViewLive.Form do
     |> assign(:page_title, "Edit View")
     |> assign(:view, view)
     |> assign(:form, to_form(Views.change_view(view)))
-    |> assign(:api_settings, to_form(changeset(%__MODULE__{}, view.api_settings)))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -129,7 +128,6 @@ defmodule PrintClientWeb.ViewLive.Form do
     |> assign(:page_title, "New View")
     |> assign(:view, view)
     |> assign(:form, to_form(Views.change_view(view)))
-    |> assign(:api_settings, to_form(changeset(%__MODULE__{}, view.api_settings)))
   end
 
   @impl true
