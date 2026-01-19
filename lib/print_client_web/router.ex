@@ -28,9 +28,8 @@ defmodule PrintClientWeb.Router do
       live "/views/:id", ViewLive.Show, :show
       live "/views/:id/edit", ViewLive.Form, :edit
 
-      # Print Queues
-      live "/queues", JobQueuesLive.Index, :index
-      live "/queues/:printer", JobQueuesLive.Show, :show
+      # Print Jobs
+      live "/jobs", JobsLive
 
       # Settings
       live "/printers", PrintersLive, :show

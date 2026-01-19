@@ -51,6 +51,7 @@ defmodule PrintClientWeb.Layouts do
           <%= for {href, label, icon} <- [
             {"/", "Dashboard", "hero-home"},
             {"/views", "Views", "hero-rectangle-stack"},
+            {"/jobs", "Jobs", "hero-queue-list"},
             {"/printers", "Printers", "hero-printer"},
             {"/templates", "Templates", "hero-photo"}
           ] do %>

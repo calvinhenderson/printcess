@@ -20,6 +20,15 @@ defmodule PrintClient.PubSub do
     socket
   end
 
+  def unsubscribe(%Phoenix.LiveView.Socket{assigns: %{myself: _myself}} = socket, pubsub, topic) do
+    if Phoenix.LiveView.connected?(socket) do
+      Phoenix.PubSub.unsubscribe(pubsub, topic)
+      socket
+    else
+      socket
+    end
+  end
+
   def unsubscribe(pubsub, topic) do
     Phoenix.PubSub.unsubscribe(pubsub, topic)
   end
