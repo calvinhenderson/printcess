@@ -103,11 +103,6 @@ defmodule PrintClient.Label.Template do
       {:ok, binary} ->
         Logger.debug("Label.Template: Loaded template #{template_path}")
 
-        formatted_name =
-          template_path
-          |> Path.basename(".svg")
-          |> String.trim()
-
         template_fields = dynamic_fields(binary)
 
         form_fields =

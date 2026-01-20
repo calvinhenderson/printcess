@@ -110,6 +110,7 @@ defmodule PrintClient.Printer.Adapter.UsbPrinter do
     end
   end
 
+  @impl Printer.Adapter
   def online?(%__MODULE__{} = adapter_state) do
     status(adapter_state)
     |> case do

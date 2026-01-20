@@ -46,11 +46,4 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Mock do
 
     {:ok, results}
   end
-
-  defp load_fixture(path) do
-    full_path = Path.join("test/support/fixtures", path)
-
-    Application.app_dir(:print_client, full_path)
-    |> File.read!()
-  end
 end

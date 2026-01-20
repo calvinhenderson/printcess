@@ -18,7 +18,7 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
       product_id: settings.product_id
     }
 
-  def search_assets(config, query, opts \\ []) when is_binary(query) do
+  def search_assets(config, query, _opts \\ []) when is_binary(query) do
     req =
       %{
         "Query" => query,
@@ -43,7 +43,7 @@ defmodule PrintClient.AssetsApi.ApiAdapter.Iiq do
     end
   end
 
-  def search_users(config, query, opts \\ []) when is_binary(query) do
+  def search_users(config, query, _opts \\ []) when is_binary(query) do
     req =
       %{
         "Query" => query,

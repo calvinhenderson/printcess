@@ -88,7 +88,7 @@ defmodule PrintClientWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method)
+  attr :rest, :global, include: ~w(href navigate patch method disabled)
 
   attr :variant, :string,
     values:

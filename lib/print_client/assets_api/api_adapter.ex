@@ -10,11 +10,11 @@ defprotocol PrintClient.AssetsApi.ApiAdapter do
 
   @doc "Establishes a connection to the printer."
   @spec search_assets(struct(), String.t(), Keyword.t()) ::
-          {:ok, SearchResult.t()} | {:error, term()}
+          {:ok, SearchResult.Asset.t()} | {:error, term()}
   def search_assets(config, query, opts \\ [])
 
   @doc "Establishes a connection to the printer."
   @spec search_users(struct(), String.t(), Keyword.t()) ::
-          {:ok, SearchResult.t()} | {:error, term()}
+          {:ok, SearchResult.User.t()} | {:error, term()}
   def search_users(config, query, opts \\ [])
 end
