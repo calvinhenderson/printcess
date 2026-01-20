@@ -2,7 +2,6 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
   use PrintClientWeb, :live_component
 
   alias PrintClient.Printer.Discovery
-  alias PrintClient.Printer
   alias PrintClient.Label
   alias PrintClient.Settings
 

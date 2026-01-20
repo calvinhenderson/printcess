@@ -69,7 +69,7 @@ defmodule PrintClientWeb.PrinterJobComponent do
               <%= case @job.template do %>
                 <% %{name: name} -> %>
                   {name}
-                <% {path, name} -> %>
+                <% {_path, name} -> %>
                   {name}
               <% end %>
             </span>

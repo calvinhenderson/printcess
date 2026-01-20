@@ -17,7 +17,7 @@ defmodule PrintClient.Menu do
   end
 
   @impl true
-  def handle_info(event, menu) do
+  def handle_info(_event, menu) do
     {:noreply, menu}
   end
 

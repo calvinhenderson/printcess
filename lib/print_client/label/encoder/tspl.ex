@@ -1,6 +1,5 @@
 defmodule PrintClient.Label.Encoder.TSPL do
   @behaviour PrintClient.Label.Encoder
-  alias PrintClient.Label.Template
 
   @impl true
   def encode(image, opts) do

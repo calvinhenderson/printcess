@@ -196,12 +196,6 @@ defmodule PrintClient.Printer.Discovery do
     "#{formatted_hostname}_#{formatted_port_name}"
   end
 
-  defp id_of_network_printer(network_printer) do
-    formatted_hostname = format_id_string(network_printer.hostname)
-    formatted_port = format_id_string(network_printer.port)
-    "#{formatted_hostname}_#{formatted_port}"
-  end
-
   defp format_id_string(id) when not is_binary(id), do: id |> to_string |> format_id_string
 
   defp format_id_string(id_string) do

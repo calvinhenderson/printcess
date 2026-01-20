@@ -7,7 +7,6 @@ defmodule PrintClient.Printer do
 
   require Logger
 
-  alias Hex.Solver.Registry
   alias PrintClient.Printer.{Adapter, PrintJob, Registry, Discovery}
   alias PrintClient.Label
   alias PrintClient.Settings
@@ -353,7 +352,7 @@ defmodule PrintClient.Printer do
 
   # --- Internal API ---
 
-  defp broadcast(printer_id, message, type \\ :info),
+  defp broadcast(printer_id, message, type),
     do:
       PrintClient.PubSub.broadcast_from(
         @pubsub,
@@ -362,7 +361,7 @@ defmodule PrintClient.Printer do
         {printer_id, type, message}
       )
 
-  defp broadcast_job(printer_id, job_id, status \\ :sent),
+  defp broadcast_job(printer_id, job_id, status),
     do:
       PrintClient.PubSub.broadcast_from(
         @pubsub,
@@ -440,7 +439,7 @@ defmodule PrintClient.Printer do
       |> state.adapter_module.print(data)
       |> handle_print_result(state, job, new_queue)
     else
-      {:empty, new_queue} ->
+      {:empty, _new_queue} ->
         state
 
       error ->
