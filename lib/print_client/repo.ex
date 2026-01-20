@@ -9,7 +9,8 @@ defmodule PrintClient.Repo do
     migrations = [
       __MODULE__.PrintersTable,
       __MODULE__.SettingsTable,
-      __MODULE__.ViewsTable
+      __MODULE__.ViewsTable,
+      __MODULE__.SearchPathsTable
     ]
 
     for mod <- migrations do

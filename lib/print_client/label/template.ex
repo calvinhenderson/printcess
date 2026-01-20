@@ -1,6 +1,8 @@
 defmodule PrintClient.Label.Template do
   require Logger
 
+  alias PrintClient.Settings
+
   @type template_field :: %{binary() => {atom(), binary() | nil}}
 
   defstruct id: "",
@@ -25,9 +27,29 @@ defmodule PrintClient.Label.Template do
   def internal_templates_path, do: Application.app_dir(:print_client, "priv/static/templates/")
 
   @doc """
+  Returns the list of template search paths.
+  """
+  def template_paths do
+    user_search_paths =
+      Settings.all_search_paths()
+      |> Enum.map(fn p ->
+        Map.put(p, :type, :user)
+      end)
+
+    internal_search_path = %{path: internal_templates_path(), disabled: false, type: :system}
+
+    [internal_search_path | user_search_paths]
+  end
+
+  @doc """
   Lists template paths.
   """
-  def list_templates, do: [internal_templates_path()] |> list_templates
+  def list_templates do
+    template_paths()
+    |> Enum.reject(& &1.disabled)
+    |> Enum.map(& &1.path)
+    |> list_templates
+  end
 
   def list_templates(templates_dirs) do
     Enum.flat_map(templates_dirs, fn dir ->

@@ -1,7 +1,7 @@
 defmodule PrintClient.Settings do
   alias PrintClient.Repo
 
-  alias PrintClient.Settings.{Printer, Config}
+  alias PrintClient.Settings.{Printer, Config, SearchPath}
 
   import Ecto.Query
 
@@ -94,6 +94,53 @@ defmodule PrintClient.Settings do
     |> Config.preferences_changeset(attrs)
     |> Repo.insert_or_update()
   end
+
+  # --- Search Paths ---
+
+  @doc """
+  Retreives a search path from the database.
+  """
+  def get_search_path(id), do: Repo.get(SearchPath, id)
+  def get_search_path!(id), do: Repo.get!(SearchPath, id)
+
+  @doc """
+  Builds a search path changeset for making changes.
+  """
+  def change_search_path(search_path, attrs \\ %{}),
+    do: SearchPath.changeset(search_path, attrs)
+
+  @doc """
+  Fetches all saved search paths.
+  """
+  def all_search_paths() do
+    Repo.all(
+      from(p in SearchPath,
+        select: p,
+        order_by: [desc: p.id],
+        order_by: p.path
+      )
+    )
+  end
+
+  @doc """
+  Writes the config to the database.
+  """
+  def save_search_path(search_path, attrs \\ %{}) do
+    search_path
+    |> change_search_path(attrs)
+    |> Repo.insert_or_update()
+  end
+
+  @doc """
+  Deletes a search path from the database.
+  """
+  def delete_search_path(%SearchPath{} = search_path) do
+    search_path
+    |> Repo.delete()
+  end
+
+  def delete_search_path(search_path),
+    do: Logger.error("Invalid search_path given: #{inspect(search_path)}")
 
   # --- Internal API ---
 

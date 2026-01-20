@@ -2,13 +2,16 @@ defmodule PrintClientWeb.TemplatesLive do
   use PrintClientWeb, :live_view
 
   alias PrintClient.{Label, Settings}
+  import PrintClientWeb.Modal
 
   require Logger
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign_templates()}
+     |> assign_templates()
+     |> assign(:show_modal, false)}
   end
 
   @impl true
@@ -112,7 +115,7 @@ defmodule PrintClientWeb.TemplatesLive do
             <h2 class="text-xl font-bold flex items-center gap-2">
               <.icon name="hero-folder" class="w-6 h-6 text-primary" /> Search Paths
             </h2>
-            <button class="btn btn-sm btn-primary btn-outline gap-2">
+            <button class="btn btn-sm btn-primary btn-outline gap-2" phx-click="edit-search-path">
               <.icon name="hero-plus" class="w-4 h-4" /> Add Path
             </button>
           </div>
@@ -130,32 +133,39 @@ defmodule PrintClientWeb.TemplatesLive do
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-base-100">
-                  <tr :for={l <- @locations} class="hover:bg-base-50 group">
+                  <tr :for={p <- @search_paths} class="hover:bg-base-50 group">
                     <td class="text-center text-base-content/40 group-hover:text-primary">
                       <.icon name="hero-folder" class="w-5 h-5 mx-auto" />
                     </td>
                     <td>
                       <div class="font-mono text-sm text-base-content/80 break-all">
-                        {l.path}
+                        {p.path}
                       </div>
                     </td>
                     <td class="text-right">
                       <div
-                        :if={l.type == :system}
+                        :if={p.type == :system}
                         class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity"
                       >
                         <span class="badge badge-sm badge-neutral">system</span>
                       </div>
                       <div
-                        :if={l.type == :user}
+                        :if={p.type == :user}
                         class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity"
                       >
-                        <button class="btn btn-square btn-ghost btn-sm tooltip" data-tip="Edit Path">
+                        <button
+                          class="btn btn-square btn-ghost btn-sm tooltip"
+                          data-tip="Edit Path"
+                          phx-click="edit-search-path"
+                          phx-value-id={p.id}
+                        >
                           <.icon name="hero-pencil" class="w-4 h-4" />
                         </button>
                         <button
                           class="btn btn-square btn-ghost btn-sm text-error hover:bg-error/10 tooltip"
                           data-tip="Remove Path"
+                          phx-click="remove-search-path"
+                          phx-value-id={p.id}
                         >
                           <.icon name="hero-trash" class="w-4 h-4" />
                         </button>
@@ -166,12 +176,33 @@ defmodule PrintClientWeb.TemplatesLive do
               </table>
             </div>
           </div>
+
+          <.modal id="search-path-modal">
+            <div>
+              <button
+                phx-click={hide_modal("search-path-modal")}
+                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              >
+                ✕
+              </button>
+              <.form
+                :let={f}
+                for={@form}
+                phx-change="validate-search-path"
+                phx-submit="save-search-path"
+              >
+                <.input type="text" field={f[:path]} label="Absolute path on the system" />
+                <.button type="submit" class="btn btn-primary">Save</.button>
+              </.form>
+            </div>
+          </.modal>
         </div>
       </div>
     </Layouts.app>
     """
   end
 
+  @impl true
   def handle_event("select", %{"id" => selection_id}, socket) do
     templates =
       socket.assigns.templates
@@ -180,9 +211,74 @@ defmodule PrintClientWeb.TemplatesLive do
     {:noreply, assign(socket, templates: templates)}
   end
 
+  def handle_event("validate-search-path", %{"search_path" => params}, socket) do
+    socket.assigns.search_path
+    |> Settings.change_search_path(params)
+    |> Ecto.Changeset.apply_action(:validate)
+    |> case do
+      {:ok, _search_path} ->
+        socket
+        |> assign_templates()
+
+      {:error, changeset} ->
+        socket
+        |> assign(:form, to_form(changeset))
+        |> assign(:show_modal, true)
+    end
+    |> then(&{:noreply, &1})
+  end
+
+  def handle_event("save-search-path", %{"search_path" => params}, socket) do
+    socket.assigns.search_path
+    |> Settings.save_search_path(params)
+    |> case do
+      {:ok, _search_path} ->
+        socket
+        |> assign_templates()
+
+      {:error, changeset} ->
+        socket
+        |> assign(:form, to_form(changeset))
+        |> assign(:show_modal, true)
+    end
+    |> then(&{:noreply, &1})
+  end
+
+  def handle_event("edit-search-path", params, socket) do
+    search_path =
+      case params do
+        %{"id" => search_path_id} -> Settings.get_search_path!(search_path_id)
+        _ -> %Settings.SearchPath{}
+      end
+
+    {:noreply,
+     assign_search_path(socket, search_path)
+     |> push_event("show-dialog-modal", %{id: "search-path-modal"})}
+  end
+
+  def handle_event("remove-search-path", %{"id" => search_path_id}, socket) do
+    search_path = Settings.get_search_path!(search_path_id)
+
+    Settings.delete_search_path(search_path)
+    |> case do
+      {:ok, _search_path} ->
+        assign_templates(socket)
+
+      {:error, _changeset} ->
+        put_flash(socket, :error, "Error removing search path.")
+    end
+    |> then(&{:noreply, &1})
+  end
+
   def handle_event(event, _params, socket) do
     Logger.debug("[PrintClientWeb.TemplatesLive]: Unhandled event received: #{event}")
     {:noreply, socket}
+  end
+
+  defp assign_search_path(socket, search_path, params \\ %{}) do
+    socket
+    |> assign(:search_path, search_path)
+    |> assign(:form, to_form(Settings.change_search_path(search_path, params)))
   end
 
   defp assign_templates(socket) do
@@ -190,15 +286,12 @@ defmodule PrintClientWeb.TemplatesLive do
       Label.Template.load_templates()
       |> Enum.map(&Map.put(&1, :selected, false))
 
-    locations = [
-      %{path: Label.Template.internal_templates_path(), type: :system},
-      %{path: "./Templates", type: :user},
-      %{path: "~/Templates", type: :user},
-      %{path: "~/Documents/Templates", type: :user}
-    ]
+    search_paths = Label.Template.template_paths()
 
     socket
     |> assign(templates: templates)
-    |> assign(:locations, locations)
+    |> assign(:search_paths, search_paths)
+    |> assign(:show_modal, false)
+    |> assign_search_path(%Settings.SearchPath{})
   end
 end
