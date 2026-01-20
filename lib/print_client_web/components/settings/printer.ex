@@ -173,18 +173,22 @@ defmodule PrintClientWeb.Settings.PrinterComponent do
                   </div>
 
                   <div class="grid grid-cols-2 gap-4">
-                    <.input
-                      label={gettext("Vendor ID")}
-                      field={f[:vendor_id]}
-                      type="text"
-                      class="input font-mono text-sm"
-                    />
-                    <.input
-                      label={gettext("Product ID")}
-                      field={f[:product_id]}
-                      type="text"
-                      class="input font-mono text-sm"
-                    />
+                    <div class="max-w-xs">
+                      <.input
+                        label={gettext("Vendor ID")}
+                        field={f[:vendor_id]}
+                        type="text"
+                        class="input font-mono text-sm"
+                      />
+                    </div>
+                    <div class="max-w-xs">
+                      <.input
+                        label={gettext("Product ID")}
+                        field={f[:product_id]}
+                        type="text"
+                        class="input font-mono text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
 
