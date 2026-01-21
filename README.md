@@ -1,4 +1,6 @@
-# PrintClient
+# Printcess
+
+Printcess (previously *Print Client*) is a desktop application designed for managing label printing. Built with Elixir and Phoenix LiveView, it provides a real-time, responsive interface for managing, and printing dynamic labels. It leverages wxWidgets for native desktop integration. The application supports a wide range of connectivity via adapters (network, USB, serial) and comes with built-in support for TSPL2 encoding. Though, other encoders can easily be added by implementing the `Label.Encoder` protocol (see [PrintClient.Label.Encoder.TSPL](/lib/print_client/label/encoder/tspl.ex)).
 
 ![overview video](/docs/overview.avif)
 
@@ -46,9 +48,13 @@ make
 - [x] `Views` API for attaching printers to templates
 - [x] Job queue window for displaying all active/completed jobs
 - [x] Template search paths for external template discovery
+- [ ] Add support for automatic app updates
+  - [ ] Automated CI builds and releases
 - [ ] Label template API mappings for search fields
+- [ ] Add support for asset owner assignments via `AssetsApi`
+  - [ ] Check out view for automatic asset assignment when printing labels
 - [ ] Multi-template printing
+- [ ] Add support for dynamically sized text fields
+- [ ] Integrated svg editor for creating label templates
 
 ### Planned - Not Yet Scheduled
-
-- [ ] Integrated label editor for creating label templates
