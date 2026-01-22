@@ -7,7 +7,7 @@ defmodule PrintClient.MixProject do
     [
       app: @app,
       version: "2.1.0",
-      elixir: "~> 1.16.3",
+      elixir: "~> 1.19.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,

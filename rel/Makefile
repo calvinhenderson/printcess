@@ -10,7 +10,7 @@
 .PHONY: all clean clean-bundle patch-linker-paths info installer bundle sign app run
 
 # --- General Configuration ---
-ELIXIR_VERSION ?= 1.16.3
+ELIXIR_VERSION ?= 1.19.5
 OTP_VERSION    ?= 27.3
 ARCH           := aarch64
 MACOSX_DEPLOYMENT_TARGET := 14
