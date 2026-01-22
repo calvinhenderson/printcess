@@ -67,14 +67,14 @@ defmodule PrintClientWeb.PrinterCardLive do
               "status",
               connected?(@socket) && "animate-ping",
               @online && "status-success",
-              is_nil(@online) or @online || "status-error",
+              (is_nil(@online) or @online) || "status-error",
               is_nil(@online) && "status-ghost"
             ]}>
             </div>
             <div class={[
               "status",
               @online && "status-success",
-              is_nil(@online) or @online || "status-error",
+              (is_nil(@online) or @online) || "status-error",
               is_nil(@online) && "status-ghost"
             ]}>
             </div>
